@@ -36,10 +36,14 @@ export function Header() {
               <Link to={link.href}>{link.label}</Link>
             </Button>
           ))}
-          <Button size="sm" variant="outline">
-            Masuk
-          </Button>
-          <Button size="sm">Mulai Sekarang</Button>
+          <Link to="/login">
+            <Button size="sm" variant="outline">
+              Masuk
+            </Button>
+          </Link>
+          <Link to="/register">
+            <Button size="sm">Mulai Sekarang</Button>
+          </Link>
         </div>
         <MobileNav />
       </nav>
