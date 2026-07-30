@@ -1,42 +1,34 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
-import { Button } from '@/components/ui/button'
 import { AppSidebar } from '@/components/app-sidebar'
-import { authClient } from '@/lib/auth-client'
-import { useNavigate } from '@tanstack/react-router'
-import { LogOut } from 'lucide-react'
+import { getSession } from '@/lib/auth.functions'
 
 export const Route = createFileRoute('/_protected')({
+  beforeLoad: async ({ location }) => {
+    const session = await getSession()
+    if (!session) {
+      throw redirect({ to: '/login', search: { redirect: location.href } })
+    }
+    return { user: session.user }
+  },
   component: ProtectedLayout,
 })
 
 function ProtectedLayout() {
-  const navigate = useNavigate()
-
-  const handleLogout = async () => {
-    try {
-      await authClient.signOut()
-      navigate({ to: '/login' })
-    } catch (err) {
-      console.error('Logout error:', err)
-      navigate({ to: '/login' })
-    }
-  }
+  const { user } = Route.useRouteContext()
 
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar user={user} />
       <SidebarInset>
-        <header className="flex items-center justify-between border-b px-6 py-4 gap-4">
-          <SidebarTrigger />
-          <Button variant="destructive" size="sm" onClick={handleLogout}>
-            <LogOut className="size-4 mr-2" />
-            Logout
-          </Button>
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1 size-7" />
+          </div>
         </header>
-        <main className="flex-1 overflow-auto p-6">
+        <div className="flex flex-1 flex-col gap-4 p-4">
           <Outlet />
-        </main>
+        </div>
       </SidebarInset>
     </SidebarProvider>
   )

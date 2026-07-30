@@ -9,9 +9,11 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarRail,
 } from '@/components/ui/sidebar'
 import { BarChart3, MapPin, AlertTriangle, AlertCircle, Activity, Home, LayoutDashboard } from 'lucide-react'
 import { Link, useLocation } from '@tanstack/react-router'
+import { NavUser } from './nav-user'
 
 const menuItems = [
   {
@@ -37,16 +39,35 @@ const menuItems = [
   }
 ]
 
-export function AppSidebar() {
+type UserData = {
+  name: string
+  email: string
+  avatar?: string | null
+}
+
+type AppSidebarProps = {
+  user?: UserData
+}
+
+export function AppSidebar({ user }: AppSidebarProps) {
   const location = useLocation()
 
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-1">
-          <LayoutDashboard className="size-6 shrink-0" />
-          <span className="font-semibold text-base group-data-[collapsible=icon]:hidden">Prita</span>
-        </div>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" tooltip="Prita">
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                <LayoutDashboard className="size-4" />
+              </div>
+              <div className="flex flex-col gap-0.5 leading-none">
+                <span className="font-semibold">Prita</span>
+                <span className="text-xs text-muted-foreground">Dashboard</span>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
         {menuItems.map((group) => (
@@ -60,8 +81,8 @@ export function AppSidebar() {
                   return (
                     <SidebarMenuItem key={item.label}>
                       <Link to={item.to} className="no-underline">
-                        <SidebarMenuButton 
-                          isActive={isActive} 
+                        <SidebarMenuButton
+                          isActive={isActive}
                           tooltip={item.label}
                           className="cursor-pointer"
                         >
@@ -77,7 +98,18 @@ export function AppSidebar() {
           </SidebarGroup>
         ))}
       </SidebarContent>
-      <SidebarFooter />
+      <SidebarFooter>
+        {user && (
+          <NavUser
+            user={{
+              name: user.name,
+              email: user.email,
+              avatar: user.avatar ?? undefined,
+            }}
+          />
+        )}
+      </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   )
 }
