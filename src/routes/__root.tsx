@@ -26,8 +26,29 @@ export const Route = createRootRoute({
       },
     ],
   }),
+  notFoundComponent: NotFound,
   shellComponent: RootDocument,
 })
+
+function NotFound() {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white px-4">
+      <div className="text-center space-y-4">
+        <h1 className="text-6xl sm:text-8xl font-bold text-gray-900">404</h1>
+        <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Halaman Tidak Ditemukan</h2>
+        <p className="text-sm sm:text-base text-gray-500 max-w-md">
+          Maaf, halaman yang Anda cari tidak ditemukan atau telah dipindahkan.
+        </p>
+        <a
+          href="/"
+          className="inline-block mt-6 px-6 py-2.5 bg-gray-900 text-white text-sm rounded-md hover:bg-gray-800 transition-colors"
+        >
+          Kembali ke Beranda
+        </a>
+      </div>
+    </div>
+  )
+}
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
