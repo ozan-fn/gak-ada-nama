@@ -2,6 +2,10 @@ import { createFileRoute, useNavigate, Link, redirect } from '@tanstack/react-ro
 import { useState } from 'react'
 import { authClient } from '@/lib/auth-client'
 import { getSession } from '@/lib/auth.functions'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import googleIcon from '@/assets/icons/google.svg'
 
 type RegisterSearch = {
   redirect?: string
@@ -52,78 +56,117 @@ function Register() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
-        <div>
-          <h2 className="text-3xl font-bold text-center">Register</h2>
+    <div className="min-h-screen flex flex-col">
+      {/* Logo */}
+      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 md:top-8 md:left-8">
+        <div className="flex items-center gap-2">
+          <span className="text-lg sm:text-xl font-bold text-gray-900">Prita.</span>
         </div>
-        
-        <form onSubmit={handleRegister} className="mt-8 space-y-6">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
-          
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Name
-              </label>
-              <input
-                id="name"
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+      </div>
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+      {/* Register Form */}
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 py-16 sm:py-20">
+        <div className="w-full max-w-77.5 sm:max-w-87.5 md:max-w-95 space-y-5 sm:space-y-6">
+          <div className="space-y-1.5 sm:space-y-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Daftar</h1>
+
+            <p className="text-xs sm:text-sm text-gray-500">
+              Buat akun baru untuk memulai 🚀
+            </p>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Loading...' : 'Register'}
-          </button>
+          <form onSubmit={handleRegister} className="space-y-3.5 sm:space-y-4">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-md text-xs sm:text-sm">
+                {error}
+              </div>
+            )}
 
-          <div className="text-center text-sm">
-            <span className="text-gray-600">Already have an account? </span>
-            <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
-              Login
-            </Link>
-          </div>
-        </form>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-9 sm:h-10 gap-2 border-gray-300 hover:bg-gray-50 text-xs sm:text-sm"
+              disabled={loading}
+            >
+              <img src={googleIcon} alt="Google" className="w-4 h-4" />
+              Daftar dengan Google
+            </Button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-[10px] sm:text-xs">
+                <span className="bg-white px-2 text-gray-500">
+                  atau
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2.5 sm:space-y-3">
+              <div className="space-y-1 sm:space-y-1.5">
+                <Label htmlFor="name" className="text-gray-900 text-xs sm:text-sm">Nama</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="Nama lengkap"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="h-8 sm:h-9 border-gray-300 text-xs sm:text-sm"
+                />
+              </div>
+
+              <div className="space-y-1 sm:space-y-1.5">
+                <Label htmlFor="email" className="text-gray-900 text-xs sm:text-sm">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="prita@email.com"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-8 sm:h-9 border-gray-300 text-xs sm:text-sm"
+                />
+              </div>
+
+              <div className="space-y-1 sm:space-y-1.5">
+                <Label htmlFor="password" className="text-gray-900 text-xs sm:text-sm">Kata Sandi</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Minimal 8 karakter"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-8 sm:h-9 border-gray-300 text-xs sm:text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full mt-3 sm:mt-4 h-9 sm:h-10 bg-gray-900 hover:bg-gray-800 text-white text-xs sm:text-sm"
+            >
+              {loading ? "Memuat..." : "Daftar"}
+            </Button>
+
+            <p className="text-center text-[11px] sm:text-sm">
+              <span className="text-gray-500">
+                Sudah punya akun?
+              </span>{" "}
+              <Link
+                to="/login"
+                className="font-medium text-gray-900 hover:underline"
+              >
+                Masuk sekarang
+              </Link>
+            </p>
+          </form>
+        </div>
       </div>
     </div>
   )
