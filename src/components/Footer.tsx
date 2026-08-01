@@ -20,10 +20,10 @@ type FooterLinkGroup = {
 export function StickyFooter() {
 	return (
 		<footer
-			className="relative h-(--footer-height) w-full border-t border-gray-800 bg-gray-900 [--footer-height:380px]"
+			className="relative h-(--footer-height) w-full border-t border-neutral-800 bg-neutral-900 [--footer-height:380px]"
 			style={{ clipPath: "polygon(0% 0, 100% 0%, 100% 100%, 0 100%)" }}
 		>
-			<div className="fixed bottom-0 h-(--footer-height) w-full bg-gray-900 z-20">
+			<div className="fixed bottom-0 h-(--footer-height) w-full bg-neutral-900 z-20">
 				<div className="sticky top-[calc(100vh-var(--footer-height))] h-full overflow-y-auto">
 					<div className="relative mx-auto flex size-full max-w-6xl flex-col justify-between gap-5">
 						<div className="grid grid-cols-1 gap-8 px-4 pt-12 md:grid-cols-2 lg:grid-cols-4">
@@ -70,7 +70,7 @@ export function StickyFooter() {
 								</AnimatedContainer>
 							))}
 						</div>
-						<div className="flex flex-col items-center justify-between gap-2 border-t border-gray-800 p-4 text-gray-300 text-sm md:flex-row">
+						<div className="flex flex-col items-center justify-between gap-2 border-t border-neutral-800 p-4 text-gray-300 text-sm md:flex-row">
 							<p>
 								&copy; {new Date().getFullYear()} Prita All rights reserved.
 							</p>
