@@ -17,7 +17,7 @@ type FooterLinkGroup = {
 	links: FooterLink[];
 };
 
-export function StickyFooter() {
+export function Footer() {
 	return (
 		<footer
 			className="relative h-(--footer-height) w-full border-t border-neutral-800 bg-neutral-900 [--footer-height:380px]"

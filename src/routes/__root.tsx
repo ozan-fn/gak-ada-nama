@@ -4,6 +4,7 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 import { TooltipProvider } from '@/components/ui/tooltip'
 
 import appCss from '../styles.css?url'
+import maplibreCss from 'maplibre-gl/dist/maplibre-gl.css?url'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -23,6 +24,10 @@ export const Route = createRootRoute({
       {
         rel: 'stylesheet',
         href: appCss,
+      },
+      {
+        rel: 'stylesheet',
+        href: maplibreCss,
       },
     ],
   }),

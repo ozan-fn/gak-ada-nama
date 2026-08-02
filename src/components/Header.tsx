@@ -2,29 +2,31 @@ import { cn } from "@/lib/utils";
 import { useScroll } from "@/hooks/use-scroll";
 import { Button } from "@/components/ui/button";
 import { MobileNav } from "@/components/MobileNav";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 
 export const navLinks = [
   {
     label: "Fitur",
-    href: "#",
+    href: "/features",
   },
   {
     label: "Peta",
-    href: "#",
+    href: "/livemap",
   },
   {
     label: "Laporan",
-    href: "#",
+    href: "/reports",
   },
   {
     label: "Tentang",
-    href: "#",
+    href: "/about",
   }
 ];
 
 export function Header() {
   const scrolled = useScroll(10);
+  const router = useRouterState();
+  const isHome = router.location.pathname === '/' || router.location.pathname === '/_public/';
 
   return (
     <header
@@ -34,10 +36,12 @@ export function Header() {
     >
       <nav className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4">
         <span className={cn("font-semibold transition-colors duration-300", {
-          "text-gray-900": scrolled,
-          "text-white": !scrolled,
+          "text-gray-900": scrolled || !isHome,
+          "text-white": !scrolled && isHome,
         })}>
-          Prita.
+          <Link to="/">
+            Prita.
+          </Link>
         </span>
         <div className="hidden items-center gap-2 md:flex">
           {navLinks.map((link) => (
@@ -46,8 +50,8 @@ export function Header() {
               size="sm"
               variant="ghost"
               className={cn("transition-colors duration-300", {
-                "text-gray-900 hover:text-gray-900": scrolled,
-                "text-white hover:text-white hover:bg-white/10": !scrolled,
+                "text-gray-900 hover:text-gray-900": scrolled || !isHome,
+                "text-white hover:text-white hover:bg-white/10": !scrolled && isHome,
               })}
             >
               <Link to={link.href}>{link.label}</Link>
@@ -58,8 +62,8 @@ export function Header() {
               size="sm"
               variant="outline"
               className={cn("transition-colors duration-300", {
-                "border-gray-300 text-gray-900 hover:bg-gray-100": scrolled,
-                "border-white text-white hover:bg-white/10": !scrolled,
+                "border-gray-300 text-gray-900 hover:bg-gray-100": scrolled || !isHome,
+                "border-white text-white hover:bg-white/10": !scrolled && isHome,
               })}
             >
               Masuk
