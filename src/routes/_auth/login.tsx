@@ -35,6 +35,22 @@ function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const handleGoogleLogin = async () => {
+    setLoading(true)
+    setError('')
+
+    const { error } = await authClient.signIn.social({
+      provider: 'google',
+      callbackURL: search.redirect || '/dashboard',
+    })
+
+    if (error) {
+      setError(error.message || 'Google login failed')
+      setLoading(false)
+      return
+    }
+  }
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -87,6 +103,7 @@ function Login() {
               variant="outline"
               className="w-full h-9 sm:h-10 gap-2 border-gray-300 hover:bg-gray-50 text-xs sm:text-sm"
               disabled={loading}
+              onClick={handleGoogleLogin}
             >
               <img src={googleIcon} alt="Google" className="w-4 h-4" />
               Masuk dengan Google
