@@ -1,22 +1,29 @@
 import { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { Layers, Navigation, Minus, Plus, AlertTriangle } from "lucide-react";
+import { Layers, Navigation, Minus, Plus, Compass } from "lucide-react";
 import { useUserLocationMarker } from "#/hooks/use-user-marker";
 
-export default function DashboardMapCard() {
+export default function RiskMap() {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
 
   const [showLayers, setShowLayers] = useState(false);
+  const [bearing, setBearing] = useState(0);
 
-  const { locate, isLocating } = useUserLocationMarker(map, true);
+  const { locate, isLocating } = useUserLocationMarker(map);
 
-  const activeAlertsCount = 2;
+  const defaultView = {
+    center: [118.0, -2.5] as [number, number],
+    zoom: 4.5,
+    pitch: 0,
+    bearing: 0,
+  };
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
+
     map.current = new maplibregl.Map({
       container: mapContainer.current,
       style: {
@@ -36,19 +43,24 @@ export default function DashboardMapCard() {
           },
         ],
       },
-      center: [106.8456, -6.2088],
-      zoom: 12,
+      ...defaultView,
       maxBounds: [
         [94.5, -11.5],
         [141.5, 6.5],
       ],
       attributionControl: false,
     });
+
     map.current.addControl(
       new maplibregl.AttributionControl({ compact: true }),
-      "bottom-left",
+      "bottom-left"
     );
 
+    map.current.on("rotate", () => {
+      setBearing(map.current?.getBearing() ?? 0);
+    });
+
+    // Kunci ke lokasi user saat pertama kali dimuat
     map.current.once("load", () => {
       setTimeout(() => locate(), 500);
     });
@@ -64,6 +76,10 @@ export default function DashboardMapCard() {
     map.current.zoomTo(map.current.getZoom() + delta);
   };
 
+  const resetView = () => {
+    map.current?.easeTo({ ...defaultView, duration: 600 });
+  };
+
   return (
     <div
       ref={containerRef}
@@ -71,22 +87,7 @@ export default function DashboardMapCard() {
     >
       <div ref={mapContainer} className="h-full w-full" />
 
-      {/* Top Left Container: Active Alerts */}
-      <div className="absolute left-3 top-3 z-10 flex flex-col gap-2">
-        {activeAlertsCount > 0 && (
-          <button
-            type="button"
-            className="flex items-center gap-2 rounded-lg border border-white/40 bg-white/60 px-3 py-2 shadow-sm backdrop-blur-md transition-colors hover:bg-white/80"
-          >
-            <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-            <span className="text-xs font-medium text-neutral-800">
-              {activeAlertsCount} Active Weather Alerts
-            </span>
-          </button>
-        )}
-      </div>
-
-      {/* Top Right Controls: Layers, Locate Me */}
+      {/* Top Right Controls: Layers, Locate, Compass/Reset */}
       <div className="absolute right-3 top-3 z-10 flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">
         <div className="relative">
           <button
@@ -115,6 +116,19 @@ export default function DashboardMapCard() {
             className={`h-4 w-4 text-neutral-700 ${
               isLocating ? "animate-pulse" : ""
             }`}
+          />
+        </button>
+
+        <button
+          type="button"
+          onClick={resetView}
+          className="flex h-9 w-9 items-center justify-center transition-colors hover:bg-neutral-50"
+          aria-label="Reset arah"
+          title="Reset arah"
+        >
+          <Compass
+            className="h-4 w-4 text-neutral-700"
+            style={{ transform: `rotate(${-bearing}deg)` }}
           />
         </button>
       </div>

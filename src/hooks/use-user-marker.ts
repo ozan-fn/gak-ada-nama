@@ -3,6 +3,7 @@ import * as maplibregl from "maplibre-gl";
 
 export function useUserLocationMarker(
   mapRef: React.RefObject<maplibregl.Map | null>,
+  restrictBounds: boolean = false
 ) {
   const userMarker = useRef<maplibregl.Marker | null>(null);
   const watchId = useRef<number | null>(null);
@@ -53,6 +54,15 @@ export function useUserLocationMarker(
           });
         } else {
           userMarker.current.setLngLat([longitude, latitude]);
+        }
+
+        if (restrictBounds) {
+          // Limit the map to roughly 200km radius (approx 1.8 degrees)
+          const radiusInDeg = 1.8;
+          mapRef.current!.setMaxBounds([
+            [longitude - radiusInDeg, latitude - radiusInDeg],
+            [longitude + radiusInDeg, latitude + radiusInDeg],
+          ]);
         }
 
         setIsLocating(false);

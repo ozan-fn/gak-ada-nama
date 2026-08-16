@@ -1,7 +1,17 @@
 import {
+  Bell,
+  ChartNoAxesCombined,
+  ClipboardList,
+  History,
+  Home,
+  LayoutDashboard,
+  Map,
+  Plus,
+} from "lucide-react";
+import { Link, useLocation } from "@tanstack/react-router";
+import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -11,71 +21,66 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import {
-  BarChart3,
-  MapPin,
-  AlertTriangle,
-  AlertCircle,
-  Activity,
-  Home,
-  LayoutDashboard,
-} from "lucide-react";
-import { Link, useLocation } from "@tanstack/react-router";
-import { DashboardNav } from "./DashboardNav";
 
 const menuItems = [
   {
-    group: "Main",
-    items: [{ label: "Dashboard", icon: Home, to: "/dashboard" }],
-  },
-  {
-    group: "Reports",
+    group: "Utama",
     items: [
       {
-        label: "Total Reports",
-        icon: BarChart3,
-        to: "/dashboard/total-reports",
-      },
-      {
-        label: "Nearby Reports",
-        icon: MapPin,
-        to: "/dashboard/nearby-reports",
+        label: "Beranda",
+        icon: Home,
+        to: "/dashboard",
       },
     ],
   },
   {
-    group: "Monitoring",
+    group: "Jelajahi",
     items: [
       {
-        label: "Today's Risk",
-        icon: AlertTriangle,
-        to: "/dashboard/todays-risk",
+        label: "Peta Risiko",
+        icon: Map,
+        to: "/dashboard/risk-map",
       },
       {
-        label: "Active Warning",
-        icon: AlertCircle,
-        to: "/dashboard/active-warning",
+        label: "Peringatan",
+        icon: Bell,
+        to: "/dashboard/warnings",
+      },
+    ],
+  },
+  {
+    group: "Kontribusi",
+    items: [
+      {
+        label: "Buat Laporan",
+        icon: Plus,
+        to: "/dashboard/report",
       },
       {
-        label: "Recent Activity",
-        icon: Activity,
-        to: "/dashboard/recent-activity",
+        label: "Laporan Saya",
+        icon: ClipboardList,
+        to: "/dashboard/my-reports",
+      },
+    ],
+  },
+  {
+    group: "Wawasan",
+    items: [
+      {
+        label: "Dampak Risiko",
+        icon: ChartNoAxesCombined,
+        to: "/dashboard/impact-analysis",
+      },
+      {
+        label: "Aktivitas",
+        icon: History,
+        to: "/dashboard/activity",
       },
     ],
   },
 ];
 
-type UserData = {
-  name: string;
-  email: string;
-  avatar?: string | null;
-};
-
-type AppSidebarProps = {
-  user?: UserData;
-};
-
-export function AppSidebar({ user }: AppSidebarProps) {
+export function AppSidebar() {
   const location = useLocation();
 
   return (
@@ -89,7 +94,9 @@ export function AppSidebar({ user }: AppSidebarProps) {
               </div>
               <div className="flex flex-col gap-0.5 leading-none">
                 <span className="font-semibold">Prita</span>
-                <span className="text-xs text-muted-foreground">Dashboard</span>
+                <span className="text-xs text-muted-foreground">
+                  Intelijen Lingkungan
+                </span>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -124,17 +131,6 @@ export function AppSidebar({ user }: AppSidebarProps) {
           </SidebarGroup>
         ))}
       </SidebarContent>
-      <SidebarFooter>
-        {user && (
-          <DashboardNav
-            user={{
-              name: user.name,
-              email: user.email,
-              avatar: user.avatar ?? undefined,
-            }}
-          />
-        )}
-      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

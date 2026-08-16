@@ -3,6 +3,10 @@ import { useScroll } from "@/hooks/use-scroll";
 import { Button } from "@/components/ui/button";
 import { MobileNav } from "@/components/MobileNav";
 import { Link, useRouterState } from "@tanstack/react-router";
+import { useSession } from "#/lib/auth-client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useState, useRef, useEffect } from "react";
+import { LayoutDashboard, LogOut } from "lucide-react";
 
 export const navLinks = [
   {
@@ -27,6 +31,31 @@ export function Header() {
   const scrolled = useScroll(10);
   const router = useRouterState();
   const isHome = router.location.pathname === '/' || router.location.pathname === '/_public/';
+  const { data: session } = useSession();
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const user = session?.user;
+
+  const getInitials = (name?: string) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <header
@@ -73,27 +102,77 @@ export function Header() {
               </Button>
             ))}
           </div>
-          <Button
-            size="sm"
-            variant="outline"
-            className={cn("transition-colors duration-300", {
-              "border-border text-foreground hover:bg-muted bg-background": scrolled || !isHome,
-              "border-white/30 text-white hover:bg-white/10 bg-transparent": !scrolled && isHome,
-            })}
-          >
-            <Link to="/login">Masuk</Link>
-          </Button>
-          <Button 
-            size="sm"
-            className={cn("transition-colors duration-300", {
-              "": scrolled || !isHome,
-              "bg-white text-gray-900 hover:bg-white/90": !scrolled && isHome,
-            })}
-          >
-            <Link to="/register">Mulai Sekarang</Link>
-          </Button>
+
+          {user ? (
+            <div className="relative" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setShowDropdown(!showDropdown)}
+                className={cn(
+                  "flex items-center rounded-lg p-1 transition-colors",
+                  {
+                    "hover:bg-muted": scrolled || !isHome,
+                    "hover:bg-white/10": !scrolled && isHome,
+                  }
+                )}
+              >
+                <Avatar className="h-7 w-7 rounded-lg">
+                  <AvatarImage src={user.image ?? undefined} alt={user.name ?? "User"} />
+                  <AvatarFallback className="rounded-lg bg-sky-500 text-[11px] font-semibold text-white">
+                    {getInitials(user.name)}
+                  </AvatarFallback>
+                </Avatar>
+              </button>
+
+              {showDropdown && (
+                <div className="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-lg">
+                  <Link
+                    to="/dashboard"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-700 transition-colors hover:bg-neutral-50"
+                    onClick={() => setShowDropdown(false)}
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    Dashboard
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowDropdown(false);
+                      // TODO: Implement logout
+                    }}
+                    className="flex w-full items-center gap-3 border-t border-neutral-100 px-4 py-2.5 text-left text-sm text-red-600 transition-colors hover:bg-red-50"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                className={cn("transition-colors duration-300", {
+                  "border-border text-foreground hover:bg-muted bg-background": scrolled || !isHome,
+                  "border-white/30 text-white hover:bg-white/10 bg-transparent": !scrolled && isHome,
+                })}
+              >
+                <Link to="/login">Masuk</Link>
+              </Button>
+              <Button 
+                size="sm"
+                className={cn("transition-colors duration-300", {
+                  "": scrolled || !isHome,
+                  "bg-white text-gray-900 hover:bg-white/90": !scrolled && isHome,
+                })}
+              >
+                <Link to="/register">Mulai Sekarang</Link>
+              </Button>
+            </>
+          )}
         </div>
-        <MobileNav isHome={isHome} scrolled={scrolled} />
+        <MobileNav isHome={isHome} scrolled={scrolled} user={user} />
       </nav>
     </header>
   );

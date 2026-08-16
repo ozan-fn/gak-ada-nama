@@ -1,6 +1,19 @@
-import { CloudRain, MoreVertical, ArrowRight } from "lucide-react";
+import {
+  CloudRain,
+  MoreVertical,
+  ArrowRight,
+  Droplets,
+  Wind,
+  Gauge,
+} from "lucide-react";
 
 export default function WeatherInformation() {
+  const details = [
+    { icon: Droplets, label: "Kelembapan", value: "88%" },
+    { icon: Wind, label: "Kecepatan Angin", value: "15 km/jam" },
+    { icon: Gauge, label: "Tekanan Udara", value: "1010 hPa" },
+  ];
+
   return (
     <div className="flex h-full w-full flex-col justify-between bg-white p-5">
       {/* Top Section */}
@@ -8,7 +21,7 @@ export default function WeatherInformation() {
         <div className="flex items-center gap-4">
           {/* Weather Icon */}
           <div className="flex h-14 w-14 shrink-0 items-center justify-center">
-            <CloudRain className="h-12 w-12 text-sky-400" strokeWidth={1.5} />
+            <CloudRain className="h-12 w-12 text-blue-500" strokeWidth={2} />
           </div>
 
           {/* Temperature */}
@@ -23,7 +36,7 @@ export default function WeatherInformation() {
 
           {/* Weather Status */}
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-wider text-neutral-400">
+            <p className="text-[11px] font-medium text-neutral-400">
               Cuaca Saat Ini
             </p>
 
@@ -49,30 +62,16 @@ export default function WeatherInformation() {
       </p>
 
       {/* Weather Details */}
-      <div className="mt-4 grid grid-cols-3 gap-4">
-        {/* Humidity */}
-        <div>
-          <p className="text-[10px] font-medium uppercase tracking-wide text-neutral-400">
-            Kelembapan
-          </p>
-          <p className="mt-1 text-sm font-bold text-neutral-900">88%</p>
-        </div>
-
-        {/* Wind Speed */}
-        <div>
-          <p className="text-[10px] font-medium uppercase tracking-wide text-neutral-400">
-            Kecepatan Angin
-          </p>
-          <p className="mt-1 text-sm font-bold text-neutral-900">15 km/jam</p>
-        </div>
-
-        {/* Pressure */}
-        <div>
-          <p className="text-[10px] font-medium uppercase tracking-wide text-neutral-400">
-            Tekanan Udara
-          </p>
-          <p className="mt-1 text-sm font-bold text-neutral-900">1010 hPa</p>
-        </div>
+      <div className="mt-3 flex flex-col divide-y divide-neutral-100 border-t border-neutral-100">
+        {details.map(({ icon: Icon, label, value }) => (
+          <div key={label} className="flex items-center justify-between py-2">
+            <span className="flex items-center gap-2 text-xs text-neutral-500">
+              <Icon className="h-3.5 w-3.5 text-neutral-400" />
+              {label}
+            </span>
+            <span className="text-sm font-bold text-neutral-900">{value}</span>
+          </div>
+        ))}
       </div>
 
       {/* View Details */}

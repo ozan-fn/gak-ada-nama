@@ -36,8 +36,8 @@ export default function RegionalExtreme() {
         {/* Stats */}
         <div className="flex flex-col divide-y divide-neutral-200/60">
           <div className="flex items-center justify-between py-2.5">
-            <div className="flex items-center gap-2 text-neutral-600">
-              <Wind className="h-4 w-4" />
+            <div className="flex items-center gap-2">
+              <Wind className="h-4 w-4 text-teal-500" strokeWidth={2} />
               <span className="text-xs font-medium uppercase tracking-wider text-neutral-500">
                 Hembusan Angin Maks
               </span>
@@ -47,8 +47,8 @@ export default function RegionalExtreme() {
             </span>
           </div>
           <div className="flex items-center justify-between py-2.5">
-            <div className="flex items-center gap-2 text-neutral-600">
-              <CloudRain className="h-4 w-4" />
+            <div className="flex items-center gap-2">
+              <CloudRain className="h-4 w-4 text-blue-500" strokeWidth={2} />
               <span className="text-xs font-medium uppercase tracking-wider text-neutral-500">
                 Total Curah Hujan
               </span>
