@@ -1,43 +1,92 @@
 import { Activity, MoreVertical } from "lucide-react";
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  ReferenceLine,
+} from "recharts";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-
-const chartData = [
-  { month: "January", aqi: 45 },
-  { month: "February", aqi: 62 },
-  { month: "March", aqi: 51 },
-  { month: "April", aqi: 38 },
-  { month: "May", aqi: 55 },
-  { month: "June", aqi: 48 },
-  { month: "July", aqi: 42 },
-  { month: "August", aqi: 40 },
-  { month: "September", aqi: 45 },
-];
+import { useEnvironmentData } from "#/hooks/useEnvironmentData";
+import { ChartAQITrendSkeleton } from "./skeletons/ChartAQITrendSkeleton";
 
 const chartConfig = {
   aqi: {
-    label: "AQI",
+    label: "PM2.5",
     color: "hsl(142.1 76.2% 36.3%)",
     icon: Activity,
   },
 } satisfies ChartConfig;
 
-export function ChartAQITrend() {
+type LocationParams =
+  { latitude: number; longitude: number } | { city: string };
+
+type ChartAQITrendProps = {
+  location?: LocationParams;
+};
+
+export function ChartAQITrend({ location }: ChartAQITrendProps) {
+  const { aqi, loading } = useEnvironmentData(location);
+
+  if (loading || !aqi || !aqi.forecast) {
+    return <ChartAQITrendSkeleton />;
+  }
+
+  // Get today's date in Jakarta timezone (YYYY-MM-DD format)
+  const today = new Date();
+  const jakartaToday = new Date(
+    today.toLocaleString("en-US", { timeZone: "Asia/Jakarta" }),
+  );
+  const todayDateString = jakartaToday.toISOString().split("T")[0];
+
+  // Use PM2.5 forecast data (7 days)
+  const chartData = aqi.forecast.pm25.slice(0, 7).map((item) => {
+    const forecastDate = new Date(item.day);
+    const forecastDateString = forecastDate.toISOString().split("T")[0];
+    const dayName = forecastDate.toLocaleDateString("id-ID", {
+      weekday: "short",
+    });
+    const isToday = forecastDateString === todayDateString;
+
+    return {
+      day: dayName,
+      aqi: item.avg,
+      isToday,
+    };
+  });
+
+  const todayData = chartData.find((d) => d.isToday);
+
+  // Determine status based on current AQI
+  let status = "Baik";
+  let statusColor = "bg-emerald-50/90 border-emerald-100 text-emerald-600";
+
+  if (aqi.aqi > 100) {
+    status = "Tidak Sehat";
+    statusColor = "bg-red-50/90 border-red-100 text-red-600";
+  } else if (aqi.aqi > 50) {
+    status = "Sedang";
+    statusColor = "bg-amber-50/90 border-amber-100 text-amber-600";
+  }
+
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-neutral-200/60 px-4 py-2">
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-semibold text-neutral-900">
-            Air Quality Index (AQI) Trends
+            Tren Kualitas Udara (PM2.5)
           </h3>
-          <span className="rounded-sm border border-cyan-100 bg-cyan-50/90 px-2 py-0.5 text-[10px] font-medium text-cyan-400">
-            Normal
+          <span
+            className={`rounded-sm border px-2 py-0.5 text-[10px] font-medium ${statusColor}`}
+          >
+            {status}
           </span>
         </div>
         <button
@@ -51,7 +100,7 @@ export function ChartAQITrend() {
 
       {/* Chart Content */}
       <div className="flex-1 px-2 py-1 relative">
-        {/* Background diagonal pattern - CSS based */}
+        {/* Background diagonal pattern */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -103,7 +152,6 @@ export function ChartAQITrend() {
               stroke="hsl(var(--border))"
               opacity={0.5}
             />
-            {/* Data vertikal di kiri berdasarkan tinggi AQI */}
             <YAxis
               tickLine={false}
               axisLine={false}
@@ -113,13 +161,12 @@ export function ChartAQITrend() {
               tickCount={4}
             />
             <XAxis
-              dataKey="month"
+              dataKey="day"
               tickLine={false}
               axisLine={false}
               tickMargin={10}
               interval={0}
               tick={{ fontSize: 12 }}
-              tickFormatter={(value) => value.slice(0, 3)}
             />
             <ChartTooltip
               cursor={false}
@@ -132,6 +179,23 @@ export function ChartAQITrend() {
               stroke="var(--color-aqi)"
               strokeWidth={2}
             />
+            {/* Vertical line at today */}
+            {todayData && (
+              <ReferenceLine
+                x={todayData.day}
+                stroke="#ef4444"
+                strokeWidth={2}
+                strokeDasharray="4 4"
+                label={{
+                  value: "Hari ini",
+                  position: "top",
+                  offset: 10,
+                  fill: "#ef4444",
+                  fontSize: 11,
+                  fontWeight: 600,
+                }}
+              />
+            )}
           </AreaChart>
         </ChartContainer>
       </div>

@@ -7,31 +7,58 @@ import {
   ReferenceLine,
   Cell,
 } from "recharts";
+import { useEnvironmentData } from "#/hooks/useEnvironmentData";
+import { PrecipitationOverviewSkeleton } from "./skeletons/PrecipitationOverviewSkeleton";
 
-const precipitationData = [
-  { time: "06.00", mm: 0 },
-  { time: "07.00", mm: 0 },
-  { time: "08.00", mm: 1 },
-  { time: "09.00", mm: 1 },
-  { time: "10.00", mm: 2 },
-  { time: "11.00", mm: 3 },
-  { time: "12.00", mm: 4 },
-  { time: "13.00", mm: 6 },
-  { time: "14.00", mm: 4 },
-  { time: "15.00", mm: 2.5 },
-  { time: "16.00", mm: 2 },
-  { time: "17.00", mm: 3 },
-  { time: "18.00", mm: 2 },
-  { time: "19.00", mm: 1 },
-  { time: "20.00", mm: 1 },
-  { time: "21.00", mm: 1 },
-  { time: "22.00", mm: 1 },
-];
+type LocationParams =
+  { latitude: number; longitude: number } | { city: string };
 
-// Selalu ambil titik data paling akhir (paling kanan) sebagai "Sekarang"
-const nowPoint = precipitationData[precipitationData.length - 1];
+type PrecipitationOverviewProps = {
+  location?: LocationParams;
+};
 
-export default function PrecipitationOverview() {
+export default function PrecipitationOverview({
+  location,
+}: PrecipitationOverviewProps) {
+  const { weather, loading } = useEnvironmentData(location);
+
+  if (loading || !weather) {
+    return <PrecipitationOverviewSkeleton />;
+  }
+
+  // Get current hour in user's local timezone (auto-detect from browser)
+  const localNow = new Date();
+  const currentHour = localNow.getHours();
+  const currentTime = `${currentHour.toString().padStart(2, "0")}.00`;
+
+  // Get hourly precipitation data (24 hours window)
+  // Use 0.01 as minimum value so Recharts renders the bar (will style as gray)
+  const precipitationData = weather.hourly.precipitation
+    .slice(0, 24)
+    .map((precip: number, index: number) => {
+      const date = new Date(weather.hourly.time[index]);
+      const hour = date.getHours();
+      const actualMm = Math.round(precip * 10) / 10;
+      return {
+        time: `${hour.toString().padStart(2, "0")}.00`,
+        mm: actualMm === 0 ? 0.01 : actualMm, // Force 0.01 to show bar
+        actualMm: actualMm, // Keep actual value for coloring
+      };
+    });
+
+  // Generate dynamic ticks - show every 2 hours across the whole range
+  const dynamicTicks: string[] = [];
+  for (let i = 0; i < precipitationData.length; i += 2) {
+    dynamicTicks.push(precipitationData[i].time);
+  }
+
+  const totalRainToday = Math.round(weather.daily.rainSum[0] * 10) / 10;
+
+  // Find bar that matches current Jakarta hour
+  const nowPoint =
+    precipitationData.find((d) => d.time === currentTime) ||
+    precipitationData[0];
+
   return (
     <div className="flex h-full w-full flex-col justify-between p-4">
       {/* Bagian Atas: Judul & Subjudul */}
@@ -60,7 +87,9 @@ export default function PrecipitationOverview() {
           Total Curah Hujan
         </p>
         <div className="flex items-baseline gap-1.5">
-          <p className="text-2xl font-bold text-neutral-900">12,4 mm</p>
+          <p className="text-2xl font-bold text-neutral-900">
+            {totalRainToday} mm
+          </p>
           <span className="text-[11px] text-neutral-400">hari ini</span>
         </div>
       </div>
@@ -70,24 +99,28 @@ export default function PrecipitationOverview() {
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={precipitationData}
-            barSize={12}
+            barSize={18}
             margin={{ top: 20, right: 18, left: 0, bottom: 0 }}
           >
             <XAxis
               dataKey="time"
-              ticks={["08.00", "12.00", "16.00", "20.00"]}
+              ticks={dynamicTicks}
               axisLine={false}
               tickLine={false}
               tick={{ fontSize: 11, fill: "#a3a3a3" }}
               dy={8}
             />
             <Bar dataKey="mm" radius={[3, 3, 0, 0]}>
-              {precipitationData.map((entry) => (
-                <Cell
-                  key={entry.time}
-                  fill={entry.mm === 0 ? "#e5e5e5" : "hsl(199, 89%, 48%)"}
-                />
-              ))}
+              {precipitationData.map(
+                (entry: { time: string; mm: number; actualMm: number }) => (
+                  <Cell
+                    key={entry.time}
+                    fill={
+                      entry.actualMm <= 0 ? "#e5e5e5" : "hsl(199, 89%, 48%)"
+                    }
+                  />
+                ),
+              )}
             </Bar>
             <ReferenceLine
               x={nowPoint.time}

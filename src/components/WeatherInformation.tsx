@@ -5,13 +5,57 @@ import {
   Droplets,
   Wind,
   Gauge,
+  Cloud,
+  Sun,
 } from "lucide-react";
+import { useEnvironmentData } from "#/hooks/useEnvironmentData";
+import { WeatherInformationSkeleton } from "./skeletons/WeatherInformationSkeleton";
 
-export default function WeatherInformation() {
+type LocationParams =
+  { latitude: number; longitude: number } | { city: string };
+
+type WeatherInformationProps = {
+  location?: LocationParams;
+};
+
+export default function WeatherInformation({
+  location,
+}: WeatherInformationProps) {
+  const { weather, aqi, loading } = useEnvironmentData(location);
+
+  if (loading || !weather) {
+    return <WeatherInformationSkeleton />;
+  }
+
+  const temp = Math.round(weather.current.temperature);
+  const humidity = Math.round(weather.current.humidity);
+  const windSpeed = Math.round(weather.current.windSpeed * 3.6); // m/s to km/h
+  const pressure = aqi?.pressure || 1013;
+
+  // Determine weather condition
+  const isRaining = weather.current.precipitation > 0;
+  const isCloudy = weather.current.cloudCover > 70;
+
+  let weatherIcon = Sun;
+  let weatherLabel = "Cerah";
+  let iconColor = "text-amber-500";
+
+  if (isRaining) {
+    weatherIcon = CloudRain;
+    weatherLabel = "Hujan";
+    iconColor = "text-blue-500";
+  } else if (isCloudy) {
+    weatherIcon = Cloud;
+    weatherLabel = "Berawan";
+    iconColor = "text-neutral-500";
+  }
+
+  const WeatherIcon = weatherIcon;
+
   const details = [
-    { icon: Droplets, label: "Kelembapan", value: "88%" },
-    { icon: Wind, label: "Kecepatan Angin", value: "15 km/jam" },
-    { icon: Gauge, label: "Tekanan Udara", value: "1010 hPa" },
+    { icon: Droplets, label: "Kelembapan", value: `${humidity}%` },
+    { icon: Wind, label: "Kecepatan Angin", value: `${windSpeed} km/jam` },
+    { icon: Gauge, label: "Tekanan Udara", value: `${pressure} hPa` },
   ];
 
   return (
@@ -21,13 +65,13 @@ export default function WeatherInformation() {
         <div className="flex items-center gap-4">
           {/* Weather Icon */}
           <div className="flex h-14 w-14 shrink-0 items-center justify-center">
-            <CloudRain className="h-12 w-12 text-blue-500" strokeWidth={2} />
+            <WeatherIcon className={`h-12 w-12 ${iconColor}`} strokeWidth={2} />
           </div>
 
           {/* Temperature */}
           <div className="flex items-start">
             <span className="text-4xl font-bold tracking-tight text-neutral-900">
-              26
+              {temp}
             </span>
             <span className="ml-1 text-lg font-medium text-neutral-600">
               °C
@@ -41,7 +85,7 @@ export default function WeatherInformation() {
             </p>
 
             <h3 className="text-base font-bold text-neutral-800">
-              Hujan Deras
+              {weatherLabel}
             </h3>
           </div>
         </div>
