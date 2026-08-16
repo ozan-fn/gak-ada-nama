@@ -3,6 +3,8 @@ import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Layers, Navigation, Minus, Plus, AlertTriangle } from "lucide-react";
 import { useUserLocationMarker } from "#/hooks/use-user-marker";
+import { useUserLocation } from "#/hooks/useUserLocation";
+import { useAQIStations } from "#/hooks/useAQIStations";
 
 export default function DashboardMapCard() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -12,6 +14,14 @@ export default function DashboardMapCard() {
   const [showLayers, setShowLayers] = useState(false);
 
   const { locate, isLocating } = useUserLocationMarker(map, true);
+  const userLocation = useUserLocation();
+  
+  // Fetch AQI stations near user location (within 1000km radius, or show 3 nearest if none found)
+  const { stations, loading: stationsLoading } = useAQIStations({
+    userLat: userLocation.latitude,
+    userLon: userLocation.longitude,
+    radiusKm: 1000,
+  });
 
   const activeAlertsCount = 2;
 
@@ -58,6 +68,143 @@ export default function DashboardMapCard() {
       map.current = null;
     };
   }, [locate]);
+
+  // Add AQI visualization layer
+  useEffect(() => {
+    console.log("AQI Effect triggered:", { stationsLoading, stationsCount: stations.length });
+    
+    if (!map.current || stationsLoading || stations.length === 0) {
+      console.log("Skipping AQI layer:", { 
+        hasMap: !!map.current, 
+        stationsLoading, 
+        stationsCount: stations.length 
+      });
+      return;
+    }
+
+    const mapInstance = map.current;
+
+    // Wait for map to be ready
+    if (!mapInstance.isStyleLoaded()) {
+      console.log("Map style not loaded, waiting...");
+      mapInstance.once("styledata", () => {
+        console.log("Map style loaded, adding AQI layer");
+        addAQILayer();
+      });
+      return;
+    }
+
+    console.log("Adding AQI layer immediately");
+    addAQILayer();
+
+    function addAQILayer() {
+      if (!mapInstance) return;
+
+      // Remove existing layers if any
+      if (mapInstance.getLayer("aqi-heatmap")) mapInstance.removeLayer("aqi-heatmap");
+      if (mapInstance.getSource("aqi-stations")) mapInstance.removeSource("aqi-stations");
+
+      // Create GeoJSON from stations
+      const geojson = {
+        type: "FeatureCollection",
+        features: stations.map((station) => ({
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: [station.longitude, station.latitude],
+          },
+          properties: {
+            aqi: station.aqi,
+          },
+        })),
+      };
+
+      // Add source
+      mapInstance.addSource("aqi-stations", {
+        type: "geojson",
+        data: geojson as any,
+      });
+
+      // Calculate bounds to fit all stations
+      if (stations.length > 0) {
+        const bounds = new maplibregl.LngLatBounds();
+        stations.forEach((station) => {
+          bounds.extend([station.longitude, station.latitude]);
+        });
+        
+        // Fit map to show all stations with padding
+        mapInstance.fitBounds(bounds, {
+          padding: 100,
+          maxZoom: 10,
+          duration: 1000,
+        });
+      }
+
+      // Add heatmap layer (pollution gradient visualization)
+      mapInstance.addLayer({
+        id: "aqi-heatmap",
+        type: "heatmap",
+        source: "aqi-stations",
+        paint: {
+          // Weight based on AQI value (0-500 scale)
+          "heatmap-weight": [
+            "interpolate",
+            ["linear"],
+            ["get", "aqi"],
+            0, 0,
+            50, 0.2,
+            100, 0.4,
+            150, 0.6,
+            200, 0.8,
+            300, 1
+          ],
+          
+          // Intensity increases with zoom level
+          "heatmap-intensity": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            0, 0.5,
+            9, 1.5
+          ],
+          
+          // Color ramp - standard AQI colors
+          "heatmap-color": [
+            "interpolate",
+            ["linear"],
+            ["heatmap-density"],
+            0, "rgba(0, 0, 0, 0)",        // Transparent
+            0.1, "rgba(0, 228, 0, 0.4)",  // Good (green)
+            0.3, "rgba(255, 255, 0, 0.5)", // Moderate (yellow)
+            0.5, "rgba(255, 126, 0, 0.6)", // Unhealthy for Sensitive (orange)
+            0.7, "rgba(255, 0, 0, 0.7)",   // Unhealthy (red)
+            0.85, "rgba(153, 0, 76, 0.8)", // Very Unhealthy (purple)
+            1, "rgba(126, 0, 35, 0.9)"     // Hazardous (maroon)
+          ],
+          
+          // Radius of influence (pollution spread area)
+          "heatmap-radius": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            0, 40,   // Far zoom: larger spread
+            5, 60,
+            9, 100   // Close zoom: more defined areas
+          ],
+          
+          // Fade opacity at higher zoom levels
+          "heatmap-opacity": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            0, 0.8,
+            9, 0.7,
+            14, 0.4
+          ]
+        }
+      });
+    }
+  }, [stations, stationsLoading]);
 
   const handleZoom = (delta: number) => {
     if (!map.current) return;

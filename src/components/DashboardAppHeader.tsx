@@ -76,7 +76,7 @@ export default function DashboardAppHeader() {
               src={user?.image ?? undefined}
               alt={user?.name ?? "User"}
             />
-            <AvatarFallback className="rounded-lg bg-foreground text-[11px] font-semibold text-background">
+            <AvatarFallback className="rounded-lg bg-foreground text-[11px] font-semibold text-background" suppressHydrationWarning>
               {getInitials(user?.name)}
             </AvatarFallback>
           </Avatar>
