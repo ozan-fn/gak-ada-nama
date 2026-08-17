@@ -69,7 +69,7 @@ export default function RegionalExtreme({ location }: RegionalExtremeProps) {
           <div className="flex items-center justify-between py-2.5">
             <div className="flex items-center gap-2">
               <Wind className="h-4 w-4 text-teal-500" strokeWidth={2} />
-              <span className="text-xs font-medium uppercase tracking-wider text-neutral-500">
+              <span className="text-xs font-medium text-neutral-500">
                 Hembusan Angin Maks
               </span>
             </div>
@@ -80,7 +80,7 @@ export default function RegionalExtreme({ location }: RegionalExtremeProps) {
           <div className="flex items-center justify-between py-2.5">
             <div className="flex items-center gap-2">
               <CloudRain className="h-4 w-4 text-blue-500" strokeWidth={2} />
-              <span className="text-xs font-medium uppercase tracking-wider text-neutral-500">
+              <span className="text-xs font-medium text-neutral-500">
                 Total Curah Hujan
               </span>
             </div>

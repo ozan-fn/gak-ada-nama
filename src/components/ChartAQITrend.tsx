@@ -99,7 +99,7 @@ export function ChartAQITrend({ location }: ChartAQITrendProps) {
       </div>
 
       {/* Chart Content */}
-      <div className="flex-1 px-2 py-1 relative">
+      <div className="flex-1 px-2 py-1 relative min-h-[200px]">
         {/* Background diagonal pattern */}
         <div
           className="absolute inset-0 pointer-events-none"

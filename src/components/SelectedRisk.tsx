@@ -10,35 +10,23 @@ import { useUserLocation } from "#/hooks/useUserLocation";
 import { useEnvironmentData } from "#/hooks/useEnvironmentData";
 import { useDynamicBaseline } from "#/hooks/useDynamicBaseline";
 import { getRegionalBaseline } from "#/lib/regionalBaselines";
-import { Skeleton } from "#/components/ui/skeleton";
+import { SelectedRiskSkeleton } from "./skeletons/SelectedRiskSkeleton";
 
 export default function SelectedRisk() {
   const userLocation = useUserLocation();
   const { weather, aqi, loading } = useEnvironmentData(userLocation);
 
   // Fetch DYNAMIC baseline from real APIs (Open-Meteo + AQICN)
-  const { baseline: dynamicBaseline, loading: baselineLoading } = useDynamicBaseline(
-    userLocation.latitude,
-    userLocation.longitude,
-    userLocation.city
-  );
+  const { baseline: dynamicBaseline, loading: baselineLoading } =
+    useDynamicBaseline(
+      userLocation.latitude,
+      userLocation.longitude,
+      userLocation.city,
+    );
 
   // Loading state
   if (loading || userLocation.loading || !weather || !aqi) {
-    return (
-      <div className="flex h-full w-full flex-col bg-white p-6 rounded-lg">
-        <Skeleton className="h-6 w-48" />
-        <Skeleton className="mt-4 h-12 w-32" />
-        <Skeleton className="mt-3 h-16 w-full" />
-        <div className="mt-6 grid grid-cols-3 gap-3">
-          <Skeleton className="h-16" />
-          <Skeleton className="h-16" />
-          <Skeleton className="h-16" />
-        </div>
-        <Skeleton className="mt-6 h-24 w-full" />
-        <Skeleton className="mt-6 h-9 w-full" />
-      </div>
-    );
+    return <SelectedRiskSkeleton />;
   }
 
   // Use dynamic baseline if available, otherwise fallback to static regional baseline
@@ -50,11 +38,14 @@ export default function SelectedRisk() {
   if (dynamicBaseline && !baselineLoading) {
     // ✅ REAL historical data from APIs!
     NORMAL_TEMP = dynamicBaseline.temp;
-    NORMAL_AQI = dynamicBaseline.aqi;       // Local area median from nearby stations
+    NORMAL_AQI = dynamicBaseline.aqi; // Local area median from nearby stations
     NORMAL_HUMIDITY = dynamicBaseline.humidity;
-    
+
     // Convert rainSum (mm/day) to rough precipitation probability
-    NORMAL_RAIN_PROB = Math.min(95, Math.round(10 + dynamicBaseline.rainSum * 7));
+    NORMAL_RAIN_PROB = Math.min(
+      95,
+      Math.round(10 + dynamicBaseline.rainSum * 7),
+    );
   } else {
     // ⏳ Fallback to static baseline while loading
     const staticBaseline = getRegionalBaseline(userLocation.city);
@@ -113,9 +104,10 @@ export default function SelectedRisk() {
   ];
 
   // ponytail: fake reports for now, backend later
-  const reports = reportCount > 0 ? [] : [
-    { title: "Belum ada laporan dari komunitas", time: "—" },
-  ];
+  const reports =
+    reportCount > 0
+      ? []
+      : [{ title: "Belum ada laporan dari komunitas", time: "—" }];
 
   return (
     <div className="flex h-full w-full flex-col bg-white p-6 rounded-lg">
@@ -147,7 +139,9 @@ export default function SelectedRisk() {
             /100
           </span>
         </div>
-        <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${levelColor}`}>
+        <span
+          className={`rounded-full px-2.5 py-1 text-xs font-bold ${levelColor}`}
+        >
           Risiko {level}
         </span>
       </div>
@@ -165,7 +159,9 @@ export default function SelectedRisk() {
               <Icon className="h-3.5 w-3.5" />
               {label}
             </p>
-            <p className="mt-1.5 text-base font-bold text-neutral-900">{value}</p>
+            <p className="mt-1.5 text-base font-bold text-neutral-900">
+              {value}
+            </p>
           </div>
         ))}
       </div>

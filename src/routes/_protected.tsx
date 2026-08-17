@@ -16,11 +16,9 @@ export const Route = createFileRoute("/_protected")({
 });
 
 function ProtectedLayout() {
-  const { user } = Route.useRouteContext();
-
   return (
     <SidebarProvider>
-      <AppSidebar user={user} />
+      <AppSidebar />
       <SidebarInset className="flex flex-col overflow-hidden">
         <DashboardAppHeader />
         <div className="flex-1 overflow-auto bg-neutral-50/40 dark:bg-neutral-950/40">

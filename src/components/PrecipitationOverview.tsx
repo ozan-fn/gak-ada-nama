@@ -60,7 +60,7 @@ export default function PrecipitationOverview({
     precipitationData[0];
 
   return (
-    <div className="flex h-full w-full flex-col justify-between p-4">
+    <div className="flex h-full w-full flex-col justify-between p-4 min-h-[280px]">
       {/* Bagian Atas: Judul & Subjudul */}
       <div className="flex items-start justify-between">
         <div>

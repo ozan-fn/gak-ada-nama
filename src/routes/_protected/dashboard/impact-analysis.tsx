@@ -1,3 +1,4 @@
+import CurrentConditionAnalysis from "#/components/CurrentConditionAnalysis";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   AlertTriangle,
@@ -10,7 +11,6 @@ import {
   MapPin,
   ShieldAlert,
   Users,
-  Wind,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_protected/dashboard/impact-analysis")({
@@ -135,68 +135,7 @@ function ImpactAnalysisPage() {
           </section>
 
           {/* Current Condition */}
-          <section className="grid gap-3 md:grid-cols-2">
-            <div className="rounded-lg bg-white p-4 shadow-sm">
-              <div className="flex items-center gap-2">
-                <Wind className="h-4 w-4 text-emerald-500" />
-                <h2 className="text-sm font-semibold text-neutral-900">
-                  Kondisi Saat Ini
-                </h2>
-              </div>
-
-              <div className="mt-4 grid grid-cols-3 gap-4">
-                <div>
-                  <p className="text-[11px] uppercase tracking-wide text-neutral-400">
-                    Curah Hujan
-                  </p>
-                  <p className="mt-1 text-xl font-semibold text-neutral-900">
-                    82%
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[11px] uppercase tracking-wide text-neutral-400">
-                    Kualitas Udara
-                  </p>
-                  <p className="mt-1 text-xl font-semibold text-neutral-900">
-                    42 AQI
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[11px] uppercase tracking-wide text-neutral-400">
-                    Laporan
-                  </p>
-                  <p className="mt-1 text-xl font-semibold text-neutral-900">
-                    3
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-lg bg-white p-4 shadow-sm">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-neutral-400">
-                Tingkat Risiko
-              </p>
-
-              <div className="mt-2 flex items-end gap-2">
-                <span className="text-4xl font-semibold tracking-tight text-neutral-900">
-                  72
-                </span>
-                <span className="mb-1 text-sm text-neutral-400">/ 100</span>
-                <span className="mb-1 ml-2 text-sm font-medium text-red-500">
-                  Risiko Tinggi
-                </span>
-              </div>
-
-              <div className="mt-4 h-2 overflow-hidden rounded-full bg-neutral-100">
-                <div className="h-full w-[72%] rounded-full bg-red-500" />
-              </div>
-
-              <p className="mt-3 text-xs leading-relaxed text-neutral-500">
-                Tingkat risiko dipengaruhi oleh kondisi lingkungan dan laporan
-                komunitas yang tersedia.
-              </p>
-            </div>
-          </section>
+          <CurrentConditionAnalysis />
 
           {/* Scenario Timeline */}
           <section className="rounded-lg bg-white p-4 shadow-sm">
