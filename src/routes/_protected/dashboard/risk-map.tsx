@@ -1,14 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronDown, Clock, MapPin } from "lucide-react";
+import { Clock, MapPin } from "lucide-react";
 import RiskMap from "#/components/RiskMap";
 import SelectedRisk from "#/components/SelectedRisk";
+import { useUserLocation } from "#/hooks/useUserLocation";
+import { getIndonesianTimezone } from "#/lib/timezoneUtils";
+import { Skeleton } from "#/components/ui/skeleton";
 
 export const Route = createFileRoute("/_protected/dashboard/risk-map")({
   component: RouteComponent,
 });
 
-function useLocalTime() {
+function useLocalTime(longitude?: number | null) {
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -16,17 +19,20 @@ function useLocalTime() {
     return () => clearInterval(interval);
   }, []);
 
+  const timezone = getIndonesianTimezone(longitude);
+
   const time = now.toLocaleTimeString("id-ID", {
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: "Asia/Jakarta",
+    timeZone: timezone.zone,
   });
 
-  return `${time} WIB`;
+  return `${time} ${timezone.label}`;
 }
 
 function RouteComponent() {
-  const localTime = useLocalTime();
+  const location = useUserLocation();
+  const localTime = useLocalTime(location.longitude);
 
   return (
     <main className="min-h-[calc(100vh-3.5rem)]">
@@ -46,14 +52,18 @@ function RouteComponent() {
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
-              <button
-                type="button"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50/80 px-2.5 py-1.5 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-100"
-              >
-                <MapPin className="h-3.5 w-3.5 text-neutral-600" />
-                <span>Jakarta, ID</span>
-                <ChevronDown className="h-3.5 w-3.5 text-neutral-400" />
-              </button>
+              {/* Display Current Location */}
+              {location.loading ? (
+                <Skeleton className="h-8 w-32 rounded-lg" />
+              ) : (
+                <div 
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50/80 px-2.5 py-1.5 text-xs font-medium text-neutral-700"
+                  title={location.error ? `Fallback: ${location.error}` : "Lokasi Anda Saat Ini"}
+                >
+                  <MapPin className="h-3.5 w-3.5 text-neutral-600" />
+                  <span>{location.city}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -71,13 +81,18 @@ function RouteComponent() {
               Informasi Risiko
             </h2>
 
-            <div className="inline-flex items-center gap-1.5 rounded-md border border-neutral-200/80 bg-neutral-100/70 px-2.5 py-1 text-xs text-neutral-600 dark:border-neutral-800 dark:bg-neutral-800/60 dark:text-neutral-400">
-              <Clock className="h-3.5 w-3.5 text-neutral-600 dark:text-neutral-400" />
-              <span>Waktu lokal:</span>
-              <span className="font-semibold text-neutral-800 dark:text-neutral-200">
-                {localTime}
-              </span>
-            </div>
+            {/* Local Time Pill */}
+            {location.loading ? (
+              <Skeleton className="h-7 w-36 rounded-md" />
+            ) : (
+              <div className="inline-flex items-center gap-1.5 rounded-md border border-neutral-200/80 bg-neutral-100/70 px-2.5 py-1 text-xs text-neutral-600 dark:border-neutral-800 dark:bg-neutral-800/60 dark:text-neutral-400">
+                <Clock className="h-3.5 w-3.5 text-neutral-600 dark:text-neutral-400" />
+                <span>Waktu lokal:</span>
+                <span className="font-semibold text-neutral-800 dark:text-neutral-200">
+                  {localTime}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Selection panel */}

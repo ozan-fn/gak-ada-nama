@@ -6,23 +6,115 @@ import {
   FileText,
   ChevronRight,
 } from "lucide-react";
+import { useUserLocation } from "#/hooks/useUserLocation";
+import { useEnvironmentData } from "#/hooks/useEnvironmentData";
+import { useDynamicBaseline } from "#/hooks/useDynamicBaseline";
+import { getRegionalBaseline } from "#/lib/regionalBaselines";
+import { Skeleton } from "#/components/ui/skeleton";
 
 export default function SelectedRisk() {
-  const regionName = "Kelurahan Cempaka Putih";
-  const score = 72;
-  const level = "Tinggi";
-  const updatedAt = "10 menit lalu";
+  const userLocation = useUserLocation();
+  const { weather, aqi, loading } = useEnvironmentData(userLocation);
+
+  // Fetch DYNAMIC baseline from real APIs (Open-Meteo + AQICN)
+  const { baseline: dynamicBaseline, loading: baselineLoading } = useDynamicBaseline(
+    userLocation.latitude,
+    userLocation.longitude,
+    userLocation.city
+  );
+
+  // Loading state
+  if (loading || userLocation.loading || !weather || !aqi) {
+    return (
+      <div className="flex h-full w-full flex-col bg-white p-6 rounded-lg">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="mt-4 h-12 w-32" />
+        <Skeleton className="mt-3 h-16 w-full" />
+        <div className="mt-6 grid grid-cols-3 gap-3">
+          <Skeleton className="h-16" />
+          <Skeleton className="h-16" />
+          <Skeleton className="h-16" />
+        </div>
+        <Skeleton className="mt-6 h-24 w-full" />
+        <Skeleton className="mt-6 h-9 w-full" />
+      </div>
+    );
+  }
+
+  // Use dynamic baseline if available, otherwise fallback to static regional baseline
+  let NORMAL_TEMP: number;
+  let NORMAL_RAIN_PROB: number;
+  let NORMAL_AQI: number;
+  let NORMAL_HUMIDITY: number;
+
+  if (dynamicBaseline && !baselineLoading) {
+    // ✅ REAL historical data from APIs!
+    NORMAL_TEMP = dynamicBaseline.temp;
+    NORMAL_AQI = dynamicBaseline.aqi;       // Local area median from nearby stations
+    NORMAL_HUMIDITY = dynamicBaseline.humidity;
+    
+    // Convert rainSum (mm/day) to rough precipitation probability
+    NORMAL_RAIN_PROB = Math.min(95, Math.round(10 + dynamicBaseline.rainSum * 7));
+  } else {
+    // ⏳ Fallback to static baseline while loading
+    const staticBaseline = getRegionalBaseline(userLocation.city);
+    NORMAL_TEMP = staticBaseline.temp;
+    NORMAL_RAIN_PROB = staticBaseline.rainProb;
+    NORMAL_AQI = staticBaseline.aqi;
+    NORMAL_HUMIDITY = staticBaseline.humidity;
+  }
+
+  // Current values
+  const temp = Math.round(weather.current.temperature);
+  const rainProb = Math.round(weather.daily.precipitationProbability[0] || 0);
+  const aqiValue = aqi.aqi;
+  const humidity = Math.round(weather.current.humidity);
+
+  // Anomaly detection
+  const tempAnomaly = temp - NORMAL_TEMP;
+  const rainAnomaly = rainProb - NORMAL_RAIN_PROB;
+  const aqiAnomaly = aqiValue - NORMAL_AQI;
+  const humidityAnomaly = humidity - NORMAL_HUMIDITY;
+
+  // Environmental Risk calculation (weighted composite)
+  const tempRisk = Math.abs(tempAnomaly) * 2;
+  const rainRisk = Math.max(0, rainAnomaly) * 1.5;
+  const aqiRisk = Math.max(0, aqiAnomaly) * 0.8;
+  const humidityRisk = Math.abs(humidityAnomaly) * 0.5;
+
+  const score = Math.min(
+    100,
+    Math.round(tempRisk + rainRisk + aqiRisk + humidityRisk),
+  );
+
+  // Calculate risk level
+  let level = "Rendah";
+  let levelColor = "bg-emerald-50 text-emerald-500";
+
+  if (score >= 70) {
+    level = "Tinggi";
+    levelColor = "bg-red-50 text-red-500";
+  } else if (score >= 50) {
+    level = "Sedang";
+    levelColor = "bg-amber-50 text-amber-500";
+  } else if (score >= 30) {
+    level = "Sedang";
+    levelColor = "bg-amber-50 text-amber-500";
+  }
+
+  const regionName = userLocation.city || "Wilayah Anda";
+  const reportCount = 0; // ponytail: will fetch from backend later
+  const updatedAt = "Baru saja";
 
   const conditions = [
-    { icon: CloudRain, label: "Curah Hujan", value: "82%" },
-    { icon: Thermometer, label: "Suhu", value: "34°C" },
-    { icon: Wind, label: "Kualitas Udara", value: "42 AQI" },
+    { icon: CloudRain, label: "Curah Hujan", value: `${rainProb}%` },
+    { icon: Thermometer, label: "Suhu", value: `${temp}°C` },
+    { icon: Wind, label: "Kualitas Udara", value: `${aqiValue} AQI` },
   ];
 
-  const reports = [
-    { title: "Genangan air di Jl. Percetakan Negara", time: "12 menit lalu" },
-    { title: "Angin kencang dilaporkan warga", time: "48 menit lalu" },
-    { title: "Kualitas udara menurun sejak siang", time: "2 jam lalu" },
+  // ponytail: fake reports for now, backend later
+  const reports = reportCount > 0 ? [] : [
+    { title: "Belum ada laporan dari komunitas", time: "—" },
   ];
 
   return (
@@ -55,7 +147,7 @@ export default function SelectedRisk() {
             /100
           </span>
         </div>
-        <span className="rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-500">
+        <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${levelColor}`}>
           Risiko {level}
         </span>
       </div>

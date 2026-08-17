@@ -6,6 +6,9 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useEnvironmentData } from "#/hooks/useEnvironmentData";
+import { useUserLocation } from "#/hooks/useUserLocation";
+import { useDynamicBaseline } from "#/hooks/useDynamicBaseline";
+import { getRegionalBaseline } from "#/lib/regionalBaselines";
 import { RegionRiskSkeleton } from "./skeletons/RegionRiskSkeleton";
 
 type LocationParams =
@@ -16,17 +19,53 @@ type RegionRiskProps = {
 };
 
 export default function RegionRisk({ location }: RegionRiskProps) {
+  const userLocation = useUserLocation();
   const { weather, aqi, loading } = useEnvironmentData(location);
+
+  // Fetch DYNAMIC baseline from real APIs (Open-Meteo + AQICN)
+  const { baseline: dynamicBaseline, loading: baselineLoading } = useDynamicBaseline(
+    userLocation.latitude,
+    userLocation.longitude,
+    userLocation.city
+  );
 
   if (loading || !weather || !aqi) {
     return <RegionRiskSkeleton />;
   }
 
-  // Historical baselines for Jakarta (ponytail: hardcoded normals, DB later)
-  const NORMAL_TEMP = 28;
-  const NORMAL_RAIN_PROB = 30;
-  const NORMAL_AQI = 50;
-  const NORMAL_HUMIDITY = 75;
+  // Determine which city to use for baseline
+  let cityForBaseline: string | null = null;
+  
+  if (location && 'city' in location) {
+    cityForBaseline = location.city;
+  } else {
+    cityForBaseline = userLocation.city;
+  }
+
+  // Use dynamic baseline if available, otherwise fallback to static regional baseline
+  let NORMAL_TEMP: number;
+  let NORMAL_RAIN_PROB: number;
+  let NORMAL_AQI: number;
+  let NORMAL_HUMIDITY: number;
+
+  if (dynamicBaseline && !baselineLoading) {
+    // ✅ REAL historical data from APIs!
+    NORMAL_TEMP = dynamicBaseline.temp;
+    NORMAL_AQI = dynamicBaseline.aqi;       // Local area median from nearby stations
+    NORMAL_HUMIDITY = dynamicBaseline.humidity;
+    
+    // Convert rainSum (mm/day) to rough precipitation probability
+    // Formula: higher daily rainfall = higher probability of rain
+    // 0mm = ~10%, 5mm = ~50%, 10mm = ~80%, 20mm+ = ~95%
+    NORMAL_RAIN_PROB = Math.min(95, Math.round(10 + dynamicBaseline.rainSum * 7));
+  } else {
+    // ⏳ Fallback to static baseline while loading
+    const staticBaseline = getRegionalBaseline(cityForBaseline);
+    NORMAL_TEMP = staticBaseline.temp;
+    NORMAL_RAIN_PROB = staticBaseline.rainProb;
+    NORMAL_AQI = staticBaseline.aqi;
+    NORMAL_HUMIDITY = staticBaseline.humidity;
+  }
 
   // Current values
   const temp = Math.round(weather.current.temperature);

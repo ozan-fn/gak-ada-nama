@@ -1,10 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { Layers, Navigation, Minus, Plus, AlertTriangle } from "lucide-react";
+import {
+  Layers,
+  Navigation,
+  Minus,
+  Plus,
+  AlertTriangle,
+  Factory,
+  Thermometer,
+  CloudRain,
+  Wind,
+  Droplet,
+} from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { useUserLocationMarker } from "#/hooks/use-user-marker";
 import { useUserLocation } from "#/hooks/useUserLocation";
 import { useAQIStations } from "#/hooks/useAQIStations";
+import { useEnvironmentData } from "#/hooks/useEnvironmentData";
+import { useEnvironmentAlerts } from "#/hooks/useEnvironmentAlerts";
 
 export default function DashboardMapCard() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -15,7 +29,11 @@ export default function DashboardMapCard() {
 
   const { locate, isLocating } = useUserLocationMarker(map, true);
   const userLocation = useUserLocation();
-  
+
+  // Fetch environment data for alerts
+  const envData = useEnvironmentData(userLocation);
+  const alerts = useEnvironmentAlerts(envData);
+
   // Fetch AQI stations near user location (within 1000km radius, or show 3 nearest if none found)
   const { stations, loading: stationsLoading } = useAQIStations({
     userLat: userLocation.latitude,
@@ -23,7 +41,7 @@ export default function DashboardMapCard() {
     radiusKm: 1000,
   });
 
-  const activeAlertsCount = 2;
+  const activeAlertsCount = alerts.length;
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -71,14 +89,7 @@ export default function DashboardMapCard() {
 
   // Add AQI visualization layer
   useEffect(() => {
-    console.log("AQI Effect triggered:", { stationsLoading, stationsCount: stations.length });
-    
     if (!map.current || stationsLoading || stations.length === 0) {
-      console.log("Skipping AQI layer:", { 
-        hasMap: !!map.current, 
-        stationsLoading, 
-        stationsCount: stations.length 
-      });
       return;
     }
 
@@ -86,23 +97,22 @@ export default function DashboardMapCard() {
 
     // Wait for map to be ready
     if (!mapInstance.isStyleLoaded()) {
-      console.log("Map style not loaded, waiting...");
       mapInstance.once("styledata", () => {
-        console.log("Map style loaded, adding AQI layer");
         addAQILayer();
       });
       return;
     }
 
-    console.log("Adding AQI layer immediately");
     addAQILayer();
 
     function addAQILayer() {
       if (!mapInstance) return;
 
       // Remove existing layers if any
-      if (mapInstance.getLayer("aqi-heatmap")) mapInstance.removeLayer("aqi-heatmap");
-      if (mapInstance.getSource("aqi-stations")) mapInstance.removeSource("aqi-stations");
+      if (mapInstance.getLayer("aqi-heatmap"))
+        mapInstance.removeLayer("aqi-heatmap");
+      if (mapInstance.getSource("aqi-stations"))
+        mapInstance.removeSource("aqi-stations");
 
       // Create GeoJSON from stations
       const geojson = {
@@ -131,7 +141,7 @@ export default function DashboardMapCard() {
         stations.forEach((station) => {
           bounds.extend([station.longitude, station.latitude]);
         });
-        
+
         // Fit map to show all stations with padding
         mapInstance.fitBounds(bounds, {
           padding: 100,
@@ -151,57 +161,78 @@ export default function DashboardMapCard() {
             "interpolate",
             ["linear"],
             ["get", "aqi"],
-            0, 0,
-            50, 0.2,
-            100, 0.4,
-            150, 0.6,
-            200, 0.8,
-            300, 1
+            0,
+            0,
+            50,
+            0.2,
+            100,
+            0.4,
+            150,
+            0.6,
+            200,
+            0.8,
+            300,
+            1,
           ],
-          
+
           // Intensity increases with zoom level
           "heatmap-intensity": [
             "interpolate",
             ["linear"],
             ["zoom"],
-            0, 0.5,
-            9, 1.5
+            0,
+            0.5,
+            9,
+            1.5,
           ],
-          
+
           // Color ramp - standard AQI colors
           "heatmap-color": [
             "interpolate",
             ["linear"],
             ["heatmap-density"],
-            0, "rgba(0, 0, 0, 0)",        // Transparent
-            0.1, "rgba(0, 228, 0, 0.4)",  // Good (green)
-            0.3, "rgba(255, 255, 0, 0.5)", // Moderate (yellow)
-            0.5, "rgba(255, 126, 0, 0.6)", // Unhealthy for Sensitive (orange)
-            0.7, "rgba(255, 0, 0, 0.7)",   // Unhealthy (red)
-            0.85, "rgba(153, 0, 76, 0.8)", // Very Unhealthy (purple)
-            1, "rgba(126, 0, 35, 0.9)"     // Hazardous (maroon)
+            0,
+            "rgba(0, 0, 0, 0)", // Transparent
+            0.1,
+            "rgba(0, 228, 0, 0.4)", // Good (green)
+            0.3,
+            "rgba(255, 255, 0, 0.5)", // Moderate (yellow)
+            0.5,
+            "rgba(255, 126, 0, 0.6)", // Unhealthy for Sensitive (orange)
+            0.7,
+            "rgba(255, 0, 0, 0.7)", // Unhealthy (red)
+            0.85,
+            "rgba(153, 0, 76, 0.8)", // Very Unhealthy (purple)
+            1,
+            "rgba(126, 0, 35, 0.9)", // Hazardous (maroon)
           ],
-          
+
           // Radius of influence (pollution spread area)
           "heatmap-radius": [
             "interpolate",
             ["linear"],
             ["zoom"],
-            0, 40,   // Far zoom: larger spread
-            5, 60,
-            9, 100   // Close zoom: more defined areas
+            0,
+            40, // Far zoom: larger spread
+            5,
+            60,
+            9,
+            100, // Close zoom: more defined areas
           ],
-          
+
           // Fade opacity at higher zoom levels
           "heatmap-opacity": [
             "interpolate",
             ["linear"],
             ["zoom"],
-            0, 0.8,
-            9, 0.7,
-            14, 0.4
-          ]
-        }
+            0,
+            0.8,
+            9,
+            0.7,
+            14,
+            0.4,
+          ],
+        },
       });
     }
   }, [stations, stationsLoading]);
@@ -221,17 +252,62 @@ export default function DashboardMapCard() {
       {/* Top Left Container: Active Alerts */}
       <div className="absolute left-3 top-3 z-10 flex flex-col gap-2">
         {activeAlertsCount > 0 && (
-          <button
-            type="button"
-            className="flex items-center gap-2 rounded-lg border border-white/40 bg-white/60 px-3 py-2 shadow-sm backdrop-blur-md transition-colors hover:bg-white/80"
-          >
-            <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-            <span className="text-xs font-medium text-neutral-800">
-              {activeAlertsCount} Active Weather Alerts
-            </span>
-          </button>
+          <Link to="/dashboard/risk-map">
+            <button
+              type="button"
+              className="flex items-center gap-2 rounded-lg border border-white/40 bg-white/60 px-3 py-2 shadow-sm backdrop-blur-md transition-colors hover:bg-white/80"
+            >
+              <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+              <span className="text-xs font-medium text-neutral-800">
+                {activeAlertsCount} Active Alert
+                {activeAlertsCount > 1 ? "s" : ""}
+              </span>
+            </button>
+          </Link>
         )}
       </div>
+
+      {/* Bottom Left: Danger Summary */}
+      {alerts.length > 0 && (
+        <div className="absolute bottom-3 left-3 z-10 max-w-xs rounded-lg border border-neutral-200 bg-white/95 p-3 shadow-md backdrop-blur-sm">
+          <h3 className="mb-2 text-xs font-semibold text-neutral-800">
+            Dangers Nearby
+          </h3>
+          <div className="space-y-1.5">
+            {alerts.slice(0, 3).map((alert) => (
+              <div
+                key={`${alert.type}-${alert.severity}`}
+                className="flex items-start gap-2 text-xs"
+              >
+                <span className="shrink-0 mt-0.5">
+                  {alert.type === "aqi" ? (
+                    <Factory className="h-4 w-4 text-orange-500" />
+                  ) : alert.type === "temperature" ? (
+                    <Thermometer className="h-4 w-4 text-red-500" />
+                  ) : alert.type === "rain" ? (
+                    <CloudRain className="h-4 w-4 text-blue-500" />
+                  ) : alert.type === "wind" ? (
+                    <Wind className="h-4 w-4 text-gray-600" />
+                  ) : alert.type === "humidity" ? (
+                    <Droplet className="h-4 w-4 text-cyan-500" />
+                  ) : (
+                    <AlertTriangle className="h-4 w-4 text-amber-500" />
+                  )}
+                </span>
+                <span className="flex-1 text-neutral-700">{alert.message}</span>
+              </div>
+            ))}
+          </div>
+          <Link to="/dashboard/risk-map">
+            <button
+              type="button"
+              className="mt-2 w-full rounded-md bg-sky-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-sky-600"
+            >
+              View Risk Map →
+            </button>
+          </Link>
+        </div>
+      )}
 
       {/* Top Right Controls: Layers, Locate Me */}
       <div className="absolute right-3 top-3 z-10 flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">
