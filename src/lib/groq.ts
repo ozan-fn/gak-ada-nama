@@ -1,9 +1,17 @@
 import Groq from "groq-sdk";
 
-if (!process.env.GROQ_API_KEY) {
-  throw new Error("GROQ_API_KEY belum dikonfigurasi di environment variable.");
-}
+let groqClient: Groq | null = null;
 
-export const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
+export function getGroqClient(): Groq {
+	const apiKey = process.env.GROQ_API_KEY;
+
+	if (!apiKey) {
+		throw new Error("GROQ_API_KEY_MISSING");
+	}
+
+	if (!groqClient) {
+		groqClient = new Groq({ apiKey });
+	}
+
+	return groqClient;
+}

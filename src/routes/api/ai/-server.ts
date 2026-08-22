@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { groq } from "#/lib/groq";
+import { getGroqClient } from "#/lib/groq";
 
 interface ChatPayload {
   prompt: string;
@@ -18,6 +18,8 @@ export const generateChatCompletion = createServerFn({ method: "POST" })
   })
   .handler(async ({ data }) => {
     try {
+      const groq = getGroqClient();
+
       // TODO: Add authentication check
       // const user = await getAuthUser();
       // if (!user) return { success: false, error: "Unauthorized" };

@@ -1,10 +1,8 @@
-import { betterAuth } from "better-auth"
-import { prismaAdapter } from "better-auth/adapters/prisma"
-import { tanstackStartCookies } from "better-auth/tanstack-start"
-import { PrismaClient } from "@prisma/client"
-import { ObjectId } from "mongodb"
-
-const prisma = new PrismaClient()
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import { tanstackStartCookies } from "better-auth/tanstack-start";
+import { ObjectId } from "mongodb";
+import { prisma } from "./prisma";
 
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
