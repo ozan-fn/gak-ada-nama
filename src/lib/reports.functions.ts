@@ -152,6 +152,48 @@ export const getPublicReportsFn = createServerFn({ method: "GET" })
 		return reports;
 	});
 
+export type ReportMapPin = {
+	id: string;
+	title: string;
+	category: string;
+	urgency: string;
+	locationName: string;
+	latitude: number;
+	longitude: number;
+};
+
+export const getReportMapPinsFn = createServerFn({ method: "GET" }).handler(
+	async (): Promise<ReportMapPin[]> => {
+		const reports = await prisma.report.findMany({
+			orderBy: {
+				createdAt: "desc",
+			},
+			take: 500,
+			select: {
+				id: true,
+				title: true,
+				category: true,
+				urgency: true,
+				locationName: true,
+				latitude: true,
+				longitude: true,
+			},
+		});
+
+		return reports.filter(
+			(report): report is ReportMapPin =>
+				typeof report.latitude === "number" &&
+				Number.isFinite(report.latitude) &&
+				report.latitude >= -90 &&
+				report.latitude <= 90 &&
+				typeof report.longitude === "number" &&
+				Number.isFinite(report.longitude) &&
+				report.longitude >= -180 &&
+				report.longitude <= 180,
+		);
+	},
+);
+
 export const getReportByIdFn = createServerFn({ method: "GET" })
 	.validator((id: string) => id)
 	.handler(async ({ data: id }) => {

@@ -1,13 +1,40 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Clock, MapPin } from "lucide-react";
 import RiskMap from "#/components/RiskMap";
 import SelectedRisk from "#/components/SelectedRisk";
 import { useUserLocation } from "#/hooks/useUserLocation";
 import { getIndonesianTimezone } from "#/lib/timezoneUtils";
+import { getReportMapPinsFn } from "#/lib/reports.functions";
 import { Skeleton } from "#/components/ui/skeleton";
 
+const REPORT_RADIUS_KM = 5;
+
+function calculateDistanceKm(
+  latitudeA: number,
+  longitudeA: number,
+  latitudeB: number,
+  longitudeB: number,
+) {
+  const earthRadiusKm = 6371;
+  const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
+  const latitudeDelta = toRadians(latitudeB - latitudeA);
+  const longitudeDelta = toRadians(longitudeB - longitudeA);
+  const startLatitude = toRadians(latitudeA);
+  const endLatitude = toRadians(latitudeB);
+
+  const haversine =
+    Math.sin(latitudeDelta / 2) ** 2 +
+    Math.cos(startLatitude) *
+      Math.cos(endLatitude) *
+      Math.sin(longitudeDelta / 2) ** 2;
+
+  return 2 * earthRadiusKm * Math.asin(Math.sqrt(haversine));
+}
+
 export const Route = createFileRoute("/_protected/dashboard/risk-map")({
+  loader: () => getReportMapPinsFn(),
+  staleTime: 30_000,
   component: RouteComponent,
 });
 
@@ -31,6 +58,7 @@ function useLocalTime(longitude?: number | null) {
 }
 
 function RouteComponent() {
+  const reportPins = Route.useLoaderData();
   const location = useUserLocation();
   const localTime = useLocalTime(location.longitude);
   
@@ -40,6 +68,25 @@ function RouteComponent() {
     longitude: number;
     city: string;
   } | null>(null);
+
+  const nearbyReports = useMemo(() => {
+    const userLatitude = location.latitude;
+    const userLongitude = location.longitude;
+    if (userLatitude === null || userLongitude === null) return [];
+
+    return reportPins
+      .map((report) => ({
+        ...report,
+        distanceKm: calculateDistanceKm(
+          userLatitude,
+          userLongitude,
+          report.latitude,
+          report.longitude,
+        ),
+      }))
+      .filter((report) => report.distanceKm <= REPORT_RADIUS_KM)
+      .sort((reportA, reportB) => reportA.distanceKm - reportB.distanceKm);
+  }, [location.latitude, location.longitude, reportPins]);
 
   return (
     <main className="min-h-[calc(100vh-3.5rem)]">
@@ -56,6 +103,12 @@ function RouteComponent() {
               <span className="text-xs font-medium text-neutral-800">
                 Visualisasi risiko lingkungan per wilayah
               </span>
+
+              {!location.loading && (
+                <span className="rounded-full border border-red-100 bg-white px-2 py-1 text-[11px] font-semibold text-red-600">
+                  {nearbyReports.length} laporan dalam {REPORT_RADIUS_KM} km
+                </span>
+              )}
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
@@ -76,7 +129,11 @@ function RouteComponent() {
 
           {/* Map */}
           <div className="h-[calc(100vh-9.5rem)] overflow-hidden rounded-lg bg-white shadow-sm">
-            <RiskMap onLocationSelect={setSelectedLocation} />
+            <RiskMap
+              reports={nearbyReports}
+              radiusKm={REPORT_RADIUS_KM}
+              onLocationSelect={setSelectedLocation}
+            />
           </div>
         </div>
 
