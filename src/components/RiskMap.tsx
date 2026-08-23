@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
@@ -19,6 +19,7 @@ import {
 } from "#/lib/aiSimulation";
 import { INDONESIA_LOCATIONS } from "#/lib/indonesiaLocations";
 import { findNearestCity } from "#/lib/geoUtils";
+import { useUserLocation } from "#/hooks/useUserLocation";
 
 const defaultView = {
   center: [118.0, -2.5] as [number, number],
@@ -39,9 +40,50 @@ function RiskMapContent({
   bearing: number;
   showAIPanel: boolean;
   setShowAIPanel: (show: boolean) => void;
-  onLocationSelect?: (location: { latitude: number; longitude: number; city: string }) => void;
+  onLocationSelect?: (location: {
+    latitude: number;
+    longitude: number;
+    city: string;
+  }) => void;
 }) {
-  const { map, alerts, userLocation, handleZoom, showLayers, setShowLayers, showRainRadar, setShowRainRadar } = context;
+  const userLocation = useUserLocation();
+  const hasFlownToUser = useRef(false);
+  
+  const {
+    map,
+    alerts,
+    locate,
+    handleZoom,
+    showLayers,
+    setShowLayers,
+    showRainRadar,
+    setShowRainRadar,
+  } = context;
+
+  // Auto-center to user location smoothly when available (ONCE only)
+  useEffect(() => {
+    if (
+      !map.current || 
+      !userLocation.latitude || 
+      !userLocation.longitude || 
+      userLocation.loading ||
+      hasFlownToUser.current
+    ) return;
+
+    hasFlownToUser.current = true;
+
+    // Smooth fly to user location
+    map.current.flyTo({
+      center: [userLocation.longitude, userLocation.latitude],
+      zoom: 12,
+      duration: 1500,
+    });
+
+    // Show user marker after a slight delay
+    setTimeout(() => {
+      locate(false);
+    }, 1600);
+  }, [map, userLocation.latitude, userLocation.longitude, userLocation.loading, locate]);
 
   // Add map click handler for location selection
   useEffect(() => {
@@ -49,10 +91,10 @@ function RiskMapContent({
 
     const handleMapClick = (e: maplibregl.MapMouseEvent) => {
       const { lng, lat } = e.lngLat;
-      
+
       // Find nearest city
       const nearestCity = findNearestCity(lat, lng, INDONESIA_LOCATIONS);
-      
+
       onLocationSelect({
         latitude: lat,
         longitude: lng,
@@ -66,8 +108,6 @@ function RiskMapContent({
       map.current?.off("click", handleMapClick);
     };
   }, [map, onLocationSelect]);
-
-
 
   const resetView = () => {
     map.current?.easeTo({ ...defaultView, duration: 600 });
@@ -91,29 +131,31 @@ function RiskMapContent({
           <button
             type="button"
             onClick={() => setShowLayers(!showLayers)}
-            className="flex h-9 w-9 items-center justify-center border-b border-neutral-200 transition-colors hover:bg-neutral-50"
+            className="flex h-9 w-9 items-center justify-center rounded-t-lg border-b border-neutral-200 transition-colors hover:bg-neutral-50"
             aria-label="Layers"
           >
             <Layers className="h-4 w-4 text-neutral-700" />
           </button>
           {showLayers && (
-            <div className="absolute left-0 -translate-x-full top-0 mr-6 w-52 rounded-lg border border-neutral-200 bg-white p-3 shadow-lg z-20">
-              <p className="mb-3 text-xs font-semibold text-neutral-700">Map Layers</p>
-              
+            <div className="absolute right-full top-0 mr-2 w-52 rounded-lg border border-neutral-200 bg-white p-3 shadow-lg z-20">
+              <p className="mb-3 text-xs font-semibold text-neutral-700">
+                Map Layers
+              </p>
+
               <label className="flex items-center gap-2 text-sm text-neutral-700 mb-2">
-                <input 
-                  type="checkbox" 
-                  checked 
-                  disabled 
+                <input
+                  type="checkbox"
+                  checked
+                  disabled
                   className="h-4 w-4 rounded border-neutral-300"
                 />
                 <span>AQI Heatmap</span>
               </label>
-              
+
               <label className="flex items-center gap-2 text-sm text-neutral-700 cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  checked={showRainRadar} 
+                <input
+                  type="checkbox"
+                  checked={showRainRadar}
                   onChange={(e) => setShowRainRadar(e.target.checked)}
                   className="h-4 w-4 rounded border-neutral-300 cursor-pointer"
                 />
@@ -139,7 +181,7 @@ function RiskMapContent({
         <button
           type="button"
           onClick={goToUserLocation}
-          className="flex h-9 w-9 items-center justify-center transition-colors hover:bg-neutral-50"
+          className="flex h-9 w-9 items-center justify-center rounded-b-lg transition-colors hover:bg-neutral-50"
           aria-label="Ke lokasi saya"
           title="Ke lokasi saya"
         >
@@ -286,7 +328,11 @@ function RiskMapContent({
 export default function RiskMap({
   onLocationSelect,
 }: {
-  onLocationSelect?: (location: { latitude: number; longitude: number; city: string }) => void;
+  onLocationSelect?: (location: {
+    latitude: number;
+    longitude: number;
+    city: string;
+  }) => void;
 }) {
   const [bearing, setBearing] = useState(0);
   const [showAIPanel, setShowAIPanel] = useState(false);
@@ -299,7 +345,7 @@ export default function RiskMap({
       initialBearing={defaultView.bearing}
       autoFitStations={false}
       autoZoomOnLocate={false}
-      autoLocateOnMount={true}
+      autoLocateOnMount={false}
       aqiRadiusKm={1000}
       onMapReady={(map) => {
         map.on("rotate", () => {

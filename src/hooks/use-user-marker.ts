@@ -8,6 +8,8 @@ export function useUserLocationMarker(
   const userMarker = useRef<maplibregl.Marker | null>(null);
   const watchId = useRef<number | null>(null);
   const [isLocating, setIsLocating] = useState(false);
+  const retryCount = useRef(0);
+  const maxRetries = 3;
 
   const createMarkerElement = useCallback(() => {
     const wrapper = document.createElement("div");
@@ -36,52 +38,63 @@ export function useUserLocationMarker(
     if (!mapRef.current || !navigator.geolocation) return;
     setIsLocating(true);
 
-    // Pantau posisi user secara realtime (bukan sekali ambil saja)
-    watchId.current = navigator.geolocation.watchPosition(
-      (position) => {
-        const { longitude, latitude } = position.coords;
+    // ponytail: getCurrentPosition + retry, no watchPosition drift
+    const attemptLocate = () => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { longitude, latitude } = position.coords;
 
-        if (!userMarker.current) {
-          const el = createMarkerElement();
-          userMarker.current = new maplibregl.Marker({ element: el })
-            .setLngLat([longitude, latitude])
-            .addTo(mapRef.current!);
+          if (!userMarker.current) {
+            const el = createMarkerElement();
+            userMarker.current = new maplibregl.Marker({ element: el })
+              .setLngLat([longitude, latitude])
+              .addTo(mapRef.current!);
 
-          if (shouldZoom) {
-            mapRef.current!.flyTo({
-              center: [longitude, latitude],
-              zoom: 11,
-              duration: 1500,
-            });
+            if (shouldZoom) {
+              mapRef.current!.flyTo({
+                center: [longitude, latitude],
+                zoom: 11,
+                duration: 1500,
+              });
+            }
+          } else {
+            userMarker.current.setLngLat([longitude, latitude]);
           }
-        } else {
-          userMarker.current.setLngLat([longitude, latitude]);
-        }
 
-        if (restrictBounds) {
-          // Limit the map to roughly 200km radius (approx 1.8 degrees)
-          const radiusInDeg = 1.8;
-          mapRef.current!.setMaxBounds([
-            [longitude - radiusInDeg, latitude - radiusInDeg],
-            [longitude + radiusInDeg, latitude + radiusInDeg],
-          ]);
-        }
+          if (restrictBounds) {
+            const radiusInDeg = 1.8;
+            mapRef.current!.setMaxBounds([
+              [longitude - radiusInDeg, latitude - radiusInDeg],
+              [longitude + radiusInDeg, latitude + radiusInDeg],
+            ]);
+          }
 
-        setIsLocating(false);
-      },
-      (error) => {
-        console.error("Geolocation error:", error);
-        alert(
-          "Tidak dapat mengakses lokasi Anda. Pastikan izin lokasi diaktifkan.",
-        );
-        setIsLocating(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      },
-    );
+          retryCount.current = 0;
+          setIsLocating(false);
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          
+          // Retry logic
+          if (retryCount.current < maxRetries) {
+            retryCount.current++;
+            console.log(`Retrying geolocation (${retryCount.current}/${maxRetries})...`);
+            setTimeout(() => attemptLocate(), 1000 * retryCount.current);
+          } else {
+            alert("Tidak dapat mengakses lokasi Anda. Pastikan izin lokasi diaktifkan.");
+            retryCount.current = 0;
+            setIsLocating(false);
+          }
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        },
+      );
+    };
+
+    attemptLocate();
   }, [mapRef, createMarkerElement, restrictBounds]);
 
   const stopWatching = useCallback(() => {
@@ -91,6 +104,7 @@ export function useUserLocationMarker(
     }
     userMarker.current?.remove();
     userMarker.current = null;
+    retryCount.current = 0;
   }, []);
 
   useEffect(() => {

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { ArrowRight, Clock, Download, MapPin } from "lucide-react";
 import DashboardMapCard from "#/components/DashboardMapCard";
 import { ChartAQITrend } from "#/components/ChartAQITrend";
@@ -40,10 +40,26 @@ function Dashboard() {
   const location = useUserLocation();
   const localTime = useLocalTime(location.longitude);
 
-  // Prepare location params for API calls
-  const locationParams = location.latitude && location.longitude
-    ? { latitude: location.latitude, longitude: location.longitude }
-    : { city: "jakarta" }; // Fallback if geolocation failed
+  // Stabilize location object to prevent unnecessary re-renders
+  const stableLocation = useMemo(
+    () => ({
+      latitude: location.latitude,
+      longitude: location.longitude,
+      city: location.city,
+      loading: location.loading,
+      error: location.error,
+    }),
+    [location.latitude, location.longitude, location.city, location.loading, location.error]
+  );
+
+  // Prepare location params for API calls (memoized)
+  const locationParams = useMemo(
+    () =>
+      location.latitude && location.longitude
+        ? { latitude: location.latitude, longitude: location.longitude }
+        : { city: "jakarta" },
+    [location.latitude, location.longitude]
+  );
 
   // Fetch environment data for alerts
   const envData = useEnvironmentData(location);
@@ -146,7 +162,7 @@ function Dashboard() {
 
           {/* Map Integration */}
           <div className="h-125 overflow-hidden rounded-lg bg-white shadow-sm">
-            <DashboardMapCard />
+            <DashboardMapCard userLocation={stableLocation} />
           </div>
           {/* Bottom */}
           <div className="flex flex-1 flex-col gap-3 sm:flex-row">

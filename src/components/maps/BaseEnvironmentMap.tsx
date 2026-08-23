@@ -31,6 +31,9 @@ interface BaseEnvironmentMapProps {
   initialPitch?: number;
   initialBearing?: number;
 
+  // Map bounds
+  maxBounds?: [[number, number], [number, number]]; // Lock map to specific area
+
   // Behavior flags
   autoFitStations?: boolean; // Auto-fit bounds to show all AQI stations
   autoZoomOnLocate?: boolean; // Zoom to user location on locate button click
@@ -49,6 +52,7 @@ export function BaseEnvironmentMap({
   initialZoom = 4.5,
   initialPitch = 0,
   initialBearing = 0,
+  maxBounds,
   autoFitStations = false,
   autoZoomOnLocate = false,
   autoLocateOnMount = false,
@@ -69,6 +73,8 @@ export function BaseEnvironmentMap({
   const [showLayers, setShowLayers] = useState(false);
   const [showRainRadar, setShowRainRadar] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const autoLocateTriggered = useRef(false);
+  const fitBoundsTriggered = useRef(false);
 
   const { locate, isLocating } = useUserLocationMarker(map, autoZoomOnLocate);
   const userLocation = useUserLocation();
@@ -120,7 +126,7 @@ export function BaseEnvironmentMap({
       zoom: initialZoom,
       pitch: initialPitch,
       bearing: initialBearing,
-      maxBounds: [
+      maxBounds: maxBounds || [
         [94.5, -11.5],
         [141.5, 6.5],
       ],
@@ -143,14 +149,16 @@ export function BaseEnvironmentMap({
       map.current = null;
       mapInitialized.current = false;
     };
-  }, [initialCenter, initialZoom, initialPitch, initialBearing]); // Only initialize once
+  }, [initialCenter, initialZoom, initialPitch, initialBearing, maxBounds]); // Only initialize once
 
-  // Trigger user location detection when map is ready
+  // Trigger user location detection when map is ready (ONCE only)
   useEffect(() => {
-    if (!map.current || !autoLocateOnMount || !mapLoaded) return;
+    if (!map.current || !autoLocateOnMount || !mapLoaded || autoLocateTriggered.current) return;
+    
+    autoLocateTriggered.current = true;
     
     setTimeout(() => {
-      locate();
+      locate(false); // Don't zoom, let fitBounds handle it
     }, 500);
     
     if (onMapReadyRef.current && map.current) {
@@ -230,8 +238,10 @@ export function BaseEnvironmentMap({
         data: geojson as any,
       });
 
-      // Auto-fit bounds if enabled (for DashboardMapCard)
-      if (autoFitStations && stations.length > 0) {
+      // Auto-fit bounds ONLY once on first station load, and ONLY if autoLocateOnMount is false
+      if (autoFitStations && stations.length > 0 && !fitBoundsTriggered.current && !autoLocateOnMount) {
+        fitBoundsTriggered.current = true;
+        
         const bounds = new maplibregl.LngLatBounds();
         stations.forEach((station) => {
           bounds.extend([station.longitude, station.latitude]);
@@ -330,7 +340,7 @@ export function BaseEnvironmentMap({
         },
       });
     }
-  }, [stations, stationsLoading, autoFitStations]);
+  }, [stations, stationsLoading, autoFitStations, autoLocateOnMount]);
 
   // Add Precipitation Heatmap visualization layer
   useEffect(() => {
