@@ -33,6 +33,13 @@ function useLocalTime(longitude?: number | null) {
 function RouteComponent() {
   const location = useUserLocation();
   const localTime = useLocalTime(location.longitude);
+  
+  // State for selected location from map click
+  const [selectedLocation, setSelectedLocation] = useState<{
+    latitude: number;
+    longitude: number;
+    city: string;
+  } | null>(null);
 
   return (
     <main className="min-h-[calc(100vh-3.5rem)]">
@@ -52,16 +59,16 @@ function RouteComponent() {
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
-              {/* Display Current Location */}
+              {/* Display Selected or Current Location */}
               {location.loading ? (
                 <Skeleton className="h-8 w-32 rounded-lg" />
               ) : (
                 <div 
                   className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50/80 px-2.5 py-1.5 text-xs font-medium text-neutral-700"
-                  title={location.error ? `Fallback: ${location.error}` : "Lokasi Anda Saat Ini"}
+                  title={selectedLocation ? "Lokasi Terpilih" : (location.error ? `Fallback: ${location.error}` : "Lokasi Anda Saat Ini")}
                 >
                   <MapPin className="h-3.5 w-3.5 text-neutral-600" />
-                  <span>{location.city}</span>
+                  <span>{selectedLocation?.city || location.city}</span>
                 </div>
               )}
             </div>
@@ -69,7 +76,7 @@ function RouteComponent() {
 
           {/* Map */}
           <div className="h-[calc(100vh-9.5rem)] overflow-hidden rounded-lg bg-white shadow-sm">
-            <RiskMap />
+            <RiskMap onLocationSelect={setSelectedLocation} />
           </div>
         </div>
 
@@ -95,8 +102,8 @@ function RouteComponent() {
             )}
           </div>
 
-          {/* Selection panel */}
-          <SelectedRisk />
+          {/* Selection panel - shows selected location or user location */}
+          <SelectedRisk selectedLocation={selectedLocation} />
         </div>
       </div>
     </main>

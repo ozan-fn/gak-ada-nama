@@ -32,7 +32,7 @@ export function useUserLocationMarker(
     return wrapper;
   }, []);
 
-  const locate = useCallback(() => {
+  const locate = useCallback((shouldZoom: boolean = true) => {
     if (!mapRef.current || !navigator.geolocation) return;
     setIsLocating(true);
 
@@ -47,11 +47,13 @@ export function useUserLocationMarker(
             .setLngLat([longitude, latitude])
             .addTo(mapRef.current!);
 
-          mapRef.current!.flyTo({
-            center: [longitude, latitude],
-            zoom: 11,
-            duration: 1500,
-          });
+          if (shouldZoom) {
+            mapRef.current!.flyTo({
+              center: [longitude, latitude],
+              zoom: 11,
+              duration: 1500,
+            });
+          }
         } else {
           userMarker.current.setLngLat([longitude, latitude]);
         }
@@ -80,7 +82,7 @@ export function useUserLocationMarker(
         maximumAge: 0,
       },
     );
-  }, [mapRef, createMarkerElement]);
+  }, [mapRef, createMarkerElement, restrictBounds]);
 
   const stopWatching = useCallback(() => {
     if (watchId.current !== null) {

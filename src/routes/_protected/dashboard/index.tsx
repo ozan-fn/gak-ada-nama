@@ -13,13 +13,6 @@ import { useEnvironmentAlerts } from "#/hooks/useEnvironmentAlerts";
 import { getIndonesianTimezone } from "#/lib/timezoneUtils";
 import { Skeleton } from "#/components/ui/skeleton";
 
-// Import skeletons
-import { ChartAQITrendSkeleton } from "#/components/skeletons/ChartAQITrendSkeleton";
-import { RegionalExtremeSkeleton } from "#/components/skeletons/RegionalExtremeSkeleton";
-import { PrecipitationOverviewSkeleton } from "#/components/skeletons/PrecipitationOverviewSkeleton";
-import { RegionRiskSkeleton } from "#/components/skeletons/RegionRiskSkeleton";
-import { WeatherInformationSkeleton } from "#/components/skeletons/WeatherInformationSkeleton";
-
 export const Route = createFileRoute("/_protected/dashboard/")({
   component: Dashboard,
 });
@@ -158,20 +151,12 @@ function Dashboard() {
           {/* Bottom */}
           <div className="flex flex-1 flex-col gap-3 sm:flex-row">
             {/* Regional Extremes */}
-            <div className="flex w-full items-center justify-center rounded-lg bg-white shadow-sm sm:w-[37.5%] transition-opacity duration-300">
-              {location.loading ? (
-                <RegionalExtremeSkeleton />
-              ) : (
-                <RegionalExtreme location={locationParams} />
-              )}
+            <div className="flex w-full items-center justify-center rounded-lg bg-white shadow-sm sm:w-[37.5%]">
+              <RegionalExtreme location={locationParams} />
             </div>
             {/* Chart AQI */}
-            <div className="w-full overflow-hidden rounded-lg bg-white shadow-sm sm:w-[62.5%] transition-opacity duration-300">
-              {location.loading ? (
-                <ChartAQITrendSkeleton />
-              ) : (
-                <ChartAQITrend location={locationParams} />
-              )}
+            <div className="w-full overflow-hidden rounded-lg bg-white shadow-sm sm:w-[62.5%]">
+              <ChartAQITrend location={locationParams} />
             </div>
           </div>
         </div>
@@ -198,28 +183,16 @@ function Dashboard() {
             )}
           </div>
           {/* Region Risk */}
-          <div className="flex items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm transition-opacity duration-300">
-            {location.loading ? (
-              <RegionRiskSkeleton />
-            ) : (
-              <RegionRisk location={locationParams} />
-            )}
+          <div className="flex items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm">
+            <RegionRisk location={locationParams} />
           </div>
           {/* Weather Information */}
-          <div className="flex items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm transition-opacity duration-300">
-            {location.loading ? (
-              <WeatherInformationSkeleton />
-            ) : (
-              <WeatherInformation location={locationParams} />
-            )}
+          <div className="flex items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm">
+            <WeatherInformation location={locationParams} />
           </div>
           {/* Precipitation Overview */}
-          <div className="flex items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm transition-opacity duration-300">
-            {location.loading ? (
-              <PrecipitationOverviewSkeleton />
-            ) : (
-              <PrecipitationOverview location={locationParams} />
-            )}
+          <div className="flex items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm">
+            <PrecipitationOverview location={locationParams} />
           </div>
         </div>
       </div>

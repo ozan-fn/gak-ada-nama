@@ -51,7 +51,6 @@ export function useUserLocation() {
       },
       (error) => {
         // Permission denied or error - fallback to Jakarta
-        console.error("Geolocation error:", error.message);
         setLocation({
           latitude: -6.2088,
           longitude: 106.8456,
