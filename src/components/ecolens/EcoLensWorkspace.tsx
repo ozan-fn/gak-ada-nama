@@ -40,6 +40,7 @@ export function EcoLensWorkspace() {
 
 	useEffect(() => {
 		mountedRef.current = true;
+		void handleStartCamera();
 
 		return () => {
 			mountedRef.current = false;
@@ -232,9 +233,8 @@ export function EcoLensWorkspace() {
 	};
 
 	const handleCreateAnother = () => {
-		camera.stopCamera();
 		clearDraft();
-		setStage("idle");
+		void handleStartCamera();
 	};
 
 	const handleLocationChange = (value: string) => {
@@ -267,8 +267,6 @@ export function EcoLensWorkspace() {
 				isCameraReady={camera.isReady}
 				location={location}
 				locationStatus={gps.status}
-				locationError={gps.error}
-				coordinates={gps.coordinates}
 				onLocationChange={handleLocationChange}
 				onRequestLocation={gps.requestLocation}
 				onStartCamera={() => void handleStartCamera()}

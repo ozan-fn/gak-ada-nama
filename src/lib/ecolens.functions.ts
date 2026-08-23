@@ -327,8 +327,11 @@ Wajib berikan output HANYA dalam format JSON valid (tanpa teks penjelasan pembuk
 						],
 					},
 				],
+				response_format: { type: "json_object" },
+				reasoning_format: "hidden",
+				reasoning_effort: "none",
 				temperature: 0.1,
-				max_completion_tokens: 1024,
+				max_completion_tokens: 1500,
 			});
 
 			const rawText = completion.choices[0]?.message?.content;
