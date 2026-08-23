@@ -5,23 +5,46 @@ import {
   Wind,
   FileText,
   ChevronRight,
+  Mountain,
 } from "lucide-react";
+import { useMemo } from "react";
 import { useUserLocation } from "#/hooks/useUserLocation";
 import { useEnvironmentData } from "#/hooks/useEnvironmentData";
 import { useDynamicBaseline } from "#/hooks/useDynamicBaseline";
 import { getRegionalBaseline } from "#/lib/regionalBaselines";
 import { SelectedRiskSkeleton } from "./skeletons/SelectedRiskSkeleton";
 
-export default function SelectedRisk() {
+type SelectedRiskProps = {
+  selectedLocation?: {
+    latitude: number;
+    longitude: number;
+    city: string;
+  } | null;
+};
+
+export default function SelectedRisk({ selectedLocation }: SelectedRiskProps) {
   const userLocation = useUserLocation();
-  const { weather, aqi, loading } = useEnvironmentData(userLocation);
+  
+  // Memoize activeLocation to prevent infinite re-renders
+  const activeLocation = useMemo(() => {
+    if (selectedLocation) {
+      return selectedLocation;
+    }
+    return {
+      latitude: userLocation.latitude,
+      longitude: userLocation.longitude,
+      city: userLocation.city,
+    };
+  }, [selectedLocation, userLocation.latitude, userLocation.longitude, userLocation.city]);
+
+  const { weather, aqi, loading } = useEnvironmentData(activeLocation);
 
   // Fetch DYNAMIC baseline from real APIs (Open-Meteo + AQICN)
   const { baseline: dynamicBaseline, loading: baselineLoading } =
     useDynamicBaseline(
-      userLocation.latitude,
-      userLocation.longitude,
-      userLocation.city,
+      activeLocation.latitude,
+      activeLocation.longitude,
+      activeLocation.city,
     );
 
   // Loading state
@@ -48,7 +71,7 @@ export default function SelectedRisk() {
     );
   } else {
     // ⏳ Fallback to static baseline while loading
-    const staticBaseline = getRegionalBaseline(userLocation.city);
+    const staticBaseline = getRegionalBaseline(activeLocation.city || "Jakarta, ID");
     NORMAL_TEMP = staticBaseline.temp;
     NORMAL_RAIN_PROB = staticBaseline.rainProb;
     NORMAL_AQI = staticBaseline.aqi;
@@ -60,6 +83,7 @@ export default function SelectedRisk() {
   const rainProb = Math.round(weather.daily.precipitationProbability[0] || 0);
   const aqiValue = aqi.aqi;
   const humidity = Math.round(weather.current.humidity);
+  const elevation = weather.elevation ? Math.round(weather.elevation) : null;
 
   // Anomaly detection
   const tempAnomaly = temp - NORMAL_TEMP;
@@ -93,7 +117,7 @@ export default function SelectedRisk() {
     levelColor = "bg-amber-50 text-amber-500";
   }
 
-  const regionName = userLocation.city || "Wilayah Anda";
+  const regionName = activeLocation.city || "Wilayah Anda";
   const reportCount = 0; // ponytail: will fetch from backend later
   const updatedAt = "Baru saja";
 
@@ -101,6 +125,7 @@ export default function SelectedRisk() {
     { icon: CloudRain, label: "Curah Hujan", value: `${rainProb}%` },
     { icon: Thermometer, label: "Suhu", value: `${temp}°C` },
     { icon: Wind, label: "Kualitas Udara", value: `${aqiValue} AQI` },
+    ...(elevation !== null ? [{ icon: Mountain, label: "Ketinggian", value: `${elevation} mdpl` }] : []),
   ];
 
   // ponytail: fake reports for now, backend later

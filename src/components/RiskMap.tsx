@@ -1,28 +1,24 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
   Layers,
-  Navigation,
   Minus,
   Plus,
   Compass,
+  Navigation,
   AlertTriangle as AlertTriangleIcon,
   CheckCircle,
   XCircle,
   AlertOctagon,
 } from "lucide-react";
-import { useUserLocationMarker } from "#/hooks/use-user-marker";
-import { useUserLocation } from "#/hooks/useUserLocation";
-import { useAQIStations } from "#/hooks/useAQIStations";
-import { useEnvironmentData } from "#/hooks/useEnvironmentData";
-import { useEnvironmentAlerts } from "#/hooks/useEnvironmentAlerts";
-import { calculateDistance } from "#/lib/geoUtils";
-import { addValidation, getValidationSummary } from "#/lib/validationStorage";
+import { BaseEnvironmentMap, type MapContext } from "./maps/BaseEnvironmentMap";
 import {
   generateRecommendation,
   getRecommendationColor,
 } from "#/lib/aiSimulation";
+import { INDONESIA_LOCATIONS } from "#/lib/indonesiaLocations";
+import { findNearestCity } from "#/lib/geoUtils";
 
 const defaultView = {
   center: [118.0, -2.5] as [number, number],
@@ -31,350 +27,66 @@ const defaultView = {
   bearing: 0,
 };
 
-export default function RiskMap() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<maplibregl.Map | null>(null);
+// Content component that can use hooks
+function RiskMapContent({
+  context,
+  bearing,
+  showAIPanel,
+  setShowAIPanel,
+  onLocationSelect,
+}: {
+  context: MapContext;
+  bearing: number;
+  showAIPanel: boolean;
+  setShowAIPanel: (show: boolean) => void;
+  onLocationSelect?: (location: { latitude: number; longitude: number; city: string }) => void;
+}) {
+  const { map, alerts, userLocation, handleZoom, showLayers, setShowLayers, showRainRadar, setShowRainRadar } = context;
 
-  const [showLayers, setShowLayers] = useState(false);
-  const [bearing, setBearing] = useState(0);
-  const [showAIPanel, setShowAIPanel] = useState(false);
-
-  const { locate, isLocating } = useUserLocationMarker(map, false);
-  const userLocation = useUserLocation();
-
-  // Fetch environment data and calculate dangers
-  const envData = useEnvironmentData(userLocation);
-  const alerts = useEnvironmentAlerts(envData);
-
-  // Fetch AQI stations for heatmap visualization
-  const { stations, loading: stationsLoading } = useAQIStations({
-    userLat: userLocation.latitude,
-    userLon: userLocation.longitude,
-    radiusKm: 1000,
-  });
-
+  // Add map click handler for location selection
   useEffect(() => {
-    if (!mapContainer.current || map.current) return;
+    if (!map.current || !onLocationSelect) return;
 
-    map.current = new maplibregl.Map({
-      container: mapContainer.current,
-      style: {
-        version: 8,
-        sources: {
-          osm: {
-            type: "raster",
-            tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-            tileSize: 256,
-          },
-        },
-        layers: [
-          {
-            id: "osm",
-            type: "raster",
-            source: "osm",
-          },
-        ],
-      },
-      ...defaultView,
-      maxBounds: [
-        [94.5, -11.5],
-        [141.5, 6.5],
-      ],
-      attributionControl: false,
-    });
+    const handleMapClick = (e: maplibregl.MapMouseEvent) => {
+      const { lng, lat } = e.lngLat;
+      
+      // Find nearest city
+      const nearestCity = findNearestCity(lat, lng, INDONESIA_LOCATIONS);
+      
+      onLocationSelect({
+        latitude: lat,
+        longitude: lng,
+        city: `${nearestCity.name}, ID`,
+      });
+    };
 
-    map.current.addControl(
-      new maplibregl.AttributionControl({ compact: true }),
-      "bottom-left",
-    );
-
-    map.current.on("rotate", () => {
-      setBearing(map.current?.getBearing() ?? 0);
-    });
-
-    // Show user location marker on load (without auto-zoom)
-    map.current.once("load", () => {
-      setTimeout(() => locate(), 500);
-    });
+    map.current.on("click", handleMapClick);
 
     return () => {
-      map.current?.remove();
-      map.current = null;
+      map.current?.off("click", handleMapClick);
     };
-  }, [locate]);
+  }, [map, onLocationSelect]);
 
-  // Add AQI visualization layer
-  useEffect(() => {
-    if (!map.current || stationsLoading || stations.length === 0) {
-      return;
-    }
 
-    const mapInstance = map.current;
-
-    // Wait for map to be ready
-    if (!mapInstance.isStyleLoaded()) {
-      mapInstance.once("styledata", () => {
-        addAQILayer();
-      });
-      return;
-    }
-
-    addAQILayer();
-
-    function addAQILayer() {
-      if (!mapInstance) return;
-
-      // Remove existing layers if any
-      if (mapInstance.getLayer("aqi-heatmap")) {
-        mapInstance.removeLayer("aqi-heatmap");
-      }
-      if (mapInstance.getSource("aqi-stations")) {
-        mapInstance.removeSource("aqi-stations");
-      }
-
-      // Create GeoJSON from stations
-      const geojson = {
-        type: "FeatureCollection",
-        features: stations.map((station) => ({
-          type: "Feature",
-          geometry: {
-            type: "Point",
-            coordinates: [station.longitude, station.latitude],
-          },
-          properties: {
-            aqi: station.aqi,
-          },
-        })),
-      };
-
-      // Add source
-      mapInstance.addSource("aqi-stations", {
-        type: "geojson",
-        data: geojson as any,
-      });
-
-      // Add heatmap layer (pollution gradient visualization)
-      mapInstance.addLayer({
-        id: "aqi-heatmap",
-        type: "heatmap",
-        source: "aqi-stations",
-        paint: {
-          "heatmap-weight": [
-            "interpolate",
-            ["linear"],
-            ["get", "aqi"],
-            0,
-            0,
-            50,
-            0.2,
-            100,
-            0.4,
-            150,
-            0.6,
-            200,
-            0.8,
-            300,
-            1,
-          ],
-          "heatmap-intensity": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            0,
-            0.5,
-            9,
-            1.5,
-          ],
-          "heatmap-color": [
-            "interpolate",
-            ["linear"],
-            ["heatmap-density"],
-            0,
-            "rgba(0, 0, 0, 0)",
-            0.1,
-            "rgba(0, 228, 0, 0.4)",
-            0.3,
-            "rgba(255, 255, 0, 0.5)",
-            0.5,
-            "rgba(255, 126, 0, 0.6)",
-            0.7,
-            "rgba(255, 0, 0, 0.7)",
-            0.85,
-            "rgba(153, 0, 76, 0.8)",
-            1,
-            "rgba(126, 0, 35, 0.9)",
-          ],
-          "heatmap-radius": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            0,
-            40,
-            5,
-            60,
-            9,
-            100,
-          ],
-          "heatmap-opacity": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            0,
-            0.8,
-            9,
-            0.7,
-            14,
-            0.4,
-          ],
-        },
-      });
-    }
-  }, [stations, stationsLoading]);
-
-  // Add interactive danger markers
-  useEffect(() => {
-    if (
-      !map.current ||
-      !userLocation.latitude ||
-      !userLocation.longitude ||
-      alerts.length === 0
-    ) {
-      return;
-    }
-
-    const mapInstance = map.current;
-    const markers: maplibregl.Marker[] = [];
-
-    // Create danger markers from alerts
-    alerts.forEach((alert, index) => {
-      // Estimate location based on alert type and user location
-      // In production, this would come from actual danger zone coordinates
-      const offset = 0.01 * (index + 1);
-      const dangerLat = userLocation.latitude! + (Math.random() - 0.5) * offset;
-      const dangerLon =
-        userLocation.longitude! + (Math.random() - 0.5) * offset;
-
-      const distance = calculateDistance(
-        userLocation.latitude!,
-        userLocation.longitude!,
-        dangerLat,
-        dangerLon,
-      );
-
-      // Get marker color based on severity
-      const markerColor =
-        alert.severity === "danger"
-          ? "#ef4444"
-          : alert.severity === "warning"
-            ? "#f59e0b"
-            : "#3b82f6";
-
-      // Get icon for alert type
-      const icon =
-        alert.type === "aqi"
-          ? "🏭"
-          : alert.type === "temperature"
-            ? "🌡️"
-            : alert.type === "rain"
-              ? "🌧️"
-              : alert.type === "wind"
-                ? "💨"
-                : "💧";
-
-      const markerId = `${alert.type}-${alert.severity}-${index}`;
-      const validationSummary = getValidationSummary(markerId);
-
-      // Create popup content
-      const popupContent = `
-        <div class="p-3 min-w-60">
-          <div class="flex items-center gap-2 mb-2">
-            <span class="text-2xl">${icon}</span>
-            <div class="flex-1">
-              <h3 class="font-semibold text-sm">${alert.message}</h3>
-              <p class="text-xs text-gray-500">${distance.toFixed(1)}km away</p>
-            </div>
-          </div>
-
-          <div class="flex gap-2 mb-2">
-            <button
-              onclick="window.confirmDanger('${markerId}')"
-              class="flex-1 px-2 py-1 text-xs rounded ${validationSummary.userValidated ? "bg-gray-200 text-gray-500" : "bg-green-500 text-white hover:bg-green-600"}"
-              ${validationSummary.userValidated ? "disabled" : ""}
-            >
-              ✓ Confirm (${validationSummary.confirmations})
-            </button>
-            <button
-              onclick="window.reportCleared('${markerId}')"
-              class="flex-1 px-2 py-1 text-xs rounded ${validationSummary.userValidated ? "bg-gray-200 text-gray-500" : "bg-blue-500 text-white hover:bg-blue-600"}"
-              ${validationSummary.userValidated ? "disabled" : ""}
-            >
-              ✗ Cleared (${validationSummary.clearances})
-            </button>
-          </div>
-
-          <button
-            onclick="window.showAIRecommendation('${markerId}')"
-            class="w-full px-3 py-1.5 text-xs font-medium rounded bg-purple-500 text-white hover:bg-purple-600"
-          >
-            🤖 AI Recommendation
-          </button>
-        </div>
-      `;
-
-      const popup = new maplibregl.Popup({ offset: 25 }).setHTML(popupContent);
-
-      const marker = new maplibregl.Marker({ color: markerColor })
-        .setLngLat([dangerLon, dangerLat])
-        .setPopup(popup)
-        .addTo(mapInstance);
-
-      markers.push(marker);
-    });
-
-    // Global functions for popup buttons
-    (window as any).confirmDanger = (markerId: string) => {
-      addValidation(markerId, "confirm");
-      alert("Danger confirmed! Thank you for validating.");
-      // Reload markers to update counts
-      window.location.reload();
-    };
-
-    (window as any).reportCleared = (markerId: string) => {
-      addValidation(markerId, "cleared");
-      alert("Reported as cleared! Thank you for updating.");
-      window.location.reload();
-    };
-
-    (window as any).showAIRecommendation = () => {
-      setShowAIPanel(true);
-    };
-
-    return () => {
-      markers.forEach((m) => {
-        m.remove();
-      });
-    };
-  }, [alerts, userLocation.latitude, userLocation.longitude]);
-
-  const handleZoom = (delta: number) => {
-    if (!map.current) return;
-    map.current.zoomTo(map.current.getZoom() + delta);
-  };
 
   const resetView = () => {
     map.current?.easeTo({ ...defaultView, duration: 600 });
   };
 
-  return (
-    <div
-      ref={containerRef}
-      className="relative h-full w-full overflow-hidden bg-white dark:bg-neutral-900"
-    >
-      <div ref={mapContainer} className="h-full w-full" />
+  const goToUserLocation = () => {
+    if (map.current && userLocation.latitude && userLocation.longitude) {
+      map.current.flyTo({
+        center: [userLocation.longitude, userLocation.latitude],
+        zoom: 14,
+        duration: 1000,
+      });
+    }
+  };
 
-      {/* Top Right Controls: Layers, Locate, Compass/Reset */}
-      <div className="absolute right-3 top-3 z-10 flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">
+  return (
+    <>
+      {/* Top Right Controls: Layers, Compass/Reset */}
+      <div className="absolute right-3 top-3 z-10 flex flex-col rounded-lg border border-neutral-200 bg-white shadow-sm">
         <div className="relative">
           <button
             type="button"
@@ -385,30 +97,36 @@ export default function RiskMap() {
             <Layers className="h-4 w-4 text-neutral-700" />
           </button>
           {showLayers && (
-            <div className="absolute right-full top-0 mr-2 w-48 rounded-lg border border-neutral-200 bg-white p-2 shadow-md">
-              <p className="text-xs text-neutral-600">Layer options</p>
+            <div className="absolute left-0 -translate-x-full top-0 mr-6 w-52 rounded-lg border border-neutral-200 bg-white p-3 shadow-lg z-20">
+              <p className="mb-3 text-xs font-semibold text-neutral-700">Map Layers</p>
+              
+              <label className="flex items-center gap-2 text-sm text-neutral-700 mb-2">
+                <input 
+                  type="checkbox" 
+                  checked 
+                  disabled 
+                  className="h-4 w-4 rounded border-neutral-300"
+                />
+                <span>AQI Heatmap</span>
+              </label>
+              
+              <label className="flex items-center gap-2 text-sm text-neutral-700 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={showRainRadar} 
+                  onChange={(e) => setShowRainRadar(e.target.checked)}
+                  className="h-4 w-4 rounded border-neutral-300 cursor-pointer"
+                />
+                <span>Rain Radar</span>
+              </label>
             </div>
           )}
         </div>
 
         <button
           type="button"
-          onClick={locate}
-          disabled={isLocating}
-          className="flex h-9 w-9 items-center justify-center border-b border-neutral-200 transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
-          aria-label="Locate me"
-        >
-          <Navigation
-            className={`h-4 w-4 text-neutral-700 ${
-              isLocating ? "animate-pulse" : ""
-            }`}
-          />
-        </button>
-
-        <button
-          type="button"
           onClick={resetView}
-          className="flex h-9 w-9 items-center justify-center transition-colors hover:bg-neutral-50"
+          className="flex h-9 w-9 items-center justify-center border-b border-neutral-200 transition-colors hover:bg-neutral-50"
           aria-label="Reset arah"
           title="Reset arah"
         >
@@ -416,6 +134,16 @@ export default function RiskMap() {
             className="h-4 w-4 text-neutral-700"
             style={{ transform: `rotate(${-bearing}deg)` }}
           />
+        </button>
+
+        <button
+          type="button"
+          onClick={goToUserLocation}
+          className="flex h-9 w-9 items-center justify-center transition-colors hover:bg-neutral-50"
+          aria-label="Ke lokasi saya"
+          title="Ke lokasi saya"
+        >
+          <Navigation className="h-4 w-4 text-neutral-700" />
         </button>
       </div>
 
@@ -446,7 +174,7 @@ export default function RiskMap() {
             {(() => {
               // Generate AI recommendation based on current dangers
               const dangersData = alerts.map((alert, idx) => {
-                const estimatedDistance = (idx + 1) * 1000; // Rough estimate
+                const estimatedDistance = (idx + 1) * 1000;
                 return {
                   type: alert.type,
                   value:
@@ -550,6 +278,44 @@ export default function RiskMap() {
           </div>
         </div>
       )}
-    </div>
+    </>
+  );
+}
+
+// Main component
+export default function RiskMap({
+  onLocationSelect,
+}: {
+  onLocationSelect?: (location: { latitude: number; longitude: number; city: string }) => void;
+}) {
+  const [bearing, setBearing] = useState(0);
+  const [showAIPanel, setShowAIPanel] = useState(false);
+
+  return (
+    <BaseEnvironmentMap
+      initialCenter={defaultView.center}
+      initialZoom={defaultView.zoom}
+      initialPitch={defaultView.pitch}
+      initialBearing={defaultView.bearing}
+      autoFitStations={false}
+      autoZoomOnLocate={false}
+      autoLocateOnMount={true}
+      aqiRadiusKm={1000}
+      onMapReady={(map) => {
+        map.on("rotate", () => {
+          setBearing(map.getBearing() ?? 0);
+        });
+      }}
+    >
+      {(context) => (
+        <RiskMapContent
+          context={context}
+          bearing={bearing}
+          showAIPanel={showAIPanel}
+          setShowAIPanel={setShowAIPanel}
+          onLocationSelect={onLocationSelect}
+        />
+      )}
+    </BaseEnvironmentMap>
   );
 }

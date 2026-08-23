@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 export type WeatherData = {
+  elevation?: number;
   current: {
     temperature: number;
     humidity: number;
@@ -95,6 +96,7 @@ export function useEnvironmentData(location?: LocationParams) {
         if (weatherRes.ok) {
           const raw = await weatherRes.json();
           weather = {
+            elevation: raw.elevation,
             current: {
               temperature: raw.current.temperature_2m,
               humidity: raw.current.relative_humidity_2m,

@@ -1,4 +1,4 @@
-import { AlertTriangle, MoreVertical, Wind, CloudRain } from "lucide-react";
+import { AlertTriangle, MoreVertical, Wind, CloudRain, Mountain } from "lucide-react";
 import { useEnvironmentData } from "#/hooks/useEnvironmentData";
 import { RegionalExtremeSkeleton } from "./skeletons/RegionalExtremeSkeleton";
 
@@ -18,6 +18,7 @@ export default function RegionalExtreme({ location }: RegionalExtremeProps) {
 
   const windSpeed = Math.round(weather.current.windSpeed * 3.6); // m/s to km/h
   const totalRain = Math.round(weather.daily.rainSum[0] * 10) / 10;
+  const elevation = weather.elevation ? Math.round(weather.elevation) : null;
 
   // Show alert if wind > 30 km/h or rain > 20mm
   const isExtreme = windSpeed > 30 || totalRain > 20;
@@ -88,6 +89,19 @@ export default function RegionalExtreme({ location }: RegionalExtremeProps) {
               {totalRain} mm
             </span>
           </div>
+          {elevation !== null && (
+            <div className="flex items-center justify-between py-2.5">
+              <div className="flex items-center gap-2">
+                <Mountain className="h-4 w-4 text-gray-600" strokeWidth={2} />
+                <span className="text-xs font-medium text-neutral-500">
+                  Ketinggian
+                </span>
+              </div>
+              <span className="text-sm font-semibold text-neutral-900">
+                {elevation} mdpl
+              </span>
+            </div>
+          )}
         </div>
 
         {/* CTA */}

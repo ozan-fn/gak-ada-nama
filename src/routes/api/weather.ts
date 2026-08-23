@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 type OpenMeteoResponse = {
   latitude: number;
   longitude: number;
+  elevation: number;
   timezone: string;
   current: {
     time: string;
