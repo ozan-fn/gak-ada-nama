@@ -49,4 +49,5 @@ export type AnalyzeEcoLensResult =
 			success: false;
 			code: AnalyzeEcoLensErrorCode;
 			message: string;
+			details?: string;
 	  };

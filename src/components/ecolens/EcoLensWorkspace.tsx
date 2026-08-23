@@ -101,12 +101,19 @@ export function EcoLensWorkspace() {
 				setCategory(result.analysis.category);
 				setDescription(result.analysis.suggestedDescription);
 			} else {
+				console.error("[EcoLens] Analisis otomatis gagal:", {
+					code: result.code,
+					message: result.message,
+					details: result.details,
+					rawResult: result,
+				});
 				setAnalysis(null);
 				setAnalysisError(result.message);
 			}
-		} catch {
+		} catch (error) {
 			if (latestAnalysisRequest.current !== requestId) return;
 
+			console.error("[EcoLens] Terjadi kesalahan saat memproses analisis:", error);
 			setAnalysis(null);
 			setAnalysisError(
 				"Analisis tidak dapat dijalankan saat ini. Kamu tetap dapat melengkapi draf secara manual.",
