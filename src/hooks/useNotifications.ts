@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useEnvironmentData } from "./useEnvironmentData";
 import { useUserLocation } from "./useUserLocation";
 import { useAQIStations } from "./useAQIStations";
+import { useNotificationSettings } from "./useNotificationSettings";
 
 export type NotificationType = "nearby_report" | "new_warning" | "report_verified" | "simulation_updated";
 
@@ -19,9 +20,8 @@ const MAX_NOTIFICATIONS = 10;
 const NOTIFICATION_TTL = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
 const CLEANUP_INTERVAL = 5 * 60 * 1000; // Run cleanup every 5 minutes
 
-// Thresholds untuk trigger warning
+// Thresholds untuk trigger warning (default fallback)
 const WARNING_THRESHOLDS = {
-  aqi: 100,
   temp: 35,
   rain: 80,
 };
@@ -34,6 +34,8 @@ export function useNotifications() {
     userLon: userLocation.longitude,
     radiusKm: 50,
   });
+
+  const { settings } = useNotificationSettings();
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
@@ -124,7 +126,7 @@ export function useNotifications() {
     const currentAQI = envData.aqi.aqi;
     const notifId = `aqi-warning-${userLocation.city}`;
 
-    if (currentAQI > WARNING_THRESHOLDS.aqi) {
+    if (settings.enableAqiWarnings && currentAQI > settings.aqiThreshold) {
       upsertNotification(
         notifId,
         "new_warning",
@@ -132,10 +134,10 @@ export function useNotifications() {
         `AQI ${currentAQI} di ${userLocation.city}. Batasi aktivitas outdoor.`
       );
     } else {
-      // Remove notification jika AQI sudah normal
+      // Remove notification jika AQI sudah normal atau fitur dinonaktifkan
       setNotifications((prev) => prev.filter((n) => n.id !== notifId));
     }
-  }, [envData.aqi, envData.loading, userLocation.city, upsertNotification]);
+  }, [envData.aqi, envData.loading, userLocation.city, upsertNotification, settings.enableAqiWarnings, settings.aqiThreshold]);
 
   // Monitor temperature - 1 notification per location
   useEffect(() => {
@@ -144,7 +146,7 @@ export function useNotifications() {
     const currentTemp = Math.round(envData.weather.current.temperature);
     const notifId = `temp-warning-${userLocation.city}`;
 
-    if (currentTemp >= WARNING_THRESHOLDS.temp) {
+    if (settings.enableTempWarnings && currentTemp >= WARNING_THRESHOLDS.temp) {
       upsertNotification(
         notifId,
         "new_warning",
@@ -154,7 +156,7 @@ export function useNotifications() {
     } else {
       setNotifications((prev) => prev.filter((n) => n.id !== notifId));
     }
-  }, [envData.weather, envData.loading, userLocation.city, upsertNotification]);
+  }, [envData.weather, envData.loading, userLocation.city, upsertNotification, settings.enableTempWarnings]);
 
   // Monitor rain probability - 1 notification per location
   useEffect(() => {
@@ -163,7 +165,7 @@ export function useNotifications() {
     const rainProb = Math.round(envData.weather.daily.precipitationProbability[0] || 0);
     const notifId = `rain-warning-${userLocation.city}`;
 
-    if (rainProb >= WARNING_THRESHOLDS.rain) {
+    if (settings.enableRainWarnings && rainProb >= WARNING_THRESHOLDS.rain) {
       upsertNotification(
         notifId,
         "new_warning",
@@ -173,14 +175,20 @@ export function useNotifications() {
     } else {
       setNotifications((prev) => prev.filter((n) => n.id !== notifId));
     }
-  }, [envData.weather, envData.loading, userLocation.city, upsertNotification]);
+  }, [envData.weather, envData.loading, userLocation.city, upsertNotification, settings.enableRainWarnings]);
 
   // Monitor nearby stations - max 3 nearby reports
   useEffect(() => {
     if (!stations || stations.length === 0) return;
 
+    if (!settings.enableNearbyReports) {
+      // Clear all nearby reports if disabled
+      setNotifications((prev) => prev.filter((n) => n.type !== "nearby_report"));
+      return;
+    }
+
     const nearbyHighAQI = stations
-      .filter((s) => s.aqi > WARNING_THRESHOLDS.aqi && s.distance < 10)
+      .filter((s) => s.aqi > settings.aqiThreshold && s.distance < 10)
       .slice(0, 3); // Max 3 nearby reports
 
     // Update or create notifications untuk nearby stations
@@ -202,7 +210,7 @@ export function useNotifications() {
         return nearbyHighAQI.some((s) => s.name === stationName);
       })
     );
-  }, [stations, upsertNotification]);
+  }, [stations, upsertNotification, settings.enableNearbyReports, settings.aqiThreshold]);
 
   // Mark notification as read
   const markAsRead = useCallback((id: string) => {

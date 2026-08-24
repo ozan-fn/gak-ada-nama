@@ -7,11 +7,13 @@ import {
   LayoutDashboard,
   Map,
   Plus,
+  Settings,
 } from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -21,6 +23,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { Separator } from "./ui/separator";
 
 const menuItems = [
   {
@@ -82,6 +85,7 @@ const menuItems = [
 
 export function AppSidebar() {
   const location = useLocation();
+  const isSettingsActive = location.pathname === "/dashboard/settings";
 
   return (
     <Sidebar collapsible="offcanvas">
@@ -131,6 +135,23 @@ export function AppSidebar() {
           </SidebarGroup>
         ))}
       </SidebarContent>
+      <SidebarFooter>
+        <Separator />
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <Link to="/dashboard/settings" className="no-underline">
+              <SidebarMenuButton
+                isActive={isSettingsActive}
+                tooltip="Pengaturan"
+                className="cursor-pointer"
+              >
+                <Settings />
+                <span>Pengaturan</span>
+              </SidebarMenuButton>
+            </Link>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

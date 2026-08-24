@@ -64,6 +64,10 @@ function RiskMapContent({
     setShowLayers,
     showRainRadar,
     setShowRainRadar,
+    aqiFilter,
+    setAqiFilter,
+    showMarkers,
+    setShowMarkers,
   } = context;
 
   // Auto-center to user location smoothly when available (ONCE only, if no search location)
@@ -159,7 +163,7 @@ function RiskMapContent({
                 <span>AQI Heatmap</span>
               </label>
 
-              <label className="flex items-center gap-2 text-sm text-neutral-700 cursor-pointer">
+              <label className="flex items-center gap-2 text-sm text-neutral-700 cursor-pointer mb-2">
                 <input
                   type="checkbox"
                   checked={showRainRadar}
@@ -168,6 +172,31 @@ function RiskMapContent({
                 />
                 <span>Rain Radar</span>
               </label>
+
+              <label className="flex items-center gap-2 text-sm text-neutral-700 cursor-pointer mb-3 pb-3 border-b border-neutral-100">
+                <input
+                  type="checkbox"
+                  checked={showMarkers}
+                  onChange={(e) => setShowMarkers(e.target.checked)}
+                  className="h-4 w-4 rounded border-neutral-300 cursor-pointer"
+                />
+                <span>Show Stations (Clusters)</span>
+              </label>
+
+              <p className="mb-2 text-xs font-semibold text-neutral-700">
+                Filter AQI Stations
+              </p>
+              <select
+                value={aqiFilter}
+                onChange={(e) => setAqiFilter(e.target.value as any)}
+                className="w-full rounded border border-neutral-300 bg-white p-1 text-sm text-neutral-700 focus:border-blue-500 focus:outline-none"
+              >
+                <option value="all">All Stations</option>
+                <option value="good">Good (0-50)</option>
+                <option value="moderate">Moderate (51-100)</option>
+                <option value="unhealthy">Unhealthy (101-200)</option>
+                <option value="hazardous">Hazardous (&gt;200)</option>
+              </select>
             </div>
           )}
         </div>
@@ -214,6 +243,31 @@ function RiskMapContent({
         >
           <Plus className="h-4 w-4 text-neutral-700" />
         </button>
+      </div>
+
+      {/* Map Legend (Bottom Left) */}
+      <div className="absolute bottom-6 left-3 z-10 flex flex-col rounded-lg border border-neutral-200 bg-white/90 p-3 shadow-sm backdrop-blur-sm">
+        <h4 className="mb-2 text-xs font-bold text-neutral-800">AQI Legend</h4>
+        <div className="flex flex-col gap-1 text-[10px] text-neutral-600">
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded-full bg-[#00e400] opacity-80" /> Good (0-50)
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded-full bg-[#ffff00] opacity-80" /> Moderate (51-100)
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded-full bg-[#ff7e00] opacity-80" /> Unhealthy for Sensitive (101-150)
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded-full bg-[#ff0000] opacity-80" /> Unhealthy (151-200)
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded-full bg-[#99004c] opacity-80" /> Very Unhealthy (201-300)
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded-full bg-[#7e0023] opacity-80" /> Hazardous (&gt;300)
+          </div>
+        </div>
       </div>
 
       {/* AI Recommendation Panel */}
