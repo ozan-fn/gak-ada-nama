@@ -7,7 +7,6 @@ generator client {
 
 datasource db {
   provider = "mongodb"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -23,6 +22,7 @@ model User {
   displayUsername  String?
   sessions         Session[]
   accounts         Account[]
+  reports          Report[]
 
   @@unique([email])
   // @@unique([username])
@@ -75,4 +75,57 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+model Report {
+  id               String           @id @default(auto()) @map("_id") @db.ObjectId
+  title            String
+  description      String
+  category         String           // "Sampah", "Drainase/Banjir", "Polusi", "Kebakaran", "Fasilitas Rusak", "Lainnya"
+  urgency          String           @default("Sedang") // "Rendah", "Sedang", "Tinggi", "Sangat Tinggi"
+  status           String           @default("PENDING") // PENDING, VERIFIED, IN_PROGRESS, RESOLVED, REJECTED
+  
+  // Lokasi
+  locationName     String
+  latitude         Float?
+  longitude        Float?
+  
+  // Foto/Media
+  images           String[]
+  
+  // Relasi ke User
+  userId           String           @db.ObjectId
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Relasi 1-to-1 ke EcoLensAnalysis
+  ecolensAnalysis  EcoLensAnalysis?
+
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([category])
+  @@map("report")
+}
+
+model EcoLensAnalysis {
+  id                   String   @id @default(auto()) @map("_id") @db.ObjectId
+  
+  // Relasi ke Report
+  reportId             String   @unique @db.ObjectId
+  report               Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  
+  // Data Hasil Prediksi AI
+  category             String
+  urgency              String
+  summary              String
+  suggestedDescription String
+  confidence           Float?
+  visionModel          String?
+  
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@map("ecolens_analysis")
 }

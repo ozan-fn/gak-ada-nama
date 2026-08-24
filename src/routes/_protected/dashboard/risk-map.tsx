@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Clock, MapPin } from "lucide-react";
-import RiskMap from "#/components/RiskMap";
+import RiskMap, { type NearbyReportPin } from "#/components/RiskMap";
 import SelectedRisk from "#/components/SelectedRisk";
 import { useUserLocation } from "#/hooks/useUserLocation";
 import { getIndonesianTimezone } from "#/lib/timezoneUtils";
+import { getReportMapPinsFn } from "#/lib/reports.functions";
 import { Skeleton } from "#/components/ui/skeleton";
 
 // Define search params schema
@@ -14,6 +15,30 @@ type RiskMapSearch = {
   city?: string;
 };
 
+const REPORT_RADIUS_KM = 5;
+
+function calculateDistanceKm(
+  latitudeA: number,
+  longitudeA: number,
+  latitudeB: number,
+  longitudeB: number,
+) {
+  const earthRadiusKm = 6371;
+  const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
+  const latitudeDelta = toRadians(latitudeB - latitudeA);
+  const longitudeDelta = toRadians(longitudeB - longitudeA);
+  const startLatitude = toRadians(latitudeA);
+  const endLatitude = toRadians(latitudeB);
+
+  const haversine =
+    Math.sin(latitudeDelta / 2) ** 2 +
+    Math.cos(startLatitude) *
+      Math.cos(endLatitude) *
+      Math.sin(longitudeDelta / 2) ** 2;
+
+  return 2 * earthRadiusKm * Math.asin(Math.sqrt(haversine));
+}
+
 export const Route = createFileRoute("/_protected/dashboard/risk-map")({
   validateSearch: (search: Record<string, unknown>): RiskMapSearch => {
     return {
@@ -22,6 +47,8 @@ export const Route = createFileRoute("/_protected/dashboard/risk-map")({
       city: typeof search.city === "string" ? search.city : undefined,
     };
   },
+  loader: () => getReportMapPinsFn(),
+  staleTime: 30_000,
   component: RouteComponent,
 });
 
@@ -45,17 +72,20 @@ function useLocalTime(longitude?: number | null) {
 }
 
 function RouteComponent() {
+  const reportPins = Route.useLoaderData();
   const location = useUserLocation();
   const localTime = useLocalTime(location.longitude);
   const navigate = useNavigate({ from: Route.fullPath });
   const { lat, lng, city } = Route.useSearch();
-  
+
   // State for selected location from map click or search
   const [selectedLocation, setSelectedLocation] = useState<{
     latitude: number;
     longitude: number;
     city: string;
   } | null>(null);
+  const [selectedReport, setSelectedReport] =
+    useState<NearbyReportPin | null>(null);
 
   // Sync search params to selectedLocation
   useEffect(() => {
@@ -65,6 +95,7 @@ function RouteComponent() {
         longitude: lng,
         city,
       });
+      setSelectedReport(null);
     }
   }, [lat, lng, city]);
 
@@ -75,12 +106,30 @@ function RouteComponent() {
     city: string;
   }) => {
     setSelectedLocation(loc);
+    setSelectedReport(null);
     // Update URL search params
     navigate({
       search: { lat: loc.latitude, lng: loc.longitude, city: loc.city },
       replace: true,
     });
   };
+
+  const nearbyReports = useMemo(() => {
+    if (!selectedLocation) return [];
+
+    return reportPins
+      .map((report) => ({
+        ...report,
+        distanceKm: calculateDistanceKm(
+          selectedLocation.latitude,
+          selectedLocation.longitude,
+          report.latitude,
+          report.longitude,
+        ),
+      }))
+      .filter((report) => report.distanceKm <= REPORT_RADIUS_KM)
+      .sort((reportA, reportB) => reportA.distanceKm - reportB.distanceKm);
+  }, [reportPins, selectedLocation]);
 
   return (
     <main className="min-h-[calc(100vh-3.5rem)]">
@@ -97,6 +146,12 @@ function RouteComponent() {
               <span className="text-xs font-medium text-neutral-800">
                 Visualisasi risiko lingkungan per wilayah
               </span>
+
+              {selectedLocation && (
+                <span className="rounded-full border border-red-100 bg-white px-2 py-1 text-[11px] font-semibold text-red-600">
+                  {nearbyReports.length} laporan dalam {REPORT_RADIUS_KM} km
+                </span>
+              )}
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
@@ -104,9 +159,15 @@ function RouteComponent() {
               {location.loading ? (
                 <Skeleton className="h-8 w-32 rounded-lg" />
               ) : (
-                <div 
+                <div
                   className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50/80 px-2.5 py-1.5 text-xs font-medium text-neutral-700"
-                  title={selectedLocation ? "Lokasi Terpilih" : (location.error ? `Fallback: ${location.error}` : "Lokasi Anda Saat Ini")}
+                  title={
+                    selectedLocation
+                      ? "Lokasi Terpilih"
+                      : location.error
+                        ? `Fallback: ${location.error}`
+                        : "Lokasi Anda Saat Ini"
+                  }
                 >
                   <MapPin className="h-3.5 w-3.5 text-neutral-600" />
                   <span>{selectedLocation?.city || location.city}</span>
@@ -117,8 +178,11 @@ function RouteComponent() {
 
           {/* Map */}
           <div className="h-[calc(100vh-9.5rem)] overflow-hidden rounded-lg bg-white shadow-sm">
-            <RiskMap 
+            <RiskMap
+              reports={nearbyReports}
+              radiusKm={REPORT_RADIUS_KM}
               onLocationSelect={handleLocationSelect}
+              onReportSelect={setSelectedReport}
               flyToLocation={selectedLocation}
             />
           </div>
@@ -147,7 +211,12 @@ function RouteComponent() {
           </div>
 
           {/* Selection panel - shows selected location or user location */}
-          <SelectedRisk selectedLocation={selectedLocation} />
+          <SelectedRisk
+            selectedLocation={selectedLocation}
+            nearbyReports={nearbyReports}
+            selectedReport={selectedReport}
+            onReportSelect={setSelectedReport}
+          />
         </div>
       </div>
     </main>
