@@ -40,6 +40,9 @@ interface BaseEnvironmentMapProps {
   autoLocateOnMount?: boolean; // Automatically locate user on map mount
   aqiRadiusKm?: number; // AQI stations search radius in km (default: 1000)
 
+  // Override AQI center location (for search feature)
+  aqiCenterLocation?: { latitude: number; longitude: number } | null;
+
   // Render props pattern - children receive map context
   children?: (context: MapContext) => ReactNode;
 
@@ -57,6 +60,7 @@ export function BaseEnvironmentMap({
   autoZoomOnLocate = false,
   autoLocateOnMount = false,
   aqiRadiusKm = 1000,
+  aqiCenterLocation,
   children,
   onMapReady,
 }: BaseEnvironmentMapProps) {
@@ -83,10 +87,16 @@ export function BaseEnvironmentMap({
   const envData = useEnvironmentData(userLocation);
   const alerts = useEnvironmentAlerts(envData);
 
+  // Use override location for AQI if provided (from search), otherwise use user location
+  const aqiCenter = aqiCenterLocation || {
+    latitude: userLocation.latitude,
+    longitude: userLocation.longitude,
+  };
+
   // Fetch AQI stations for heatmap visualization
   const { stations, loading: stationsLoading } = useAQIStations({
-    userLat: userLocation.latitude,
-    userLon: userLocation.longitude,
+    userLat: aqiCenter.latitude,
+    userLon: aqiCenter.longitude,
     radiusKm: aqiRadiusKm,
   });
 

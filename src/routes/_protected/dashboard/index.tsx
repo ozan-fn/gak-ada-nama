@@ -49,7 +49,13 @@ function Dashboard() {
       loading: location.loading,
       error: location.error,
     }),
-    [location.latitude, location.longitude, location.city, location.loading, location.error]
+    [
+      location.latitude,
+      location.longitude,
+      location.city,
+      location.loading,
+      location.error,
+    ],
   );
 
   // Prepare location params for API calls (memoized)
@@ -58,12 +64,12 @@ function Dashboard() {
       location.latitude && location.longitude
         ? { latitude: location.latitude, longitude: location.longitude }
         : { city: "jakarta" },
-    [location.latitude, location.longitude]
+    [location.latitude, location.longitude],
   );
 
   // Fetch environment data for alerts
   const envData = useEnvironmentData(location);
-  
+
   // Get real-time alerts based on environment conditions
   const alerts = useEnvironmentAlerts(envData);
   const primaryAlert = alerts[0]; // Show the most important alert
@@ -94,8 +100,16 @@ function Dashboard() {
                 </>
               ) : primaryAlert ? (
                 <>
-                  <div className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${severityColors[primaryAlert.severity]}`}>
-                    <span>{primaryAlert.severity === "danger" ? "Bahaya" : primaryAlert.severity === "warning" ? "Peringatan" : "Info"}</span>
+                  <div
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${severityColors[primaryAlert.severity]}`}
+                  >
+                    <span>
+                      {primaryAlert.severity === "danger"
+                        ? "Bahaya"
+                        : primaryAlert.severity === "warning"
+                          ? "Peringatan"
+                          : "Info"}
+                    </span>
                   </div>
 
                   {/* Alert Message */}
@@ -140,9 +154,13 @@ function Dashboard() {
               {location.loading ? (
                 <Skeleton className="h-8 w-32 rounded-lg" />
               ) : (
-                <div 
+                <div
                   className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50/80 px-2.5 py-1.5 text-xs font-medium text-neutral-700"
-                  title={location.error ? `Fallback: ${location.error}` : "Lokasi Anda Saat Ini"}
+                  title={
+                    location.error
+                      ? `Fallback: ${location.error}`
+                      : "Lokasi Anda Saat Ini"
+                  }
                 >
                   <MapPin className="h-3.5 w-3.5 text-neutral-600" />
                   <span>{location.city}</span>

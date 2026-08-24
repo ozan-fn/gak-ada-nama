@@ -35,6 +35,7 @@ function RiskMapContent({
   showAIPanel,
   setShowAIPanel,
   onLocationSelect,
+  flyToLocation,
 }: {
   context: MapContext;
   bearing: number;
@@ -45,6 +46,11 @@ function RiskMapContent({
     longitude: number;
     city: string;
   }) => void;
+  flyToLocation?: {
+    latitude: number;
+    longitude: number;
+    city: string;
+  } | null;
 }) {
   const userLocation = useUserLocation();
   const hasFlownToUser = useRef(false);
@@ -60,14 +66,15 @@ function RiskMapContent({
     setShowRainRadar,
   } = context;
 
-  // Auto-center to user location smoothly when available (ONCE only)
+  // Auto-center to user location smoothly when available (ONCE only, if no search location)
   useEffect(() => {
     if (
       !map.current || 
       !userLocation.latitude || 
       !userLocation.longitude || 
       userLocation.loading ||
-      hasFlownToUser.current
+      hasFlownToUser.current ||
+      flyToLocation // Skip if search location exists
     ) return;
 
     hasFlownToUser.current = true;
@@ -75,7 +82,7 @@ function RiskMapContent({
     // Smooth fly to user location
     map.current.flyTo({
       center: [userLocation.longitude, userLocation.latitude],
-      zoom: 12,
+      zoom: 10, // Regional view untuk AQI
       duration: 1500,
     });
 
@@ -83,7 +90,7 @@ function RiskMapContent({
     setTimeout(() => {
       locate(false);
     }, 1600);
-  }, [map, userLocation.latitude, userLocation.longitude, userLocation.loading, locate]);
+  }, [map, userLocation.latitude, userLocation.longitude, userLocation.loading, locate, flyToLocation]);
 
   // Add map click handler for location selection
   useEffect(() => {
@@ -327,15 +334,37 @@ function RiskMapContent({
 // Main component
 export default function RiskMap({
   onLocationSelect,
+  flyToLocation,
 }: {
   onLocationSelect?: (location: {
     latitude: number;
     longitude: number;
     city: string;
   }) => void;
+  flyToLocation?: {
+    latitude: number;
+    longitude: number;
+    city: string;
+  } | null;
 }) {
   const [bearing, setBearing] = useState(0);
   const [showAIPanel, setShowAIPanel] = useState(false);
+  const mapInstanceRef = useRef<maplibregl.Map | null>(null);
+  const [aqiRadius, setAqiRadius] = useState(1000); // Default Indonesia-wide
+
+  // Fly to location when flyToLocation changes (from search)
+  useEffect(() => {
+    if (!mapInstanceRef.current || !flyToLocation) return;
+
+    // Adjust AQI radius untuk regional detail
+    setAqiRadius(100); // 100km radius untuk city-level detail
+
+    mapInstanceRef.current.flyTo({
+      center: [flyToLocation.longitude, flyToLocation.latitude],
+      zoom: 10, // Regional view untuk lihat AQI area sekitar
+      duration: 1500,
+    });
+  }, [flyToLocation]);
 
   return (
     <BaseEnvironmentMap
@@ -346,8 +375,13 @@ export default function RiskMap({
       autoFitStations={false}
       autoZoomOnLocate={false}
       autoLocateOnMount={false}
-      aqiRadiusKm={1000}
+      aqiRadiusKm={aqiRadius}
+      aqiCenterLocation={flyToLocation ? {
+        latitude: flyToLocation.latitude,
+        longitude: flyToLocation.longitude,
+      } : null}
       onMapReady={(map) => {
+        mapInstanceRef.current = map;
         map.on("rotate", () => {
           setBearing(map.getBearing() ?? 0);
         });
@@ -360,6 +394,7 @@ export default function RiskMap({
           showAIPanel={showAIPanel}
           setShowAIPanel={setShowAIPanel}
           onLocationSelect={onLocationSelect}
+          flyToLocation={flyToLocation}
         />
       )}
     </BaseEnvironmentMap>

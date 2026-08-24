@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Clock, MapPin } from "lucide-react";
 import RiskMap from "#/components/RiskMap";
@@ -7,7 +7,21 @@ import { useUserLocation } from "#/hooks/useUserLocation";
 import { getIndonesianTimezone } from "#/lib/timezoneUtils";
 import { Skeleton } from "#/components/ui/skeleton";
 
+// Define search params schema
+type RiskMapSearch = {
+  lat?: number;
+  lng?: number;
+  city?: string;
+};
+
 export const Route = createFileRoute("/_protected/dashboard/risk-map")({
+  validateSearch: (search: Record<string, unknown>): RiskMapSearch => {
+    return {
+      lat: typeof search.lat === "number" ? search.lat : undefined,
+      lng: typeof search.lng === "number" ? search.lng : undefined,
+      city: typeof search.city === "string" ? search.city : undefined,
+    };
+  },
   component: RouteComponent,
 });
 
@@ -33,13 +47,40 @@ function useLocalTime(longitude?: number | null) {
 function RouteComponent() {
   const location = useUserLocation();
   const localTime = useLocalTime(location.longitude);
+  const navigate = useNavigate({ from: Route.fullPath });
+  const { lat, lng, city } = Route.useSearch();
   
-  // State for selected location from map click
+  // State for selected location from map click or search
   const [selectedLocation, setSelectedLocation] = useState<{
     latitude: number;
     longitude: number;
     city: string;
   } | null>(null);
+
+  // Sync search params to selectedLocation
+  useEffect(() => {
+    if (lat && lng && city) {
+      setSelectedLocation({
+        latitude: lat,
+        longitude: lng,
+        city,
+      });
+    }
+  }, [lat, lng, city]);
+
+  // Handle location selection from map
+  const handleLocationSelect = (loc: {
+    latitude: number;
+    longitude: number;
+    city: string;
+  }) => {
+    setSelectedLocation(loc);
+    // Update URL search params
+    navigate({
+      search: { lat: loc.latitude, lng: loc.longitude, city: loc.city },
+      replace: true,
+    });
+  };
 
   return (
     <main className="min-h-[calc(100vh-3.5rem)]">
@@ -76,7 +117,10 @@ function RouteComponent() {
 
           {/* Map */}
           <div className="h-[calc(100vh-9.5rem)] overflow-hidden rounded-lg bg-white shadow-sm">
-            <RiskMap onLocationSelect={setSelectedLocation} />
+            <RiskMap 
+              onLocationSelect={handleLocationSelect}
+              flyToLocation={selectedLocation}
+            />
           </div>
         </div>
 

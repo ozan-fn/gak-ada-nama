@@ -99,7 +99,10 @@ export function ChartAQITrend({ location }: ChartAQITrendProps) {
       </div>
 
       {/* Chart Content */}
-      <div className="flex-1 px-2 py-1 relative min-h-[200px]">
+      <div
+        className="flex-1 px-2 py-1 relative"
+        style={{ minHeight: "200px", height: "100%" }}
+      >
         {/* Background diagonal pattern */}
         <div
           className="absolute inset-0 pointer-events-none"
@@ -112,14 +115,15 @@ export function ChartAQITrend({ location }: ChartAQITrendProps) {
               hsl(var(--muted-foreground) / 0.08) 9px
             )`,
             marginLeft: "32px",
-            marginTop: "8px",
+            marginTop: "24px",
             marginBottom: "32px",
             marginRight: "12px",
           }}
         />
         <ChartContainer
           config={chartConfig}
-          className="h-full w-full relative z-10"
+          className="relative z-10"
+          style={{ width: "100%", height: "100%" }}
         >
           <AreaChart
             accessibilityLayer
@@ -127,7 +131,7 @@ export function ChartAQITrend({ location }: ChartAQITrendProps) {
             margin={{
               left: 0,
               right: 12,
-              top: 8,
+              top: 24,
               bottom: 4,
             }}
           >
@@ -159,6 +163,10 @@ export function ChartAQITrend({ location }: ChartAQITrendProps) {
               width={25}
               tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
               tickCount={4}
+              domain={[
+                0,
+                (dataMax: number) => Math.ceil((dataMax + 10) / 10) * 10,
+              ]}
             />
             <XAxis
               dataKey="day"
@@ -188,7 +196,7 @@ export function ChartAQITrend({ location }: ChartAQITrendProps) {
                 strokeDasharray="4 4"
                 label={{
                   value: "Hari ini",
-                  position: "top",
+                  position: "insideTopLeft",
                   offset: 10,
                   fill: "#ef4444",
                   fontSize: 11,
