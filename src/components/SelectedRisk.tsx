@@ -30,6 +30,14 @@ export default function SelectedRisk({ selectedLocation }: SelectedRiskProps) {
     if (selectedLocation) {
       return selectedLocation;
     }
+    // Guard against null coordinates
+    if (!userLocation.latitude || !userLocation.longitude) {
+      return {
+        latitude: -6.2088, // Jakarta fallback
+        longitude: 106.8456,
+        city: userLocation.city || "Jakarta, DKI Jakarta",
+      };
+    }
     return {
       latitude: userLocation.latitude,
       longitude: userLocation.longitude,

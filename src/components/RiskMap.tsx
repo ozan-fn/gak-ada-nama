@@ -17,7 +17,7 @@ import {
   generateRecommendation,
   getRecommendationColor,
 } from "#/lib/aiSimulation";
-import { INDONESIA_LOCATIONS } from "#/lib/indonesiaLocations";
+import { indonesiaLocations } from "#/data/indonesia-locations";
 import { findNearestCity } from "#/lib/geoUtils";
 import { useUserLocation } from "#/hooks/useUserLocation";
 
@@ -104,12 +104,12 @@ function RiskMapContent({
       const { lng, lat } = e.lngLat;
 
       // Find nearest city
-      const nearestCity = findNearestCity(lat, lng, INDONESIA_LOCATIONS);
+      const nearestCity = findNearestCity(lat, lng, indonesiaLocations);
 
       onLocationSelect({
         latitude: lat,
         longitude: lng,
-        city: `${nearestCity.name}, ID`,
+        city: `${nearestCity.name}, ${nearestCity.province}`,
       });
     };
 

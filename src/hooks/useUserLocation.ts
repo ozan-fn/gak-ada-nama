@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { INDONESIA_LOCATIONS } from "#/lib/indonesiaLocations";
+import { indonesiaLocations } from "#/data/indonesia-locations";
 import { findNearestCity } from "#/lib/geoUtils";
 
 type LocationState = {
@@ -42,12 +42,12 @@ export function useUserLocation() {
           const lon = position.coords.longitude;
 
           // Find nearest city from our database
-          const nearestCity = findNearestCity(lat, lon, INDONESIA_LOCATIONS);
+          const nearestCity = findNearestCity(lat, lon, indonesiaLocations);
 
           setLocation({
             latitude: lat,
             longitude: lon,
-            city: `${nearestCity.name}, ID`,
+            city: `${nearestCity.name}, ${nearestCity.province}`,
             loading: false,
             error: null,
           });

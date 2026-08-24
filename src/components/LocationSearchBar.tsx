@@ -116,7 +116,7 @@ export default function LocationSearchBar({
   const filteredResults = getFilteredResults();
 
   return (
-    <div className="relative w-full max-w-sm" ref={dropdownRef}>
+    <div className="relative w-full max-w-xl" ref={dropdownRef}>
       <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none z-10" />
       <input
         ref={inputRef}
@@ -132,7 +132,7 @@ export default function LocationSearchBar({
       {showDropdown && query.trim().length >= 2 && (
         <div className="absolute top-full left-0 right-0 mt-2 rounded-lg border border-neutral-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-800 z-50 max-h-96 flex flex-col">
           {/* Search Type Tabs */}
-          <div className="flex items-center gap-1 border-b border-neutral-100 dark:border-neutral-700 p-2">
+          <div className="flex items-center gap-1 border-b border-neutral-100 dark:border-neutral-700 p-2 overflow-x-auto scrollbar-hide">
             {searchTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.type;
@@ -142,14 +142,14 @@ export default function LocationSearchBar({
                   key={tab.type}
                   type="button"
                   onClick={() => setActiveTab(tab.type)}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
                     isActive
                       ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
                       : "text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-700"
                   }`}
                 >
                   <Icon className="h-3.5 w-3.5" />
-                  {tab.label}
+                  <span className="hidden sm:inline">{tab.label}</span>
                 </button>
               );
             })}

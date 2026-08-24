@@ -78,51 +78,47 @@ export default function DashboardAppHeader() {
 
   return (
     <header
-      className={`relative z-50 grid h-14 shrink-0 grid-cols-3 items-center bg-white/80 backdrop-blur-md px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 dark:bg-neutral-900/80 ${
+      className={`relative z-50 grid h-14 shrink-0 items-center bg-white/80 backdrop-blur-md px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 dark:bg-neutral-900/80 ${
         isNoBorderRoute
           ? "border-b-0"
           : "border-b border-neutral-200/60 dark:border-neutral-800/60"
       }`}
+      style={{ gridTemplateColumns: "auto 1fr auto" }}
     >
       {/* Grid 1 (Kiri): Sidebar Trigger */}
-      <div className="flex items-center justify-start gap-3">
+      <div className="flex items-center justify-start gap-3 mr-4">
         <SidebarTrigger className="-ml-1 size-7 rounded-lg" />
         <div className="hidden h-5 w-px bg-border sm:block" />
       </div>
 
       {/* Grid 2 (Tengah): Search Location (Hanya di /dashboard/risk-map) */}
-      <div className="flex justify-center">
+      <div className="flex justify-center px-4">
         {isRiskMapRoute && (
           <LocationSearchBar onLocationSelect={handleLocationSearch} />
         )}
       </div>
 
       {/* Grid 3 (Kanan): AQI Icon, Notification, Avatar */}
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex items-center justify-end gap-2 ml-4">
         <AQIIndicator />
         <NotificationBar />
 
         <div className="h-5 w-px bg-neutral-200 dark:bg-neutral-700" />
 
         <DropdownMenu>
-          <DropdownMenuTrigger>
-            <button
-              type="button"
-              className="flex items-center gap-2 rounded-lg bg-neutral-100/60 px-1.5 py-1 hover:bg-neutral-200/80 transition-colors dark:bg-neutral-800/60 dark:hover:bg-neutral-700/80 outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50"
-            >
-              <Avatar className="h-7 w-7 rounded-lg">
-                <AvatarImage
-                  src={user?.image ?? undefined}
-                  alt={user?.name ?? "User"}
-                />
-                <AvatarFallback
-                  className="rounded-lg bg-foreground text-[11px] font-semibold text-background"
-                  suppressHydrationWarning
-                >
-                  {getInitials(user?.name)}
-                </AvatarFallback>
-              </Avatar>
-            </button>
+          <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg bg-neutral-100/60 px-1.5 py-1 hover:bg-neutral-200/80 transition-colors dark:bg-neutral-800/60 dark:hover:bg-neutral-700/80 outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50">
+            <Avatar className="h-7 w-7 rounded-lg">
+              <AvatarImage
+                src={user?.image ?? undefined}
+                alt={user?.name ?? "User"}
+              />
+              <AvatarFallback
+                className="rounded-lg bg-foreground text-[11px] font-semibold text-background"
+                suppressHydrationWarning
+              >
+                {getInitials(user?.name)}
+              </AvatarFallback>
+            </Avatar>
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="end" sideOffset={8} className="w-56">

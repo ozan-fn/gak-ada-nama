@@ -1,4 +1,4 @@
-import type { LocationData } from "./indonesiaLocations";
+import type { IndonesiaLocation } from "#/data/indonesia-locations";
 
 // Haversine formula to calculate distance between two coordinates
 export function calculateDistance(
@@ -28,13 +28,32 @@ function toRad(degrees: number): number {
 export function findNearestCity(
   userLat: number,
   userLon: number,
-  cities: LocationData[]
-): LocationData {
+  cities: IndonesiaLocation[]
+): IndonesiaLocation {
+  if (cities.length === 0) {
+    // ponytail: fallback to Jakarta if no cities
+    return {
+      name: "Jakarta",
+      province: "DKI Jakarta",
+      coordinates: [106.8456, -6.2088]
+    };
+  }
+
   let nearest = cities[0];
-  let minDistance = calculateDistance(userLat, userLon, nearest.latitude, nearest.longitude);
+  let minDistance = calculateDistance(
+    userLat,
+    userLon,
+    nearest.coordinates[1], // lat
+    nearest.coordinates[0]  // lng
+  );
 
   for (const city of cities) {
-    const distance = calculateDistance(userLat, userLon, city.latitude, city.longitude);
+    const distance = calculateDistance(
+      userLat,
+      userLon,
+      city.coordinates[1], // lat
+      city.coordinates[0]  // lng
+    );
     if (distance < minDistance) {
       minDistance = distance;
       nearest = city;
