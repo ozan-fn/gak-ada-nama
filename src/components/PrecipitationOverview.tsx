@@ -60,7 +60,7 @@ export default function PrecipitationOverview({
     precipitationData[0];
 
   return (
-    <div className="flex h-full w-full flex-col justify-between p-4 min-h-[280px]">
+    <div className="flex h-full w-full flex-col justify-between p-4 min-h-70">
       {/* Bagian Atas: Judul & Subjudul */}
       <div className="flex items-start justify-between">
         <div>
@@ -82,7 +82,7 @@ export default function PrecipitationOverview({
       </div>
 
       {/* Ringkasan Angka Utama */}
-      <div className="mt-3">
+      <div className="mt-1">
         <p className="text-[11px] font-medium text-neutral-400">
           Total Curah Hujan
         </p>
@@ -95,8 +95,8 @@ export default function PrecipitationOverview({
       </div>
 
       {/* Grafik */}
-      <div className="relative -mt-8 h-36 w-full">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="relative -mt-1.5 w-full" style={{ height: "144px" }}>
+        <ResponsiveContainer width="100%" height={144}>
           <BarChart
             data={precipitationData}
             barSize={18}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { INDONESIA_LOCATIONS } from "#/lib/indonesiaLocations";
 import { findNearestCity } from "#/lib/geoUtils";
 
@@ -19,6 +19,9 @@ export function useUserLocation() {
     error: null,
   });
 
+  const retryCount = useRef(0);
+  const maxRetries = 3;
+
   useEffect(() => {
     // Check if Geolocation API is available
     if (!navigator.geolocation) {
@@ -32,39 +35,54 @@ export function useUserLocation() {
       return;
     }
 
-    // Request user location
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
+    const attemptLocation = () => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
 
-        // Find nearest city from our database
-        const nearestCity = findNearestCity(lat, lon, INDONESIA_LOCATIONS);
+          // Find nearest city from our database
+          const nearestCity = findNearestCity(lat, lon, INDONESIA_LOCATIONS);
 
-        setLocation({
-          latitude: lat,
-          longitude: lon,
-          city: `${nearestCity.name}, ID`,
-          loading: false,
-          error: null,
-        });
-      },
-      (error) => {
-        // Permission denied or error - fallback to Jakarta
-        setLocation({
-          latitude: -6.2088,
-          longitude: 106.8456,
-          city: "Jakarta, ID",
-          loading: false,
-          error: error.message,
-        });
-      },
-      {
-        enableHighAccuracy: false, // ponytail: false = faster, less battery
-        timeout: 10000,
-        maximumAge: 300000, // Cache for 5 minutes
-      }
-    );
+          setLocation({
+            latitude: lat,
+            longitude: lon,
+            city: `${nearestCity.name}, ID`,
+            loading: false,
+            error: null,
+          });
+
+          retryCount.current = 0;
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+
+          // Retry logic
+          if (retryCount.current < maxRetries) {
+            retryCount.current++;
+            console.log(`Retrying geolocation (${retryCount.current}/${maxRetries})...`);
+            setTimeout(() => attemptLocation(), 1000 * retryCount.current);
+          } else {
+            // Max retries reached - fallback to Jakarta
+            setLocation({
+              latitude: -6.2088,
+              longitude: 106.8456,
+              city: "Jakarta, ID",
+              loading: false,
+              error: error.message,
+            });
+            retryCount.current = 0;
+          }
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0, // Always get fresh location on mount
+        }
+      );
+    };
+
+    attemptLocation();
   }, []);
 
   return location;

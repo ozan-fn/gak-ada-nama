@@ -22,6 +22,10 @@ export interface MapContext {
   setShowLayers: (show: boolean) => void;
   showRainRadar: boolean;
   setShowRainRadar: (show: boolean) => void;
+  aqiFilter: 'all' | 'good' | 'moderate' | 'unhealthy' | 'hazardous';
+  setAqiFilter: (filter: 'all' | 'good' | 'moderate' | 'unhealthy' | 'hazardous') => void;
+  showMarkers: boolean;
+  setShowMarkers: (show: boolean) => void;
 }
 
 interface BaseEnvironmentMapProps {
@@ -31,11 +35,17 @@ interface BaseEnvironmentMapProps {
   initialPitch?: number;
   initialBearing?: number;
 
+  // Map bounds
+  maxBounds?: [[number, number], [number, number]]; // Lock map to specific area
+
   // Behavior flags
   autoFitStations?: boolean; // Auto-fit bounds to show all AQI stations
   autoZoomOnLocate?: boolean; // Zoom to user location on locate button click
   autoLocateOnMount?: boolean; // Automatically locate user on map mount
   aqiRadiusKm?: number; // AQI stations search radius in km (default: 1000)
+
+  // Override AQI center location (for search feature)
+  aqiCenterLocation?: { latitude: number; longitude: number } | null;
 
   // Render props pattern - children receive map context
   children?: (context: MapContext) => ReactNode;
@@ -49,10 +59,12 @@ export function BaseEnvironmentMap({
   initialZoom = 4.5,
   initialPitch = 0,
   initialBearing = 0,
+  maxBounds,
   autoFitStations = false,
   autoZoomOnLocate = false,
   autoLocateOnMount = false,
   aqiRadiusKm = 1000,
+  aqiCenterLocation,
   children,
   onMapReady,
 }: BaseEnvironmentMapProps) {
@@ -68,7 +80,11 @@ export function BaseEnvironmentMap({
 
   const [showLayers, setShowLayers] = useState(false);
   const [showRainRadar, setShowRainRadar] = useState(false);
+  const [aqiFilter, setAqiFilter] = useState<'all' | 'good' | 'moderate' | 'unhealthy' | 'hazardous'>('all');
+  const [showMarkers, setShowMarkers] = useState(true);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const autoLocateTriggered = useRef(false);
+  const fitBoundsTriggered = useRef(false);
 
   const { locate, isLocating } = useUserLocationMarker(map, autoZoomOnLocate);
   const userLocation = useUserLocation();
@@ -77,10 +93,16 @@ export function BaseEnvironmentMap({
   const envData = useEnvironmentData(userLocation);
   const alerts = useEnvironmentAlerts(envData);
 
+  // Use override location for AQI if provided (from search), otherwise use user location
+  const aqiCenter = aqiCenterLocation || {
+    latitude: userLocation.latitude,
+    longitude: userLocation.longitude,
+  };
+
   // Fetch AQI stations for heatmap visualization
   const { stations, loading: stationsLoading } = useAQIStations({
-    userLat: userLocation.latitude,
-    userLon: userLocation.longitude,
+    userLat: aqiCenter.latitude,
+    userLon: aqiCenter.longitude,
     radiusKm: aqiRadiusKm,
   });
 
@@ -120,7 +142,7 @@ export function BaseEnvironmentMap({
       zoom: initialZoom,
       pitch: initialPitch,
       bearing: initialBearing,
-      maxBounds: [
+      maxBounds: maxBounds || [
         [94.5, -11.5],
         [141.5, 6.5],
       ],
@@ -143,14 +165,16 @@ export function BaseEnvironmentMap({
       map.current = null;
       mapInitialized.current = false;
     };
-  }, [initialCenter, initialZoom, initialPitch, initialBearing]); // Only initialize once
+  }, [initialCenter, initialZoom, initialPitch, initialBearing, maxBounds]); // Only initialize once
 
-  // Trigger user location detection when map is ready
+  // Trigger user location detection when map is ready (ONCE only)
   useEffect(() => {
-    if (!map.current || !autoLocateOnMount || !mapLoaded) return;
+    if (!map.current || !autoLocateOnMount || !mapLoaded || autoLocateTriggered.current) return;
+    
+    autoLocateTriggered.current = true;
     
     setTimeout(() => {
-      locate();
+      locate(false); // Don't zoom, let fitBounds handle it
     }, 500);
     
     if (onMapReadyRef.current && map.current) {
@@ -204,15 +228,27 @@ export function BaseEnvironmentMap({
       if (!mapInstance) return;
 
       // Remove existing layers if any
-      if (mapInstance.getLayer("aqi-heatmap"))
-        mapInstance.removeLayer("aqi-heatmap");
-      if (mapInstance.getSource("aqi-stations"))
-        mapInstance.removeSource("aqi-stations");
+      if (mapInstance.getLayer("unclustered-point-label")) mapInstance.removeLayer("unclustered-point-label");
+      if (mapInstance.getLayer("unclustered-point")) mapInstance.removeLayer("unclustered-point");
+      if (mapInstance.getLayer("cluster-count")) mapInstance.removeLayer("cluster-count");
+      if (mapInstance.getLayer("clusters")) mapInstance.removeLayer("clusters");
+      if (mapInstance.getLayer("aqi-heatmap")) mapInstance.removeLayer("aqi-heatmap");
+      if (mapInstance.getSource("aqi-stations")) mapInstance.removeSource("aqi-stations");
+
+      // Apply Filter
+      const filteredStations = stations.filter(station => {
+        if (aqiFilter === 'all') return true;
+        if (aqiFilter === 'good') return station.aqi <= 50;
+        if (aqiFilter === 'moderate') return station.aqi > 50 && station.aqi <= 100;
+        if (aqiFilter === 'unhealthy') return station.aqi > 100 && station.aqi <= 200;
+        if (aqiFilter === 'hazardous') return station.aqi > 200;
+        return true;
+      });
 
       // Create GeoJSON from stations
       const geojson = {
         type: "FeatureCollection",
-        features: stations.map((station) => ({
+        features: filteredStations.map((station) => ({
           type: "Feature",
           geometry: {
             type: "Point",
@@ -228,10 +264,18 @@ export function BaseEnvironmentMap({
       mapInstance.addSource("aqi-stations", {
         type: "geojson",
         data: geojson as any,
+        cluster: true,
+        clusterMaxZoom: 14,
+        clusterRadius: 50,
+        clusterProperties: {
+          max_aqi: ["max", ["get", "aqi"]]
+        }
       });
 
-      // Auto-fit bounds if enabled (for DashboardMapCard)
-      if (autoFitStations && stations.length > 0) {
+      // Auto-fit bounds ONLY once on first station load, and ONLY if autoLocateOnMount is false
+      if (autoFitStations && stations.length > 0 && !fitBoundsTriggered.current && !autoLocateOnMount) {
+        fitBoundsTriggered.current = true;
+        
         const bounds = new maplibregl.LngLatBounds();
         stations.forEach((station) => {
           bounds.extend([station.longitude, station.latitude]);
@@ -329,8 +373,114 @@ export function BaseEnvironmentMap({
           ],
         },
       });
+
+      // Add clusters layer
+      mapInstance.addLayer({
+        id: "clusters",
+        type: "circle",
+        source: "aqi-stations",
+        filter: ["has", "point_count"],
+        layout: {
+          visibility: showMarkers ? "visible" : "none"
+        },
+        paint: {
+          "circle-color": [
+            "step",
+            ["get", "max_aqi"],
+            "rgba(0, 228, 0, 0.9)", // Good <= 50
+            50,
+            "rgba(255, 255, 0, 0.9)", // Moderate <= 100
+            100,
+            "rgba(255, 126, 0, 0.9)", // Unhealthy sensitive <= 150
+            150,
+            "rgba(255, 0, 0, 0.9)", // Unhealthy <= 200
+            200,
+            "rgba(153, 0, 76, 0.9)", // Very Unhealthy <= 300
+            300,
+            "rgba(126, 0, 35, 0.9)" // Hazardous
+          ],
+          "circle-radius": [
+            "step",
+            ["get", "point_count"],
+            20,
+            10, // point count 10+
+            30,
+            50, // point count 50+
+            40
+          ],
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#ffffff"
+        }
+      });
+
+      // Add cluster count label
+      mapInstance.addLayer({
+        id: "cluster-count",
+        type: "symbol",
+        source: "aqi-stations",
+        filter: ["has", "point_count"],
+        layout: {
+          "text-field": "{point_count_abbreviated}",
+          "text-size": 12,
+          visibility: showMarkers ? "visible" : "none"
+        },
+        paint: {
+          "text-color": "#000000"
+        }
+      });
+
+      // Add unclustered point layer
+      mapInstance.addLayer({
+        id: "unclustered-point",
+        type: "circle",
+        source: "aqi-stations",
+        filter: ["!", ["has", "point_count"]],
+        layout: {
+          visibility: showMarkers ? "visible" : "none"
+        },
+        paint: {
+          "circle-color": [
+            "step",
+            ["get", "aqi"],
+            "rgba(0, 228, 0, 1)",
+            50,
+            "rgba(255, 255, 0, 1)",
+            100,
+            "rgba(255, 126, 0, 1)",
+            150,
+            "rgba(255, 0, 0, 1)",
+            200,
+            "rgba(153, 0, 76, 1)",
+            300,
+            "rgba(126, 0, 35, 1)"
+          ],
+          "circle-radius": 8,
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#fff"
+        }
+      });
+
+      // Add unclustered point AQI label
+      mapInstance.addLayer({
+        id: "unclustered-point-label",
+        type: "symbol",
+        source: "aqi-stations",
+        filter: ["!", ["has", "point_count"]],
+        layout: {
+          "text-field": "{aqi}",
+          "text-size": 10,
+          "text-offset": [0, 1.5],
+          "text-anchor": "top",
+          visibility: showMarkers ? "visible" : "none"
+        },
+        paint: {
+          "text-color": "#333",
+          "text-halo-color": "#fff",
+          "text-halo-width": 1
+        }
+      });
     }
-  }, [stations, stationsLoading, autoFitStations]);
+  }, [stations, stationsLoading, autoFitStations, autoLocateOnMount, aqiFilter, showMarkers]);
 
   // Add Precipitation Heatmap visualization layer
   useEffect(() => {
@@ -479,6 +629,10 @@ export function BaseEnvironmentMap({
     setShowLayers,
     showRainRadar,
     setShowRainRadar,
+    aqiFilter,
+    setAqiFilter,
+    showMarkers,
+    setShowMarkers,
   };
 
   return (

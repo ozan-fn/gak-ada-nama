@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import * as maplibregl from "maplibre-gl";
+import { useEffect, useState, useRef } from "react";
+import type * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
   Layers,
@@ -33,46 +33,6 @@ type NearbyReportPin = ReportMapPin & {
   distanceKm: number;
 };
 
-function getReportMarkerColor(urgency: string) {
-  if (urgency === "Sangat Tinggi") return "#b91c1c";
-  if (urgency === "Tinggi") return "#ef4444";
-  if (urgency === "Rendah") return "#0ea5e9";
-  return "#f59e0b";
-}
-
-function createReportPopup(report: NearbyReportPin) {
-  const container = document.createElement("div");
-  container.className = "min-w-56 space-y-2 p-1 text-neutral-900";
-
-  const category = document.createElement("p");
-  category.className = "text-[10px] font-bold uppercase tracking-wider text-red-600";
-  category.textContent = report.category;
-
-  const title = document.createElement("h3");
-  title.className = "text-sm font-bold leading-snug";
-  title.textContent = report.title;
-
-  const location = document.createElement("p");
-  location.className = "text-xs leading-relaxed text-neutral-600";
-  location.textContent = report.locationName;
-
-  const metadata = document.createElement("div");
-  metadata.className = "flex items-center justify-between gap-3 border-t border-neutral-100 pt-2 text-[11px]";
-
-  const distance = document.createElement("span");
-  distance.className = "font-semibold text-red-600";
-  distance.textContent = `${report.distanceKm.toFixed(1)} km dari Anda`;
-
-  const urgency = document.createElement("span");
-  urgency.className = "text-neutral-500";
-  urgency.textContent = `Urgensi ${report.urgency}`;
-
-  metadata.append(distance, urgency);
-  container.append(category, title, location, metadata);
-
-  return container;
-}
-
 // Content component that can use hooks
 function RiskMapContent({
   context,
@@ -88,12 +48,29 @@ function RiskMapContent({
   bearing: number;
   showAIPanel: boolean;
   setShowAIPanel: (show: boolean) => void;
+  onLocationSelect?: (location: {
+    latitude: number;
+    longitude: number;
+    city: string;
+  }) => void;
   reports: NearbyReportPin[];
   radiusKm: number;
   isMapReady: boolean;
-  onLocationSelect?: (location: { latitude: number; longitude: number; city: string }) => void;
 }) {
-  const { map, alerts, userLocation, handleZoom, showLayers, setShowLayers, showRainRadar, setShowRainRadar } = context;
+  const {
+    map,
+    alerts,
+    userLocation,
+    handleZoom,
+    showLayers,
+    setShowLayers,
+    showRainRadar,
+    setShowRainRadar,
+    aqiFilter,
+    setAqiFilter,
+    showMarkers,
+    setShowMarkers,
+  } = context;
 
   // Add map click handler for location selection
   useEffect(() => {
@@ -101,10 +78,10 @@ function RiskMapContent({
 
     const handleMapClick = (e: maplibregl.MapMouseEvent) => {
       const { lng, lat } = e.lngLat;
-      
+
       // Find nearest city
       const nearestCity = findNearestCity(lat, lng, INDONESIA_LOCATIONS);
-      
+
       onLocationSelect({
         latitude: lat,
         longitude: lng,
@@ -118,79 +95,6 @@ function RiskMapContent({
       map.current?.off("click", handleMapClick);
     };
   }, [isMapReady, map, onLocationSelect]);
-
-  useEffect(() => {
-    if (!map.current || !isMapReady) return;
-    const mapInstance = map.current;
-
-    const markers = reports.map((report) => {
-      const marker = new maplibregl.Marker({
-        color: getReportMarkerColor(report.urgency),
-        scale: 0.85,
-      })
-        .setLngLat([report.longitude, report.latitude])
-        .setPopup(
-          new maplibregl.Popup({
-            closeButton: true,
-            maxWidth: "280px",
-            offset: 24,
-          }).setDOMContent(createReportPopup(report)),
-        )
-        .addTo(mapInstance);
-
-      const markerElement = marker.getElement();
-      markerElement.setAttribute("aria-label", `Laporan: ${report.title}`);
-      markerElement.setAttribute("role", "button");
-      markerElement.setAttribute("tabindex", "0");
-      markerElement.classList.add("cursor-pointer");
-
-      const selectReport = () => {
-        onLocationSelect?.({
-          latitude: report.latitude,
-          longitude: report.longitude,
-          city: report.locationName,
-        });
-      };
-
-      const handleMarkerClick = (event: Event) => {
-        event.stopPropagation();
-        selectReport();
-      };
-
-      const handleMarkerKeyDown = (event: KeyboardEvent) => {
-        if (event.key !== "Enter" && event.key !== " ") return;
-        event.preventDefault();
-        event.stopPropagation();
-        selectReport();
-        marker.togglePopup();
-      };
-
-      markerElement.addEventListener("click", handleMarkerClick);
-      markerElement.addEventListener("keydown", handleMarkerKeyDown);
-
-      return {
-        marker,
-        markerElement,
-        handleMarkerClick,
-        handleMarkerKeyDown,
-      };
-    });
-
-    return () => {
-      for (const {
-        marker,
-        markerElement,
-        handleMarkerClick,
-        handleMarkerKeyDown,
-      } of markers) {
-        markerElement.removeEventListener("click", handleMarkerClick);
-        markerElement.removeEventListener("keydown", handleMarkerKeyDown);
-        marker.remove();
-      }
-    };
-  }, [isMapReady, map, onLocationSelect, reports]);
-
-
 
   const resetView = () => {
     map.current?.easeTo({ ...defaultView, duration: 600 });
@@ -210,7 +114,9 @@ function RiskMapContent({
     <>
       <div className="absolute left-3 top-3 z-10 inline-flex items-center gap-2 rounded-full border border-red-100 bg-white/95 px-3 py-1.5 text-xs font-semibold text-neutral-700 shadow-sm backdrop-blur-md">
         <MapPin className="size-3.5 text-red-600" />
-        <span>{reports.length} laporan dalam radius {radiusKm} km</span>
+        <span>
+          {reports.length} laporan dalam radius {radiusKm} km
+        </span>
       </div>
 
       {/* Top Right Controls: Layers, Compass/Reset */}
@@ -219,34 +125,63 @@ function RiskMapContent({
           <button
             type="button"
             onClick={() => setShowLayers(!showLayers)}
-            className="flex h-9 w-9 items-center justify-center border-b border-neutral-200 transition-colors hover:bg-neutral-50"
+            className="flex h-9 w-9 items-center justify-center rounded-t-lg border-b border-neutral-200 transition-colors hover:bg-neutral-50"
             aria-label="Layers"
           >
             <Layers className="h-4 w-4 text-neutral-700" />
           </button>
           {showLayers && (
-            <div className="absolute left-0 -translate-x-full top-0 mr-6 w-52 rounded-lg border border-neutral-200 bg-white p-3 shadow-lg z-20">
-              <p className="mb-3 text-xs font-semibold text-neutral-700">Map Layers</p>
-              
+            <div className="absolute right-full top-0 mr-2 w-52 rounded-lg border border-neutral-200 bg-white p-3 shadow-lg z-20">
+              <p className="mb-3 text-xs font-semibold text-neutral-700">
+                Map Layers
+              </p>
+
               <label className="flex items-center gap-2 text-sm text-neutral-700 mb-2">
-                <input 
-                  type="checkbox" 
-                  checked 
-                  disabled 
+                <input
+                  type="checkbox"
+                  checked
+                  disabled
                   className="h-4 w-4 rounded border-neutral-300"
                 />
                 <span>AQI Heatmap</span>
               </label>
-              
-              <label className="flex items-center gap-2 text-sm text-neutral-700 cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  checked={showRainRadar} 
+
+              <label className="flex items-center gap-2 text-sm text-neutral-700 cursor-pointer mb-2">
+                <input
+                  type="checkbox"
+                  checked={showRainRadar}
                   onChange={(e) => setShowRainRadar(e.target.checked)}
                   className="h-4 w-4 rounded border-neutral-300 cursor-pointer"
                 />
                 <span>Rain Radar</span>
               </label>
+
+              <label className="flex items-center gap-2 text-sm text-neutral-700 cursor-pointer mb-3 pb-3 border-b border-neutral-100">
+                <input
+                  type="checkbox"
+                  checked={showMarkers}
+                  onChange={(e) => setShowMarkers(e.target.checked)}
+                  className="h-4 w-4 rounded border-neutral-300 cursor-pointer"
+                />
+                <span>Show Stations (Clusters)</span>
+              </label>
+
+              <p className="mb-2 text-xs font-semibold text-neutral-700">
+                Filter AQI Stations
+              </p>
+              <select
+                value={aqiFilter}
+                onChange={(e) =>
+                  setAqiFilter(e.target.value as MapContext["aqiFilter"])
+                }
+                className="w-full rounded border border-neutral-300 bg-white p-1 text-sm text-neutral-700 focus:border-blue-500 focus:outline-none"
+              >
+                <option value="all">All Stations</option>
+                <option value="good">Good (0-50)</option>
+                <option value="moderate">Moderate (51-100)</option>
+                <option value="unhealthy">Unhealthy (101-200)</option>
+                <option value="hazardous">Hazardous (&gt;200)</option>
+              </select>
             </div>
           )}
         </div>
@@ -267,7 +202,7 @@ function RiskMapContent({
         <button
           type="button"
           onClick={goToUserLocation}
-          className="flex h-9 w-9 items-center justify-center transition-colors hover:bg-neutral-50"
+          className="flex h-9 w-9 items-center justify-center rounded-b-lg transition-colors hover:bg-neutral-50"
           aria-label="Ke lokasi saya"
           title="Ke lokasi saya"
         >
@@ -293,6 +228,37 @@ function RiskMapContent({
         >
           <Plus className="h-4 w-4 text-neutral-700" />
         </button>
+      </div>
+
+      {/* Map Legend (Bottom Left) */}
+      <div className="absolute bottom-6 left-3 z-10 flex flex-col rounded-lg border border-neutral-200 bg-white/90 p-3 shadow-sm backdrop-blur-sm">
+        <h4 className="mb-2 text-xs font-bold text-neutral-800">AQI Legend</h4>
+        <div className="flex flex-col gap-1 text-[10px] text-neutral-600">
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded-full bg-[#00e400] opacity-80" />{" "}
+            Good (0-50)
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded-full bg-[#ffff00] opacity-80" />{" "}
+            Moderate (51-100)
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded-full bg-[#ff7e00] opacity-80" />{" "}
+            Unhealthy for Sensitive (101-150)
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded-full bg-[#ff0000] opacity-80" />{" "}
+            Unhealthy (151-200)
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded-full bg-[#99004c] opacity-80" />{" "}
+            Very Unhealthy (201-300)
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded-full bg-[#7e0023] opacity-80" />{" "}
+            Hazardous (&gt;300)
+          </div>
+        </div>
       </div>
 
       {/* AI Recommendation Panel */}
@@ -415,13 +381,38 @@ export default function RiskMap({
   reports,
   radiusKm = 5,
   onLocationSelect,
+  flyToLocation,
 }: {
   reports: NearbyReportPin[];
   radiusKm?: number;
-  onLocationSelect?: (location: { latitude: number; longitude: number; city: string }) => void;
+  onLocationSelect?: (location: {
+    latitude: number;
+    longitude: number;
+    city: string;
+  }) => void;
+  flyToLocation?: {
+    latitude: number;
+    longitude: number;
+  } | null;
 }) {
   const [bearing, setBearing] = useState(0);
   const [showAIPanel, setShowAIPanel] = useState(false);
+  const mapInstanceRef = useRef<maplibregl.Map | null>(null);
+  const [aqiRadius, setAqiRadius] = useState(1000); // Default Indonesia-wide
+
+  // Fly to location when flyToLocation changes (from search)
+  useEffect(() => {
+    if (!mapInstanceRef.current || !flyToLocation) return;
+
+    // Adjust AQI radius untuk regional detail
+    setAqiRadius(100); // 100km radius untuk city-level detail
+
+    mapInstanceRef.current.flyTo({
+      center: [flyToLocation.longitude, flyToLocation.latitude],
+      zoom: 10, // Regional view untuk lihat AQI area sekitar
+      duration: 1500,
+    });
+  }, [flyToLocation]);
   const [isMapReady, setIsMapReady] = useState(false);
 
   return (
@@ -431,10 +422,19 @@ export default function RiskMap({
       initialPitch={defaultView.pitch}
       initialBearing={defaultView.bearing}
       autoFitStations={false}
-      autoZoomOnLocate={true}
-      autoLocateOnMount={true}
-      aqiRadiusKm={1000}
+      autoZoomOnLocate={false}
+      autoLocateOnMount={false}
+      aqiRadiusKm={aqiRadius}
+      aqiCenterLocation={
+        flyToLocation
+          ? {
+              latitude: flyToLocation.latitude,
+              longitude: flyToLocation.longitude,
+            }
+          : null
+      }
       onMapReady={(map) => {
+        mapInstanceRef.current = map;
         setIsMapReady(true);
         map.on("rotate", () => {
           setBearing(map.getBearing() ?? 0);

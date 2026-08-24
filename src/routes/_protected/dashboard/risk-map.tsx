@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Clock, MapPin } from "lucide-react";
 import RiskMap from "#/components/RiskMap";
@@ -7,6 +7,13 @@ import { useUserLocation } from "#/hooks/useUserLocation";
 import { getIndonesianTimezone } from "#/lib/timezoneUtils";
 import { getReportMapPinsFn } from "#/lib/reports.functions";
 import { Skeleton } from "#/components/ui/skeleton";
+
+// Define search params schema
+type RiskMapSearch = {
+  lat?: number;
+  lng?: number;
+  city?: string;
+};
 
 const REPORT_RADIUS_KM = 5;
 
@@ -33,6 +40,13 @@ function calculateDistanceKm(
 }
 
 export const Route = createFileRoute("/_protected/dashboard/risk-map")({
+  validateSearch: (search: Record<string, unknown>): RiskMapSearch => {
+    return {
+      lat: typeof search.lat === "number" ? search.lat : undefined,
+      lng: typeof search.lng === "number" ? search.lng : undefined,
+      city: typeof search.city === "string" ? search.city : undefined,
+    };
+  },
   loader: () => getReportMapPinsFn(),
   staleTime: 30_000,
   component: RouteComponent,
@@ -61,13 +75,40 @@ function RouteComponent() {
   const reportPins = Route.useLoaderData();
   const location = useUserLocation();
   const localTime = useLocalTime(location.longitude);
-  
-  // State for selected location from map click
+  const navigate = useNavigate({ from: Route.fullPath });
+  const { lat, lng, city } = Route.useSearch();
+
+  // State for selected location from map click or search
   const [selectedLocation, setSelectedLocation] = useState<{
     latitude: number;
     longitude: number;
     city: string;
   } | null>(null);
+
+  // Sync search params to selectedLocation
+  useEffect(() => {
+    if (lat && lng && city) {
+      setSelectedLocation({
+        latitude: lat,
+        longitude: lng,
+        city,
+      });
+    }
+  }, [lat, lng, city]);
+
+  // Handle location selection from map
+  const handleLocationSelect = (loc: {
+    latitude: number;
+    longitude: number;
+    city: string;
+  }) => {
+    setSelectedLocation(loc);
+    // Update URL search params
+    navigate({
+      search: { lat: loc.latitude, lng: loc.longitude, city: loc.city },
+      replace: true,
+    });
+  };
 
   const nearbyReports = useMemo(() => {
     const userLatitude = location.latitude;
@@ -116,9 +157,15 @@ function RouteComponent() {
               {location.loading ? (
                 <Skeleton className="h-8 w-32 rounded-lg" />
               ) : (
-                <div 
+                <div
                   className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50/80 px-2.5 py-1.5 text-xs font-medium text-neutral-700"
-                  title={selectedLocation ? "Lokasi Terpilih" : (location.error ? `Fallback: ${location.error}` : "Lokasi Anda Saat Ini")}
+                  title={
+                    selectedLocation
+                      ? "Lokasi Terpilih"
+                      : location.error
+                        ? `Fallback: ${location.error}`
+                        : "Lokasi Anda Saat Ini"
+                  }
                 >
                   <MapPin className="h-3.5 w-3.5 text-neutral-600" />
                   <span>{selectedLocation?.city || location.city}</span>
@@ -132,7 +179,8 @@ function RouteComponent() {
             <RiskMap
               reports={nearbyReports}
               radiusKm={REPORT_RADIUS_KM}
-              onLocationSelect={setSelectedLocation}
+              onLocationSelect={handleLocationSelect}
+              flyToLocation={selectedLocation}
             />
           </div>
         </div>
