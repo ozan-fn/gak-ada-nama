@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Clock, MapPin } from "lucide-react";
-import RiskMap from "#/components/RiskMap";
+import RiskMap, { type NearbyReportPin } from "#/components/RiskMap";
 import SelectedRisk from "#/components/SelectedRisk";
 import { useUserLocation } from "#/hooks/useUserLocation";
 import { getIndonesianTimezone } from "#/lib/timezoneUtils";
@@ -84,6 +84,8 @@ function RouteComponent() {
     longitude: number;
     city: string;
   } | null>(null);
+  const [selectedReport, setSelectedReport] =
+    useState<NearbyReportPin | null>(null);
 
   // Sync search params to selectedLocation
   useEffect(() => {
@@ -93,6 +95,7 @@ function RouteComponent() {
         longitude: lng,
         city,
       });
+      setSelectedReport(null);
     }
   }, [lat, lng, city]);
 
@@ -103,6 +106,7 @@ function RouteComponent() {
     city: string;
   }) => {
     setSelectedLocation(loc);
+    setSelectedReport(null);
     // Update URL search params
     navigate({
       search: { lat: loc.latitude, lng: loc.longitude, city: loc.city },
@@ -111,23 +115,21 @@ function RouteComponent() {
   };
 
   const nearbyReports = useMemo(() => {
-    const userLatitude = location.latitude;
-    const userLongitude = location.longitude;
-    if (userLatitude === null || userLongitude === null) return [];
+    if (!selectedLocation) return [];
 
     return reportPins
       .map((report) => ({
         ...report,
         distanceKm: calculateDistanceKm(
-          userLatitude,
-          userLongitude,
+          selectedLocation.latitude,
+          selectedLocation.longitude,
           report.latitude,
           report.longitude,
         ),
       }))
       .filter((report) => report.distanceKm <= REPORT_RADIUS_KM)
       .sort((reportA, reportB) => reportA.distanceKm - reportB.distanceKm);
-  }, [location.latitude, location.longitude, reportPins]);
+  }, [reportPins, selectedLocation]);
 
   return (
     <main className="min-h-[calc(100vh-3.5rem)]">
@@ -145,7 +147,7 @@ function RouteComponent() {
                 Visualisasi risiko lingkungan per wilayah
               </span>
 
-              {!location.loading && (
+              {selectedLocation && (
                 <span className="rounded-full border border-red-100 bg-white px-2 py-1 text-[11px] font-semibold text-red-600">
                   {nearbyReports.length} laporan dalam {REPORT_RADIUS_KM} km
                 </span>
@@ -180,6 +182,7 @@ function RouteComponent() {
               reports={nearbyReports}
               radiusKm={REPORT_RADIUS_KM}
               onLocationSelect={handleLocationSelect}
+              onReportSelect={setSelectedReport}
               flyToLocation={selectedLocation}
             />
           </div>
@@ -208,7 +211,12 @@ function RouteComponent() {
           </div>
 
           {/* Selection panel - shows selected location or user location */}
-          <SelectedRisk selectedLocation={selectedLocation} />
+          <SelectedRisk
+            selectedLocation={selectedLocation}
+            nearbyReports={nearbyReports}
+            selectedReport={selectedReport}
+            onReportSelect={setSelectedReport}
+          />
         </div>
       </div>
     </main>

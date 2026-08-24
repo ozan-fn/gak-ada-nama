@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import type * as maplibregl from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
   Layers,
@@ -29,9 +29,55 @@ const defaultView = {
   bearing: 0,
 };
 
-type NearbyReportPin = ReportMapPin & {
+export type NearbyReportPin = ReportMapPin & {
   distanceKm: number;
 };
+
+function groupNearbyReports(
+  reports: NearbyReportPin[],
+): NearbyReportPin[][] {
+  const overlapThreshold = 0.0015;
+  const groups: NearbyReportPin[][] = [];
+
+  for (const report of reports) {
+    const existingGroup = groups.find((group) =>
+      group.some(
+        (candidate) =>
+          Math.abs(candidate.latitude - report.latitude) <= overlapThreshold &&
+          Math.abs(candidate.longitude - report.longitude) <= overlapThreshold,
+      ),
+    );
+
+    if (existingGroup) {
+      existingGroup.push(report);
+    } else {
+      groups.push([report]);
+    }
+  }
+
+  return groups;
+}
+
+function createReportMarkerElement(title: string, reportCount: number) {
+  const marker = document.createElement("button");
+  marker.type = "button";
+  marker.className =
+    "risk-report-marker flex size-9 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-amber-400 text-amber-950 shadow-lg transition-colors hover:bg-amber-300 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2";
+  marker.ariaLabel =
+    reportCount > 1 ? `${reportCount} laporan di lokasi ini` : `Laporan: ${title}`;
+  marker.title =
+    reportCount > 1 ? `${reportCount} laporan di lokasi ini` : title;
+  marker.style.pointerEvents = "auto";
+  marker.style.zIndex = "20";
+
+  const icon = document.createElement("span");
+  icon.className = "text-xl font-black leading-none";
+  icon.textContent = reportCount > 1 ? String(reportCount) : "!";
+  icon.setAttribute("aria-hidden", "true");
+  marker.appendChild(icon);
+
+  return marker;
+}
 
 // Content component that can use hooks
 function RiskMapContent({
@@ -43,6 +89,7 @@ function RiskMapContent({
   radiusKm,
   isMapReady,
   onLocationSelect,
+  onReportSelect,
 }: {
   context: MapContext;
   bearing: number;
@@ -56,7 +103,9 @@ function RiskMapContent({
   reports: NearbyReportPin[];
   radiusKm: number;
   isMapReady: boolean;
+  onReportSelect?: (report: NearbyReportPin) => void;
 }) {
+  const reportMarkersRef = useRef<maplibregl.Marker[]>([]);
   const {
     map,
     alerts,
@@ -72,11 +121,85 @@ function RiskMapContent({
     setShowMarkers,
   } = context;
 
+  useEffect(() => {
+    reportMarkersRef.current.forEach((marker) => {
+      marker.remove();
+    });
+    reportMarkersRef.current = [];
+
+    if (!map.current || !isMapReady) return;
+    const mapInstance = map.current;
+
+    const reportGroups = groupNearbyReports(reports);
+    const markers = reportGroups.map((reportGroup) => {
+      const primaryReport = reportGroup[0];
+      const markerElement = createReportMarkerElement(
+        primaryReport.title,
+        reportGroup.length,
+      );
+      const marker = new maplibregl.Marker({
+        element: markerElement,
+        anchor: "bottom",
+      })
+        .setLngLat([primaryReport.longitude, primaryReport.latitude])
+        .addTo(mapInstance);
+
+      markerElement.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onReportSelect?.(primaryReport);
+      });
+      markerElement.addEventListener("pointerdown", (event) => {
+        event.stopPropagation();
+      });
+
+      return marker;
+    });
+    reportMarkersRef.current = markers;
+
+    return () => {
+      markers.forEach((marker) => {
+        marker.remove();
+      });
+      reportMarkersRef.current = [];
+    };
+  }, [isMapReady, map, onReportSelect, reports]);
+
   // Add map click handler for location selection
   useEffect(() => {
     if (!map.current || !isMapReady || !onLocationSelect) return;
 
     const handleMapClick = (e: maplibregl.MapMouseEvent) => {
+      if (e.originalEvent.defaultPrevented) return;
+
+      const eventTarget = e.originalEvent.target;
+      if (
+        eventTarget instanceof Element &&
+        eventTarget.closest(".maplibregl-marker, .maplibregl-popup")
+      ) {
+        return;
+      }
+
+      const clickedReportGroup = groupNearbyReports(reports).find(
+        (reportGroup) => {
+          const primaryReport = reportGroup[0];
+        const reportPoint = map.current?.project([
+            primaryReport.longitude,
+            primaryReport.latitude,
+        ]);
+        if (!reportPoint) return false;
+
+          const horizontalDistance = reportPoint.x - e.point.x;
+          const verticalDistance = reportPoint.y - e.point.y;
+        return Math.hypot(horizontalDistance, verticalDistance) <= 24;
+        },
+      );
+
+      if (clickedReportGroup) {
+        onReportSelect?.(clickedReportGroup[0]);
+        return;
+      }
+
       const { lng, lat } = e.lngLat;
 
       // Find nearest city
@@ -94,14 +217,28 @@ function RiskMapContent({
     return () => {
       map.current?.off("click", handleMapClick);
     };
-  }, [isMapReady, map, onLocationSelect]);
+  }, [isMapReady, map, onLocationSelect, onReportSelect, reports]);
 
   const resetView = () => {
     map.current?.easeTo({ ...defaultView, duration: 600 });
   };
 
   const goToUserLocation = () => {
-    if (map.current && userLocation.latitude && userLocation.longitude) {
+    if (
+      !map.current ||
+      userLocation.latitude === null ||
+      userLocation.longitude === null
+    ) {
+      return;
+    }
+
+    if (onLocationSelect) {
+      onLocationSelect({
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+        city: userLocation.city,
+      });
+    } else {
       map.current.flyTo({
         center: [userLocation.longitude, userLocation.latitude],
         zoom: 14,
@@ -381,6 +518,7 @@ export default function RiskMap({
   reports,
   radiusKm = 5,
   onLocationSelect,
+  onReportSelect,
   flyToLocation,
 }: {
   reports: NearbyReportPin[];
@@ -390,6 +528,7 @@ export default function RiskMap({
     longitude: number;
     city: string;
   }) => void;
+  onReportSelect?: (report: NearbyReportPin) => void;
   flyToLocation?: {
     latitude: number;
     longitude: number;
@@ -399,21 +538,32 @@ export default function RiskMap({
   const [showAIPanel, setShowAIPanel] = useState(false);
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
   const [aqiRadius, setAqiRadius] = useState(1000); // Default Indonesia-wide
+  const [isMapReady, setIsMapReady] = useState(false);
 
   // Fly to location when flyToLocation changes (from search)
   useEffect(() => {
-    if (!mapInstanceRef.current || !flyToLocation) return;
+    if (!mapInstanceRef.current || !isMapReady || !flyToLocation) return;
+
+    const mapInstance = mapInstanceRef.current;
+    const selectedMarker = new maplibregl.Marker({ color: "#dc2626" })
+      .setLngLat([flyToLocation.longitude, flyToLocation.latitude])
+      .addTo(mapInstance);
+    selectedMarker.getElement().ariaLabel = "Titik wilayah terpilih";
+    selectedMarker.getElement().title = "Wilayah terpilih";
 
     // Adjust AQI radius untuk regional detail
     setAqiRadius(100); // 100km radius untuk city-level detail
 
-    mapInstanceRef.current.flyTo({
+    mapInstance.flyTo({
       center: [flyToLocation.longitude, flyToLocation.latitude],
       zoom: 10, // Regional view untuk lihat AQI area sekitar
       duration: 1500,
     });
-  }, [flyToLocation]);
-  const [isMapReady, setIsMapReady] = useState(false);
+
+    return () => {
+      selectedMarker.remove();
+    };
+  }, [flyToLocation, isMapReady]);
 
   return (
     <BaseEnvironmentMap
@@ -451,6 +601,7 @@ export default function RiskMap({
           radiusKm={radiusKm}
           isMapReady={isMapReady}
           onLocationSelect={onLocationSelect}
+          onReportSelect={onReportSelect}
         />
       )}
     </BaseEnvironmentMap>
