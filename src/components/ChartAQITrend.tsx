@@ -38,20 +38,27 @@ export function ChartAQITrend({ location }: ChartAQITrendProps) {
     return <ChartAQITrendSkeleton />;
   }
 
-  // Get today's date in Jakarta timezone (YYYY-MM-DD format)
+  // Get today's date in Jakarta timezone
   const today = new Date();
+
   const jakartaToday = new Date(
-    today.toLocaleString("en-US", { timeZone: "Asia/Jakarta" }),
+    today.toLocaleString("en-US", {
+      timeZone: "Asia/Jakarta",
+    }),
   );
+
   const todayDateString = jakartaToday.toISOString().split("T")[0];
 
   // Use PM2.5 forecast data (7 days)
   const chartData = aqi.forecast.pm25.slice(0, 7).map((item) => {
     const forecastDate = new Date(item.day);
+
     const forecastDateString = forecastDate.toISOString().split("T")[0];
+
     const dayName = forecastDate.toLocaleDateString("id-ID", {
       weekday: "short",
     });
+
     const isToday = forecastDateString === todayDateString;
 
     return {
@@ -78,17 +85,27 @@ export function ChartAQITrend({ location }: ChartAQITrendProps) {
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-neutral-200/60 px-4 py-2">
+      <div className="flex items-center justify-between border-b border-neutral-200/60 px-3 py-2 md:px-4">
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-semibold text-neutral-900">
             Tren Kualitas Udara (PM2.5)
           </h3>
+
           <span
-            className={`rounded-sm border px-2 py-0.5 text-[10px] font-medium ${statusColor}`}
+            className={`
+              rounded-sm
+              border
+              px-2
+              py-0.5
+              text-[10px]
+              font-medium
+              ${statusColor}
+            `}
           >
             {status}
           </span>
         </div>
+
         <button
           type="button"
           className="flex h-7 w-7 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:bg-neutral-100"
@@ -100,12 +117,15 @@ export function ChartAQITrend({ location }: ChartAQITrendProps) {
 
       {/* Chart Content */}
       <div
-        className="flex-1 px-2 py-1 relative"
-        style={{ minHeight: "200px", height: "100%" }}
+        className="relative flex-1 px-1 py-1 md:px-2"
+        style={{
+          minHeight: "200px",
+          height: "100%",
+        }}
       >
         {/* Background diagonal pattern */}
         <div
-          className="absolute inset-0 pointer-events-none"
+          className="pointer-events-none absolute inset-0"
           style={{
             backgroundImage: `repeating-linear-gradient(
               -45deg,
@@ -120,10 +140,14 @@ export function ChartAQITrend({ location }: ChartAQITrendProps) {
             marginRight: "12px",
           }}
         />
+
         <ChartContainer
           config={chartConfig}
           className="relative z-10"
-          style={{ width: "100%", height: "100%" }}
+          style={{
+            width: "100%",
+            height: "100%",
+          }}
         >
           <AreaChart
             accessibilityLayer
@@ -142,6 +166,7 @@ export function ChartAQITrend({ location }: ChartAQITrendProps) {
                   stopColor="var(--color-aqi)"
                   stopOpacity={0.5}
                 />
+
                 <stop
                   offset="95%"
                   stopColor="var(--color-aqi)"
@@ -156,18 +181,23 @@ export function ChartAQITrend({ location }: ChartAQITrendProps) {
               stroke="hsl(var(--border))"
               opacity={0.5}
             />
+
             <YAxis
               tickLine={false}
               axisLine={false}
               tickMargin={4}
               width={25}
-              tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+              tick={{
+                fontSize: 11,
+                fill: "hsl(var(--muted-foreground))",
+              }}
               tickCount={4}
               domain={[
                 0,
                 (dataMax: number) => Math.ceil((dataMax + 10) / 10) * 10,
               ]}
             />
+
             <XAxis
               dataKey="day"
               tickLine={false}
@@ -176,10 +206,12 @@ export function ChartAQITrend({ location }: ChartAQITrendProps) {
               interval={0}
               tick={{ fontSize: 12 }}
             />
+
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent hideLabel />}
             />
+
             <Area
               dataKey="aqi"
               type="step"
@@ -187,6 +219,7 @@ export function ChartAQITrend({ location }: ChartAQITrendProps) {
               stroke="var(--color-aqi)"
               strokeWidth={2}
             />
+
             {/* Vertical line at today */}
             {todayData && (
               <ReferenceLine

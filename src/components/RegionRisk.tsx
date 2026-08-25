@@ -20,14 +20,16 @@ type RegionRiskProps = {
 
 export default function RegionRisk({ location }: RegionRiskProps) {
   const userLocation = useUserLocation();
+
   const { weather, aqi, loading } = useEnvironmentData(location);
 
   // Fetch DYNAMIC baseline from real APIs (Open-Meteo + AQICN)
-  const { baseline: dynamicBaseline, loading: baselineLoading } = useDynamicBaseline(
-    userLocation.latitude,
-    userLocation.longitude,
-    userLocation.city
-  );
+  const { baseline: dynamicBaseline, loading: baselineLoading } =
+    useDynamicBaseline(
+      userLocation.latitude,
+      userLocation.longitude,
+      userLocation.city,
+    );
 
   if (loading || !weather || !aqi) {
     return <RegionRiskSkeleton />;
@@ -35,32 +37,36 @@ export default function RegionRisk({ location }: RegionRiskProps) {
 
   // Determine which city to use for baseline
   let cityForBaseline: string | null = null;
-  
-  if (location && 'city' in location) {
+
+  if (location && "city" in location) {
     cityForBaseline = location.city;
   } else {
     cityForBaseline = userLocation.city;
   }
 
-  // Use dynamic baseline if available, otherwise fallback to static regional baseline
+  // Use dynamic baseline if available,
+  // otherwise fallback to static regional baseline
   let NORMAL_TEMP: number;
   let NORMAL_RAIN_PROB: number;
   let NORMAL_AQI: number;
   let NORMAL_HUMIDITY: number;
 
   if (dynamicBaseline && !baselineLoading) {
-    // ✅ REAL historical data from APIs!
+    // Real historical data from APIs
     NORMAL_TEMP = dynamicBaseline.temp;
-    NORMAL_AQI = dynamicBaseline.aqi;       // Local area median from nearby stations
+    NORMAL_AQI = dynamicBaseline.aqi;
     NORMAL_HUMIDITY = dynamicBaseline.humidity;
-    
+
     // Convert rainSum (mm/day) to rough precipitation probability
-    // Formula: higher daily rainfall = higher probability of rain
     // 0mm = ~10%, 5mm = ~50%, 10mm = ~80%, 20mm+ = ~95%
-    NORMAL_RAIN_PROB = Math.min(95, Math.round(10 + dynamicBaseline.rainSum * 7));
+    NORMAL_RAIN_PROB = Math.min(
+      95,
+      Math.round(10 + dynamicBaseline.rainSum * 7),
+    );
   } else {
-    // ⏳ Fallback to static baseline while loading
+    // Fallback to static baseline while loading
     const staticBaseline = getRegionalBaseline(cityForBaseline);
+
     NORMAL_TEMP = staticBaseline.temp;
     NORMAL_RAIN_PROB = staticBaseline.rainProb;
     NORMAL_AQI = staticBaseline.aqi;
@@ -90,10 +96,10 @@ export default function RegionRisk({ location }: RegionRiskProps) {
     Math.round(tempRisk + rainRisk + aqiRisk + humidityRisk),
   );
 
-  // Real report count from API (currently 0, will fetch from backend later)
+  // Real report count from API
   const reportCount = 0;
 
-  // Calculate risk level based on composite Environmental Risk
+  // Calculate risk level
   let level = "Rendah";
   let levelColor = "text-emerald-600";
 
@@ -109,13 +115,25 @@ export default function RegionRisk({ location }: RegionRiskProps) {
   }
 
   const conditions = [
-    { icon: CloudRain, label: "Curah Hujan", value: `${rainProb}%` },
-    { icon: Thermometer, label: "Suhu", value: `${temp}°C` },
-    { icon: Wind, label: "Kualitas Udara", value: `${aqiValue} AQI` },
+    {
+      icon: CloudRain,
+      label: "Curah Hujan",
+      value: `${rainProb}%`,
+    },
+    {
+      icon: Thermometer,
+      label: "Suhu",
+      value: `${temp}°C`,
+    },
+    {
+      icon: Wind,
+      label: "Kualitas Udara",
+      value: `${aqiValue} AQI`,
+    },
   ];
 
   return (
-    <div className="flex h-full w-full flex-col justify-between bg-white p-6">
+    <div className="flex h-full w-full flex-col justify-between bg-white p-3 md:p-6">
       {/* Top Section */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-5">
@@ -124,6 +142,7 @@ export default function RegionRisk({ location }: RegionRiskProps) {
             <span className="text-4xl font-bold tracking-tight text-neutral-900">
               {score}
             </span>
+
             <span className="ml-1 text-lg font-medium text-neutral-600">
               /100
             </span>
@@ -134,6 +153,7 @@ export default function RegionRisk({ location }: RegionRiskProps) {
             <p className="text-[11px] font-medium text-neutral-400">
               Risiko Wilayah
             </p>
+
             <h3 className={`text-base font-bold ${levelColor}`}>
               Risiko {level}
             </h3>
@@ -151,7 +171,7 @@ export default function RegionRisk({ location }: RegionRiskProps) {
       </div>
 
       {/* Description */}
-      <p className="mt-3 text-xs text-neutral-500 leading-relaxed">
+      <p className="mt-3 text-xs leading-relaxed text-neutral-500">
         Kondisi lingkungan saat ini menunjukkan{" "}
         {score >= 50
           ? "peningkatan risiko dibanding pola normal"
@@ -161,17 +181,22 @@ export default function RegionRisk({ location }: RegionRiskProps) {
 
       {/* Conditions */}
       <div className="mt-6 grid grid-cols-3 gap-3">
-        {conditions.map(({ icon: Icon, label, value }) => (
-          <div key={label}>
-            <p className="flex items-center gap-1.5 text-[11px] font-medium text-neutral-400">
-              <Icon className="h-3.5 w-3.5" />
-              {label}
-            </p>
-            <p className="mt-1.5 text-base font-bold text-neutral-900">
-              {value}
-            </p>
-          </div>
-        ))}
+        {conditions.map(({ icon: Icon, label, value }, idx) => {
+          const colors = ["text-blue-500", "text-orange-500", "text-teal-500"];
+
+          return (
+            <div key={label}>
+              <p className="flex items-center gap-1.5 text-[11px] font-medium text-neutral-400">
+                <Icon className={`h-3.5 w-3.5 ${colors[idx]}`} />
+                {label}
+              </p>
+
+              <p className="mt-1.5 text-base font-bold text-neutral-900">
+                {value}
+              </p>
+            </div>
+          );
+        })}
       </div>
 
       {/* Footer */}
@@ -184,6 +209,7 @@ export default function RegionRisk({ location }: RegionRiskProps) {
             ? `${reportCount} laporan mendukung`
             : "Belum ada laporan komunitas"}
         </span>
+
         <ArrowRight className="h-4 w-4" />
       </button>
     </div>

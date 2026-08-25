@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
 import { ArrowRight, Clock, Download, MapPin } from "lucide-react";
 import DashboardMapCard from "#/components/DashboardMapCard";
+import MobileDashboard from "#/components/MobileDashboard";
 import { ChartAQITrend } from "#/components/ChartAQITrend";
 import RegionalExtreme from "#/components/RegionalExtreme";
 import PrecipitationOverview from "#/components/PrecipitationOverview";
@@ -39,6 +40,18 @@ function useLocalTime(longitude?: number | null) {
 function Dashboard() {
   const location = useUserLocation();
   const localTime = useLocalTime(location.longitude);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Stabilize location object to prevent unnecessary re-renders
   const stableLocation = useMemo(
@@ -80,6 +93,18 @@ function Dashboard() {
     warning: "bg-amber-50 text-amber-700",
     danger: "bg-red-50 text-red-700",
   };
+
+  // Render mobile layout if screen is small
+  if (isMobile) {
+    return (
+      <MobileDashboard
+        location={location}
+        stableLocation={stableLocation}
+        locationParams={locationParams}
+        envData={envData}
+      />
+    );
+  }
 
   return (
     <main className="min-h-screen">

@@ -29,10 +29,9 @@ export default function WeatherInformation({
 
   const temp = Math.round(weather.current.temperature);
   const humidity = Math.round(weather.current.humidity);
-  const windSpeed = Math.round(weather.current.windSpeed * 3.6); // m/s to km/h
+  const windSpeed = Math.round(weather.current.windSpeed * 3.6);
   const pressure = aqi?.pressure || 1013;
 
-  // Determine weather condition
   const isRaining = weather.current.precipitation > 0;
   const isCloudy = weather.current.cloudCover > 70;
 
@@ -53,13 +52,28 @@ export default function WeatherInformation({
   const WeatherIcon = weatherIcon;
 
   const details = [
-    { icon: Droplets, label: "Kelembapan", value: `${humidity}%` },
-    { icon: Wind, label: "Kecepatan Angin", value: `${windSpeed} km/jam` },
-    { icon: Gauge, label: "Tekanan Udara", value: `${pressure} hPa` },
+    {
+      icon: Droplets,
+      label: "Kelembapan",
+      value: `${humidity}%`,
+      color: "text-blue-500",
+    },
+    {
+      icon: Wind,
+      label: "Kecepatan Angin",
+      value: `${windSpeed} km/jam`,
+      color: "text-teal-500",
+    },
+    {
+      icon: Gauge,
+      label: "Tekanan Udara",
+      value: `${pressure} hPa`,
+      color: "text-orange-500",
+    },
   ];
 
   return (
-    <div className="flex h-full w-full flex-col justify-between bg-white p-5">
+    <div className="flex h-full w-full flex-col justify-between bg-white p-3 md:p-5">
       {/* Top Section */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
@@ -73,6 +87,7 @@ export default function WeatherInformation({
             <span className="text-4xl font-bold tracking-tight text-neutral-900">
               {temp}
             </span>
+
             <span className="ml-1 text-lg font-medium text-neutral-600">
               °C
             </span>
@@ -101,18 +116,19 @@ export default function WeatherInformation({
       </div>
 
       {/* Description */}
-      <p className="mt-2 text-xs text-neutral-500 leading-relaxed">
+      <p className="mt-2 text-xs leading-relaxed text-neutral-500">
         Pembaruan cuaca dan suhu secara berkala setiap jam untuk wilayah Anda.
       </p>
 
       {/* Weather Details */}
       <div className="mt-3 flex flex-col divide-y divide-neutral-100 border-t border-neutral-100">
-        {details.map(({ icon: Icon, label, value }) => (
+        {details.map(({ icon: Icon, label, value, color }) => (
           <div key={label} className="flex items-center justify-between py-2">
             <span className="flex items-center gap-2 text-xs text-neutral-500">
-              <Icon className="h-3.5 w-3.5 text-neutral-400" />
+              <Icon className={`h-3.5 w-3.5 ${color}`} />
               {label}
             </span>
+
             <span className="text-sm font-bold text-neutral-900">{value}</span>
           </div>
         ))}
@@ -124,6 +140,7 @@ export default function WeatherInformation({
         className="mt-4 flex h-8 w-full items-center justify-between rounded-lg bg-neutral-100 px-3 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-200"
       >
         <span>Lihat Rincian</span>
+
         <ArrowRight className="h-4 w-4" />
       </button>
     </div>

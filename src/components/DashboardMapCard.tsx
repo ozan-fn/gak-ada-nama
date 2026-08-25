@@ -45,8 +45,8 @@ function DashboardMapContent({ context }: { context: MapContext }) {
 
   return (
     <>
-      {/* Top Left Container: Active Alerts */}
-      <div className="absolute left-3 top-3 z-10 flex flex-col gap-2">
+      {/* Top Left Container: Active Alerts - Hidden on mobile */}
+      <div className="absolute left-3 top-3 z-10 hidden flex-col gap-2 lg:flex">
         {activeAlertsCount > 0 && (
           <Link to="/dashboard/risk-map">
             <button
@@ -63,9 +63,9 @@ function DashboardMapContent({ context }: { context: MapContext }) {
         )}
       </div>
 
-      {/* Bottom Left: Danger Summary */}
+      {/* Bottom Left: Danger Summary - Hidden on mobile */}
       {alerts.length > 0 && (
-        <div className="absolute bottom-3 left-3 z-10 max-w-xs rounded-lg border border-neutral-200 bg-white/95 p-3 shadow-md backdrop-blur-sm">
+        <div className="absolute bottom-3 left-3 z-10 hidden max-w-xs rounded-lg border border-neutral-200 bg-white/95 p-3 shadow-md backdrop-blur-sm lg:block">
           <h3 className="mb-2 text-xs font-semibold text-neutral-800">
             Dangers Nearby
           </h3>
@@ -107,8 +107,8 @@ function DashboardMapContent({ context }: { context: MapContext }) {
         </div>
       )}
 
-      {/* Top Right Controls: Layers, Locate Me */}
-      <div className="absolute right-3 top-3 z-10 flex flex-col rounded-lg border border-neutral-200 bg-white shadow-sm">
+      {/* Top Right Controls: Layers, Locate Me - Hidden on mobile */}
+      <div className="absolute right-3 top-3 z-10 hidden flex-col rounded-lg border border-neutral-200 bg-white shadow-sm lg:flex">
         <div className="relative">
           <button
             type="button"
@@ -162,8 +162,8 @@ function DashboardMapContent({ context }: { context: MapContext }) {
         </button>
       </div>
 
-      {/* Bottom Right Controls: Zoom */}
-      <div className="absolute bottom-3 right-3 z-10 flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">
+      {/* Bottom Right Controls: Zoom - Hidden on mobile */}
+      <div className="absolute bottom-3 right-3 z-10 hidden flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm lg:flex">
         <button
           type="button"
           onClick={() => handleZoom(-1)}

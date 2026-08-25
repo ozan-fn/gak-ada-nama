@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Clock, MapPin } from "lucide-react";
 import RiskMap, { type NearbyReportPin } from "#/components/RiskMap";
+import MobileRiskMap from "#/components/MobileRiskMap";
 import SelectedRisk from "#/components/SelectedRisk";
 import { useUserLocation } from "#/hooks/useUserLocation";
 import { getIndonesianTimezone } from "#/lib/timezoneUtils";
@@ -77,6 +78,18 @@ function RouteComponent() {
   const localTime = useLocalTime(location.longitude);
   const navigate = useNavigate({ from: Route.fullPath });
   const { lat, lng, city } = Route.useSearch();
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // State for selected location from map click or search
   const [selectedLocation, setSelectedLocation] = useState<{
@@ -86,6 +99,24 @@ function RouteComponent() {
   } | null>(null);
   const [selectedReport, setSelectedReport] =
     useState<NearbyReportPin | null>(null);
+
+  // Stabilize location object
+  const stableLocation = useMemo(
+    () => ({
+      latitude: location.latitude,
+      longitude: location.longitude,
+      city: location.city,
+      loading: location.loading,
+      error: location.error,
+    }),
+    [
+      location.latitude,
+      location.longitude,
+      location.city,
+      location.loading,
+      location.error,
+    ],
+  );
 
   // Sync search params to selectedLocation
   useEffect(() => {
@@ -130,6 +161,29 @@ function RouteComponent() {
       .filter((report) => report.distanceKm <= REPORT_RADIUS_KM)
       .sort((reportA, reportB) => reportA.distanceKm - reportB.distanceKm);
   }, [reportPins, selectedLocation]);
+
+  // Render mobile layout if screen is small
+  if (isMobile) {
+    return (
+      <MobileRiskMap
+        location={location}
+        stableLocation={stableLocation}
+        reports={nearbyReports}
+        radiusKm={REPORT_RADIUS_KM}
+        selectedLocation={selectedLocation}
+        onLocationSelect={handleLocationSelect}
+        onReportSelect={setSelectedReport}
+        renderSheetContent={() => (
+          <SelectedRisk
+            selectedLocation={selectedLocation}
+            nearbyReports={nearbyReports}
+            selectedReport={selectedReport}
+            onReportSelect={setSelectedReport}
+          />
+        )}
+      />
+    );
+  }
 
   return (
     <main className="min-h-[calc(100vh-3.5rem)]">

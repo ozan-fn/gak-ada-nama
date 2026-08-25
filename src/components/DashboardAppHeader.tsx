@@ -1,8 +1,10 @@
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { LogOut, Settings, User } from "lucide-react";
+
 import { SidebarTrigger } from "./ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,7 +25,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "./ui/alert-dialog";
+
 import { useSession, signOut } from "#/lib/auth-client";
+
 import AQIIndicator from "./AQIIndicator";
 import LocationSearchBar from "./LocationSearchBar";
 import NotificationBar from "./NotificationBar";
@@ -31,7 +36,9 @@ export default function DashboardAppHeader() {
   const { data: session } = useSession();
   const { pathname } = useLocation();
   const navigate = useNavigate();
+
   const user = session?.user;
+
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -40,8 +47,23 @@ export default function DashboardAppHeader() {
 
   const isRiskMapRoute = pathname === "/dashboard/risk-map";
 
+  const getPageTitle = () => {
+    const routes: Record<string, string> = {
+      "/dashboard": "Beranda",
+      "/dashboard/warning": "Peringatan",
+      "/dashboard/profile": "Profil",
+      "/dashboard/settings": "Pengaturan",
+      "/dashboard/notifications": "Notifikasi",
+    };
+
+    return routes[pathname] ?? "Beranda";
+  };
+
+  const pageTitle = getPageTitle();
+
   const getInitials = (name?: string) => {
     if (!name) return "U";
+
     return name
       .split(" ")
       .map((n) => n[0])
@@ -67,6 +89,7 @@ export default function DashboardAppHeader() {
 
   const handleLogout = async () => {
     setLoggingOut(true);
+
     try {
       await signOut();
       navigate({ to: "/login" });
@@ -78,42 +101,110 @@ export default function DashboardAppHeader() {
 
   return (
     <header
-      className={`relative z-50 grid h-14 shrink-0 items-center bg-white/80 backdrop-blur-md px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 dark:bg-neutral-900/80 ${
-        isNoBorderRoute
-          ? "border-b-0"
-          : "border-b border-neutral-200/60 dark:border-neutral-800/60"
-      }`}
-      style={{ gridTemplateColumns: "auto 1fr auto" }}
+      className={`
+        relative z-50 grid h-14 shrink-0
+        grid-cols-[auto_1fr_auto]
+        items-center
+        bg-white/80 px-4
+        backdrop-blur-md
+        transition-[width,height]
+        ease-linear
+        group-has-data-[collapsible=icon]/sidebar-wrapper:h-12
+        dark:bg-neutral-900/80
+        ${
+          isNoBorderRoute
+            ? "border-b-0"
+            : "border-b border-neutral-200/60 dark:border-neutral-800/60"
+        }
+      `}
     >
-      {/* Grid 1 (Kiri): Sidebar Trigger */}
-      <div className="flex items-center justify-start gap-3 mr-4">
-        <SidebarTrigger className="-ml-1 size-7 rounded-lg" />
-        <div className="hidden h-5 w-px bg-border sm:block" />
-      </div>
+      {/* =========================================================
+          LEFT
+      ========================================================= */}
+      <div className="flex min-w-0 items-center gap-3 pr-4">
+        <SidebarTrigger className="-ml-1 size-7 shrink-0 rounded-lg" />
 
-      {/* Grid 2 (Tengah): Search Location (Hanya di /dashboard/risk-map) */}
-      <div className="flex justify-center px-4">
-        {isRiskMapRoute && (
-          <LocationSearchBar onLocationSelect={handleLocationSearch} />
+        <div className="hidden h-5 w-px bg-border sm:block" />
+
+        {/* =====================================================
+            MOBILE / SMALL SCREEN TITLE
+            < md = berada di samping SidebarTrigger
+        ===================================================== */}
+        {!isRiskMapRoute && (
+          <span className="truncate text-sm font-medium text-neutral-700 md:hidden dark:text-neutral-200">
+            {pageTitle}
+          </span>
         )}
       </div>
 
-      {/* Grid 3 (Kanan): AQI Icon, Notification, Avatar */}
-      <div className="flex items-center justify-end gap-2 ml-4">
+      {/* =========================================================
+          CENTER - DESKTOP / TABLET
+          md+ = benar-benar berada di tengah viewport
+      ========================================================= */}
+      <div
+        className="
+          pointer-events-none
+          absolute
+          left-1/2
+          hidden
+          -translate-x-1/2
+          items-center
+          justify-center
+          md:flex
+        "
+      >
+        <div className="pointer-events-auto">
+          {isRiskMapRoute ? (
+            <LocationSearchBar onLocationSelect={handleLocationSearch} />
+          ) : (
+            <span className="whitespace-nowrap text-sm font-medium text-neutral-700 dark:text-neutral-200">
+              {pageTitle}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* =========================================================
+          RIGHT
+      ========================================================= */}
+      <div className="ml-4 flex items-center justify-end gap-2">
         <AQIIndicator />
+
         <NotificationBar />
 
-        <div className="h-5 w-px bg-neutral-200 dark:bg-neutral-700" />
+        <div className="mx-1 h-5 w-px bg-neutral-200 dark:bg-neutral-700" />
 
+        {/* User Dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg bg-neutral-100/60 px-1.5 py-1 hover:bg-neutral-200/80 transition-colors dark:bg-neutral-800/60 dark:hover:bg-neutral-700/80 outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50">
-            <Avatar className="h-7 w-7 rounded-lg">
+          <DropdownMenuTrigger
+            className="
+              flex items-center gap-2
+              rounded-lg
+              bg-neutral-100/60
+              px-1.5 py-1
+              outline-none
+              transition-colors
+              hover:bg-neutral-200/80
+              focus-visible:ring-2
+              focus-visible:ring-emerald-500/50
+              dark:bg-neutral-800/60
+              dark:hover:bg-neutral-700/80
+            "
+          >
+            <Avatar className="size-7 rounded-lg">
               <AvatarImage
                 src={user?.image ?? undefined}
                 alt={user?.name ?? "User"}
               />
+
               <AvatarFallback
-                className="rounded-lg bg-foreground text-[11px] font-semibold text-background"
+                className="
+                  rounded-lg
+                  bg-foreground
+                  text-[11px]
+                  font-semibold
+                  text-background
+                "
                 suppressHydrationWarning
               >
                 {getInitials(user?.name)}
@@ -125,25 +216,35 @@ export default function DashboardAppHeader() {
             <DropdownMenuGroup>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col gap-0.5">
-                  <p className="text-xs font-medium leading-none truncate">
+                  <p className="truncate text-xs font-medium leading-none">
                     {user?.name ?? "User"}
                   </p>
-                  <p className="text-xs text-muted-foreground truncate">
+
+                  <p className="truncate text-xs text-muted-foreground">
                     {user?.email ?? ""}
                   </p>
                 </div>
               </DropdownMenuLabel>
             </DropdownMenuGroup>
+
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate({ to: "/dashboard" })}>
+
+            <DropdownMenuItem
+              onClick={() => navigate({ to: "/dashboard/profile" })}
+            >
               <User className="mr-2 size-4" />
               Profil
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate({ to: "/dashboard" })}>
+
+            <DropdownMenuItem
+              onClick={() => navigate({ to: "/dashboard/settings" })}
+            >
               <Settings className="mr-2 size-4" />
               Pengaturan
             </DropdownMenuItem>
+
             <DropdownMenuSeparator />
+
             <DropdownMenuItem
               variant="destructive"
               onClick={() => setShowLogoutConfirm(true)}
@@ -154,24 +255,35 @@ export default function DashboardAppHeader() {
           </DropdownMenuContent>
         </DropdownMenu>
 
+        {/* Logout Confirmation */}
         <AlertDialog
           open={showLogoutConfirm}
           onOpenChange={setShowLogoutConfirm}
         >
-          <AlertDialogContent>
+          <AlertDialogContent className="sm:max-w-md">
             <AlertDialogHeader>
               <AlertDialogTitle>Keluar dari akun?</AlertDialogTitle>
-              <AlertDialogDescription>
+
+              <AlertDialogDescription className="leading-relaxed">
                 Anda akan keluar dari sesi ini dan perlu login kembali untuk
                 mengakses dashboard.
               </AlertDialogDescription>
             </AlertDialogHeader>
+
             <AlertDialogFooter>
               <AlertDialogCancel disabled={loggingOut}>Batal</AlertDialogCancel>
+
               <AlertDialogAction
                 onClick={handleLogout}
                 disabled={loggingOut}
-                className="bg-red-600 text-white hover:bg-red-700 focus:ring-red-600"
+                className="
+                  bg-red-600
+                  text-white
+                  hover:bg-red-700
+                  focus:ring-red-600
+                  dark:bg-red-500
+                  dark:hover:bg-red-600
+                "
               >
                 {loggingOut ? "Keluar..." : "Keluar"}
               </AlertDialogAction>

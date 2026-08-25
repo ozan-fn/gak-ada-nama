@@ -29,5 +29,5 @@ export function getAQIAdvice(aqi: number): string {
   if (aqi <= 150) {
     return "Kelompok sensitif mungkin mengalami dampak kesehatan. Batasi aktivitas outdoor berkepanjangan.";
   }
-  return "⚠️ Tidak sehat! Hindari aktivitas outdoor. Gunakan masker jika harus keluar.";
+  return "Tidak sehat! Hindari aktivitas outdoor. Gunakan masker jika harus keluar.";
 }

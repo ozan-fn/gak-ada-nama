@@ -4,7 +4,6 @@ import {
   ClipboardList,
   History,
   Home,
-  LayoutDashboard,
   Map,
   Plus,
   Settings,
@@ -22,8 +21,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Separator } from "./ui/separator";
+import PritaLogo from "@/assets/images/prita-logo.png";
 
 const menuItems = [
   {
@@ -86,23 +87,30 @@ const menuItems = [
 export function AppSidebar() {
   const location = useLocation();
   const isSettingsActive = location.pathname === "/dashboard/settings";
+  const { setOpenMobile, isMobile } = useSidebar();
+
+  const handleNavClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   return (
-    <Sidebar collapsible="offcanvas">
+    <Sidebar collapsible="offcanvas" className="md:w-64 w-64">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" tooltip="Prita">
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <LayoutDashboard className="size-4" />
-              </div>
-              <div className="flex flex-col gap-0.5 leading-none">
-                <span className="font-semibold">Prita</span>
-                <span className="text-xs text-muted-foreground">
-                  Intelijen Lingkungan
-                </span>
-              </div>
-            </SidebarMenuButton>
+            <Link to="/dashboard" className="no-underline">
+              <SidebarMenuButton size="lg" tooltip="Prita">
+                <img src={PritaLogo} alt="Prita Logo" className="h-8 w-8" />
+                <div className="flex flex-col gap-0.5 leading-none">
+                  <span className="font-logo font-semibold">Prita</span>
+                  <span className="text-xs text-muted-foreground">
+                    Pemantauan Risiko Lingkungan
+                  </span>
+                </div>
+              </SidebarMenuButton>
+            </Link>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
@@ -117,7 +125,11 @@ export function AppSidebar() {
                   const isActive = location.pathname === item.to;
                   return (
                     <SidebarMenuItem key={item.label}>
-                      <Link to={item.to} className="no-underline">
+                      <Link
+                        to={item.to}
+                        className="no-underline"
+                        onClick={handleNavClick}
+                      >
                         <SidebarMenuButton
                           isActive={isActive}
                           tooltip={item.label}
@@ -139,7 +151,11 @@ export function AppSidebar() {
         <Separator />
         <SidebarMenu>
           <SidebarMenuItem>
-            <Link to="/dashboard/settings" className="no-underline">
+            <Link
+              to="/dashboard/settings"
+              className="no-underline"
+              onClick={handleNavClick}
+            >
               <SidebarMenuButton
                 isActive={isSettingsActive}
                 tooltip="Pengaturan"

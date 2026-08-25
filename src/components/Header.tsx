@@ -8,6 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useRef, useEffect } from "react";
 import { LayoutDashboard, LogOut } from "lucide-react";
 
+import PritaLogo from "@/assets/images/prita-logo.png";
+
 export const navLinks = [
   {
     label: "Fitur",
@@ -24,13 +26,15 @@ export const navLinks = [
   {
     label: "Tentang",
     href: "/about",
-  }
+  },
 ];
 
 export function Header() {
   const scrolled = useScroll(10);
   const router = useRouterState();
-  const isHome = router.location.pathname === '/' || router.location.pathname === '/_public/';
+  const isHome =
+    router.location.pathname === "/" ||
+    router.location.pathname === "/_public/";
   const { data: session } = useSession();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -49,7 +53,10 @@ export function Header() {
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
         setShowDropdown(false);
       }
     };
@@ -62,8 +69,9 @@ export function Header() {
       className={cn(
         "sticky top-0 z-50 mx-auto w-full max-w-5xl border-transparent border-b md:rounded-md md:border md:transition-all md:ease-out",
         {
-          "border-border bg-background/95 backdrop-blur-sm supports-backdrop-filter:bg-background/50 md:top-2 md:max-w-4xl md:shadow": scrolled,
-        }
+          "border-border bg-background/95 backdrop-blur-sm supports-backdrop-filter:bg-background/50 md:top-2 md:max-w-4xl md:shadow":
+            scrolled,
+        },
       )}
     >
       <nav
@@ -71,20 +79,21 @@ export function Header() {
           "flex h-14 w-full items-center justify-between px-4 md:h-12 md:transition-all md:ease-out",
           {
             "md:px-2": scrolled,
-          }
+          },
         )}
       >
         <Link
           to="/"
           className={cn(
-            "rounded-md p-2 font-semibold transition-colors duration-300",
+            "flex items-center rounded-md p-0.5 font-semibold transition-colors duration-300",
             {
               "text-foreground hover:bg-muted": scrolled || !isHome,
               "text-white hover:bg-white/10": !scrolled && isHome,
-            }
+            },
           )}
         >
-          Prita.
+          <img src={PritaLogo} alt="Prita Logo" className="h-8 w-8" />
+          <span className="ml-2 text-lg font-logo font-semibold">Prita</span>
         </Link>
         <div className="hidden items-center gap-2 md:flex">
           <div>
@@ -94,8 +103,10 @@ export function Header() {
                 size="sm"
                 variant="ghost"
                 className={cn("transition-colors duration-300", {
-                  "text-foreground hover:text-foreground hover:bg-muted": scrolled || !isHome,
-                  "text-white hover:text-white hover:bg-white/10": !scrolled && isHome,
+                  "text-foreground hover:text-foreground hover:bg-muted":
+                    scrolled || !isHome,
+                  "text-white hover:text-white hover:bg-white/10":
+                    !scrolled && isHome,
                 })}
               >
                 <Link to={link.href}>{link.label}</Link>
@@ -113,11 +124,14 @@ export function Header() {
                   {
                     "hover:bg-muted": scrolled || !isHome,
                     "hover:bg-white/10": !scrolled && isHome,
-                  }
+                  },
                 )}
               >
                 <Avatar className="h-7 w-7 rounded-lg">
-                  <AvatarImage src={user.image ?? undefined} alt={user.name ?? "User"} />
+                  <AvatarImage
+                    src={user.image ?? undefined}
+                    alt={user.name ?? "User"}
+                  />
                   <AvatarFallback className="rounded-lg bg-sky-500 text-[11px] font-semibold text-white">
                     {getInitials(user.name)}
                   </AvatarFallback>
@@ -154,17 +168,20 @@ export function Header() {
                 size="sm"
                 variant="outline"
                 className={cn("transition-colors duration-300", {
-                  "border-border text-foreground hover:bg-muted bg-background": scrolled || !isHome,
-                  "border-white/30 text-white hover:bg-white/10 bg-transparent": !scrolled && isHome,
+                  "border-border text-foreground hover:bg-muted bg-background":
+                    scrolled || !isHome,
+                  "border-white/30 text-white hover:bg-white/10 bg-transparent":
+                    !scrolled && isHome,
                 })}
               >
                 <Link to="/login">Masuk</Link>
               </Button>
-              <Button 
+              <Button
                 size="sm"
                 className={cn("transition-colors duration-300", {
                   "": scrolled || !isHome,
-                  "bg-white text-gray-900 hover:bg-white/90": !scrolled && isHome,
+                  "bg-white text-gray-900 hover:bg-white/90":
+                    !scrolled && isHome,
                 })}
               >
                 <Link to="/register">Mulai Sekarang</Link>
