@@ -168,7 +168,8 @@ function RouteComponent() {
   // Render mobile layout if screen is small
   if (isMobile) {
     return (
-      <MobileRiskMap
+      <div className="h-[calc(100vh-3.5rem)] overflow-hidden">
+        <MobileRiskMap
         location={location}
         stableLocation={stableLocation}
         reports={nearbyReports}
@@ -184,7 +185,8 @@ function RouteComponent() {
             onReportSelect={setSelectedReport}
           />
         )}
-      />
+        />
+      </div>
     );
   }
 
