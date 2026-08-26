@@ -79,6 +79,7 @@ export type AssessReportRiskResult =
 	| {
 			success: false;
 			errorCode: RiskAssessmentErrorCode;
+			model: string;
 	  };
 
 export type ReportAssessmentSummary = {

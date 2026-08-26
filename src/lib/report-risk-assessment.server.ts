@@ -48,9 +48,9 @@ const MAX_SUMMARY_LENGTH = 800;
 const MAX_HORIZON_SUMMARY_LENGTH = 500;
 const MAX_LIST_ITEM_LENGTH = 300;
 const MAX_LIST_ITEMS = 8;
-const MAX_REPORT_DESCRIPTION_LENGTH = 2_000;
-const MAX_CANDIDATE_DESCRIPTION_LENGTH = 600;
-const MAX_ENVIRONMENT_JSON_LENGTH = 16_000;
+const MAX_REPORT_DESCRIPTION_LENGTH = 800;
+const MAX_CANDIDATE_DESCRIPTION_LENGTH = 180;
+const MAX_ENVIRONMENT_JSON_LENGTH = 4_000;
 
 type RiskRateLimitState = {
 	timestamps: number[];
@@ -385,20 +385,224 @@ function truncateText(
 	maxLength: number,
 ): string {
 	const text = value?.replace(/\s+/g, " ").trim() ?? "";
-	return text.length <= maxLength ? text : `${text.slice(0, maxLength - 1)}…`;
+	return text.length <= maxLength ? text : `${text.slice(0, maxLength - 3)}...`;
+}
+
+function finiteNumber(value: unknown): number | null {
+	return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function finiteNumberArray(value: unknown, limit: number): number[] {
+	return Array.isArray(value)
+		? value.slice(0, limit).flatMap((item) => {
+				const number = finiteNumber(item);
+				return number === null ? [] : [number];
+			})
+		: [];
+}
+
+function rounded(value: number): number {
+	return Math.round(value * 10) / 10;
+}
+
+function average(values: number[]): number | null {
+	return values.length > 0
+		? rounded(values.reduce((sum, value) => sum + value, 0) / values.length)
+		: null;
+}
+
+function minimum(values: number[]): number | null {
+	return values.length > 0 ? rounded(Math.min(...values)) : null;
+}
+
+function maximum(values: number[]): number | null {
+	return values.length > 0 ? rounded(Math.max(...values)) : null;
+}
+
+function total(values: number[]): number | null {
+	return values.length > 0
+		? rounded(values.reduce((sum, value) => sum + value, 0))
+		: null;
+}
+
+function summarizeHourlyWeather(
+	hourly: Record<string, unknown> | null,
+	hours: number,
+): Record<string, number | null> | null {
+	if (!hourly) return null;
+
+	const temperatures = finiteNumberArray(hourly.temperature_2m, hours);
+	const humidity = finiteNumberArray(hourly.relative_humidity_2m, hours);
+	const rainProbability = finiteNumberArray(
+		hourly.precipitation_probability,
+		hours,
+	);
+	const precipitation = finiteNumberArray(hourly.precipitation, hours);
+	const wind = finiteNumberArray(hourly.wind_speed_10m, hours);
+
+	return {
+		minTemperatureC: minimum(temperatures),
+		maxTemperatureC: maximum(temperatures),
+		averageHumidityPercent: average(humidity),
+		maxRainProbabilityPercent: maximum(rainProbability),
+		totalPrecipitationMm: total(precipitation),
+		maxWindSpeedKmh: maximum(wind),
+	};
+}
+
+function summarizeDailyWeather(
+	daily: Record<string, unknown> | null,
+): Record<string, number | null> | null {
+	if (!daily) return null;
+
+	return {
+		minTemperatureC: minimum(finiteNumberArray(daily.temperature_2m_min, 7)),
+		maxTemperatureC: maximum(finiteNumberArray(daily.temperature_2m_max, 7)),
+		maxRainProbabilityPercent: maximum(
+			finiteNumberArray(daily.precipitation_probability_max, 7),
+		),
+		totalPrecipitationMm: total(finiteNumberArray(daily.precipitation_sum, 7)),
+		maxWindSpeedKmh: maximum(finiteNumberArray(daily.wind_speed_10m_max, 7)),
+	};
+}
+
+function getPollutantValue(
+	iaqi: Record<string, unknown> | null,
+	key: string,
+): number | null {
+	const measurement = iaqi && isRecord(iaqi[key]) ? iaqi[key] : null;
+	return measurement ? finiteNumber(measurement.v) : null;
+}
+
+function summarizeAQIForecast(
+	daily: Record<string, unknown> | null,
+	days: number,
+): Record<string, { average: number | null; maximum: number | null }> | null {
+	if (!daily) return null;
+
+	const summaries = ["pm25", "pm10", "o3", "uvi"].flatMap((pollutant) => {
+		const points = Array.isArray(daily[pollutant])
+			? daily[pollutant].slice(0, days).filter(isRecord)
+			: [];
+		if (points.length === 0) return [];
+
+		return [
+			[
+				pollutant,
+				{
+					average: average(
+						points.flatMap((point) => {
+							const value = finiteNumber(point.avg);
+							return value === null ? [] : [value];
+						}),
+					),
+					maximum: maximum(
+						points.flatMap((point) => {
+							const value = finiteNumber(point.max);
+							return value === null ? [] : [value];
+						}),
+					),
+				},
+			] as const,
+		];
+	});
+
+	return summaries.length > 0 ? Object.fromEntries(summaries) : null;
+}
+
+export function compactEnvironmentSnapshotForRisk(snapshot: unknown): unknown {
+	if (!isRecord(snapshot)) return null;
+
+	const coordinates = isRecord(snapshot.coordinates)
+		? {
+				latitude: finiteNumber(snapshot.coordinates.latitude),
+				longitude: finiteNumber(snapshot.coordinates.longitude),
+			}
+		: null;
+	const weather = isRecord(snapshot.openMeteo) ? snapshot.openMeteo : null;
+	const weatherCurrent =
+		weather && isRecord(weather.current) ? weather.current : null;
+	const weatherHourly =
+		weather && isRecord(weather.hourly) ? weather.hourly : null;
+	const weatherDaily =
+		weather && isRecord(weather.daily) ? weather.daily : null;
+	const airQuality = isRecord(snapshot.aqicn) ? snapshot.aqicn : null;
+	const iaqi = airQuality && isRecord(airQuality.iaqi) ? airQuality.iaqi : null;
+	const aqiTime =
+		airQuality && isRecord(airQuality.time) ? airQuality.time : null;
+	const aqiForecast =
+		airQuality && isRecord(airQuality.forecast) ? airQuality.forecast : null;
+	const aqiDaily =
+		aqiForecast && isRecord(aqiForecast.daily) ? aqiForecast.daily : null;
+
+	return {
+		observedAt:
+			typeof snapshot.observedAt === "string" ? snapshot.observedAt : null,
+		coordinates,
+		weather: weather
+			? {
+					source: "OPEN_METEO",
+					observedAt:
+						typeof weatherCurrent?.time === "string"
+							? weatherCurrent.time
+							: null,
+					current: weatherCurrent
+						? {
+								temperatureC: finiteNumber(weatherCurrent.temperature_2m),
+								humidityPercent: finiteNumber(
+									weatherCurrent.relative_humidity_2m,
+								),
+								precipitationMm: finiteNumber(weatherCurrent.precipitation),
+								rainMm: finiteNumber(weatherCurrent.rain),
+								windSpeedKmh: finiteNumber(weatherCurrent.wind_speed_10m),
+								cloudCoverPercent: finiteNumber(weatherCurrent.cloud_cover),
+							}
+						: null,
+					forecast: {
+						"24H": summarizeHourlyWeather(weatherHourly, 24),
+						"72H": summarizeHourlyWeather(weatherHourly, 72),
+						"7D": summarizeDailyWeather(weatherDaily),
+					},
+				}
+			: null,
+		airQuality: airQuality
+			? {
+					source: "AQICN",
+					observedAt: typeof aqiTime?.iso === "string" ? aqiTime.iso : null,
+					current: {
+						aqi: finiteNumber(airQuality.aqi),
+						dominantPollutant:
+							typeof airQuality.dominentpol === "string"
+								? airQuality.dominentpol
+								: null,
+						pm25: getPollutantValue(iaqi, "pm25"),
+						pm10: getPollutantValue(iaqi, "pm10"),
+						o3: getPollutantValue(iaqi, "o3"),
+						no2: getPollutantValue(iaqi, "no2"),
+						so2: getPollutantValue(iaqi, "so2"),
+						co: getPollutantValue(iaqi, "co"),
+					},
+					forecast: {
+						"24H": summarizeAQIForecast(aqiDaily, 1),
+						"72H": summarizeAQIForecast(aqiDaily, 3),
+						"7D": summarizeAQIForecast(aqiDaily, 7),
+					},
+				}
+			: null,
+	};
 }
 
 function normalizeEnvironmentSnapshot(snapshot: unknown): unknown {
 	try {
-		const serialized = JSON.stringify(snapshot) ?? "null";
+		const compactSnapshot = compactEnvironmentSnapshotForRisk(snapshot);
+		const serialized = JSON.stringify(compactSnapshot) ?? "null";
 		return serialized.length <= MAX_ENVIRONMENT_JSON_LENGTH
-			? JSON.parse(serialized)
+			? compactSnapshot
 			: {
 					truncated: true,
-					jsonFragment: `${serialized.slice(
-						0,
-						MAX_ENVIRONMENT_JSON_LENGTH - 1,
-					)}…`,
+					observedAt: isRecord(compactSnapshot)
+						? compactSnapshot.observedAt
+						: null,
 				};
 	} catch {
 		return null;
@@ -418,7 +622,7 @@ function normalizeNearbyReports(
 		.slice(0, MAX_NEARBY_REPORTS_FOR_RISK)
 		.map((report) => ({
 			id: report.id,
-			title: truncateText(report.title, 240),
+			title: truncateText(report.title, 120),
 			description: truncateText(
 				report.description,
 				MAX_CANDIDATE_DESCRIPTION_LENGTH,
@@ -426,7 +630,7 @@ function normalizeNearbyReports(
 			category: report.category,
 			urgency: report.urgency,
 			status: report.status,
-			locationName: truncateText(report.locationName, 240),
+			locationName: truncateText(report.locationName, 120),
 			createdAt:
 				report.createdAt instanceof Date
 					? report.createdAt.toISOString()
@@ -438,17 +642,17 @@ function normalizeNearbyReports(
 function buildRiskPrompt(input: AssessReportRiskInput): string {
 	return JSON.stringify({
 		report: {
-			title: truncateText(input.report.title, 240),
+			title: truncateText(input.report.title, 120),
 			description: truncateText(
 				input.report.description,
 				MAX_REPORT_DESCRIPTION_LENGTH,
 			),
 			category: input.report.category,
 			urgency: input.report.urgency,
-			locationName: truncateText(input.report.locationName, 240),
+			locationName: truncateText(input.report.locationName, 120),
 			latitude: input.report.latitude ?? null,
 			longitude: input.report.longitude ?? null,
-			ecolensSummary: truncateText(input.report.ecolensSummary, 800) || null,
+			ecolensSummary: truncateText(input.report.ecolensSummary, 300) || null,
 		},
 		nearbyReports: normalizeNearbyReports(input.nearbyReports),
 		environmentSnapshot: normalizeEnvironmentSnapshot(
@@ -476,11 +680,48 @@ function classifyRiskError(
 	return "AI_UNAVAILABLE";
 }
 
+function getRiskErrorLogDetails(error: unknown): {
+	name: string;
+	message: string;
+	status: number | null;
+	code: string | null;
+} {
+	const errorRecord =
+		typeof error === "object" && error !== null
+			? (error as Record<string, unknown>)
+			: null;
+	const rawMessage = error instanceof Error ? error.message : String(error);
+	const apiKey = process.env.GROQ_API_KEY?.trim();
+	const redactedMessage = apiKey
+		? rawMessage.replaceAll(apiKey, "[REDACTED]")
+		: rawMessage;
+	const status = errorRecord?.status;
+	const code = errorRecord?.code;
+
+	return {
+		name: error instanceof Error ? error.name : "UnknownError",
+		message: redactedMessage.replace(/\s+/g, " ").trim().slice(0, 500),
+		status: typeof status === "number" ? status : null,
+		code:
+			typeof code === "string" || typeof code === "number"
+				? String(code)
+				: null,
+	};
+}
+
 export async function assessReportRisk(
 	input: AssessReportRiskInput,
 ): Promise<AssessReportRiskResult> {
+	const startedAt = Date.now();
+	const model = process.env.GROQ_RISK_MODEL?.trim() || DEFAULT_RISK_MODEL;
+
 	if (!acquireRiskAssessmentSlot(input.rateLimitKey)) {
-		return { success: false, errorCode: "RATE_LIMITED" };
+		console.warn("[ReportAssessment] AI risk assessment rate limited", {
+			errorCode: "RATE_LIMITED",
+			model,
+			durationMs: Date.now() - startedAt,
+		});
+		return { success: false, errorCode: "RATE_LIMITED", model };
 	}
 
 	const controller = new AbortController();
@@ -488,10 +729,18 @@ export async function assessReportRisk(
 		() => controller.abort(),
 		RISK_ASSESSMENT_TIMEOUT_MS,
 	);
-	const model = process.env.GROQ_RISK_MODEL?.trim() || DEFAULT_RISK_MODEL;
-
 	try {
 		const groq = getGroqClient();
+		const riskContext = buildRiskPrompt(input);
+		console.info("[ReportAssessment] AI risk request prepared", {
+			model,
+			contextChars: riskContext.length,
+			estimatedContextTokens: Math.ceil(riskContext.length / 4),
+			nearbyReportCount: Math.min(
+				input.nearbyReports.length,
+				MAX_NEARBY_REPORTS_FOR_RISK,
+			),
+		});
 		const completion = await groq.chat.completions.create(
 			{
 				model,
@@ -520,14 +769,14 @@ Semua score wajib bilangan bulat 0-100, confidence wajib 0-1, dan setiap daftar 
 					},
 					{
 						role: "user",
-						content: `Analisis konteks laporan berikut:\n${buildRiskPrompt(input)}`,
+						content: `Analisis konteks laporan berikut:\n${riskContext}`,
 					},
 				],
 				response_format: { type: "json_object" },
 				reasoning_format: "hidden",
 				reasoning_effort: "none",
 				temperature: 0.1,
-				max_completion_tokens: 2_000,
+				max_completion_tokens: 900,
 			},
 			{ signal: controller.signal },
 		);
@@ -535,13 +784,30 @@ Semua score wajib bilangan bulat 0-100, confidence wajib 0-1, dan setiap daftar 
 		const rawText = completion.choices[0]?.message?.content;
 		const risk = rawText ? parseRiskAssessment(rawText) : null;
 
-		return risk
-			? { success: true, risk, model }
-			: { success: false, errorCode: "INVALID_RESPONSE" };
+		if (!risk) {
+			console.error("[ReportAssessment] AI risk response rejected", {
+				errorCode: "INVALID_RESPONSE",
+				model,
+				durationMs: Date.now() - startedAt,
+				finishReason: completion.choices[0]?.finish_reason ?? null,
+				responseLength: rawText?.length ?? 0,
+			});
+			return { success: false, errorCode: "INVALID_RESPONSE", model };
+		}
+
+		return { success: true, risk, model };
 	} catch (error) {
+		const errorCode = classifyRiskError(error, controller.signal.aborted);
+		console.error("[ReportAssessment] AI risk request failed", {
+			errorCode,
+			model,
+			durationMs: Date.now() - startedAt,
+			...getRiskErrorLogDetails(error),
+		});
 		return {
 			success: false,
-			errorCode: classifyRiskError(error, controller.signal.aborted),
+			errorCode,
+			model,
 		};
 	} finally {
 		clearTimeout(timeout);

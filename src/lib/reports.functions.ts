@@ -268,7 +268,7 @@ async function computeAssessment({
 			attemptCount: previousAttemptCount + 1,
 		}),
 		risk: null,
-		model: null,
+		model: result.model,
 		errorCode: result.errorCode,
 		attempted: true,
 	};
@@ -509,6 +509,7 @@ export const createReportFn = createServerFn({ method: "POST" })
 			nearbyReportCount: nearbyReports.length,
 			providerErrors: computation.providerErrors,
 			model: computation.model,
+			errorCode: computation.errorCode,
 		});
 
 		return resultToPublicView(report);
@@ -628,6 +629,7 @@ async function refreshOwnedReportAssessment(
 		attemptCount: nextAttemptCount,
 		providerErrors: computation.providerErrors,
 		model: computation.model,
+		errorCode: computation.errorCode,
 	});
 
 	return resultToPublicView(refreshedReport);

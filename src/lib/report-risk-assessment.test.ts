@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 
 import {
+	compactEnvironmentSnapshotForRisk,
 	getReportSearchBounds,
 	getReportSearchCutoff,
 	getReportSearchPolicy,
@@ -452,5 +453,78 @@ describe("assessment status resolution edge cases", () => {
 				`attempt ${attemptCount} should be FAILED`,
 			);
 		}
+	});
+});
+
+describe("AI environment context compaction", () => {
+	test("summarizes raw hourly and daily provider payloads without forwarding their arrays", () => {
+		const hourlyValues = Array.from({ length: 168 }, (_, index) => index);
+		const aqiForecast = Array.from({ length: 7 }, (_, index) => ({
+			avg: index + 1,
+			max: index + 2,
+			min: index,
+			day: `2026-08-${String(index + 1).padStart(2, "0")}`,
+		}));
+		const compact = compactEnvironmentSnapshotForRisk({
+			observedAt: "2026-08-26T10:00:00.000Z",
+			coordinates: { latitude: -6.2, longitude: 106.8 },
+			openMeteo: {
+				current: {
+					time: "2026-08-26T17:00",
+					temperature_2m: 29,
+					relative_humidity_2m: 78,
+					precipitation: 1.2,
+					rain: 1,
+					wind_speed_10m: 8,
+					cloud_cover: 64,
+				},
+				hourly: {
+					temperature_2m: hourlyValues,
+					relative_humidity_2m: hourlyValues.map(() => 80),
+					precipitation_probability: hourlyValues,
+					precipitation: hourlyValues.map(() => 1),
+					wind_speed_10m: hourlyValues.map((value) => value / 2),
+				},
+				daily: {
+					temperature_2m_min: [20, 19, 18, 21, 22, 20, 19],
+					temperature_2m_max: [30, 31, 32, 33, 34, 35, 36],
+					precipitation_probability_max: [40, 50, 60, 70, 80, 90, 100],
+					precipitation_sum: [1, 2, 3, 4, 5, 6, 7],
+					wind_speed_10m_max: [10, 11, 12, 13, 14, 15, 16],
+				},
+			},
+			aqicn: {
+				aqi: 54,
+				dominentpol: "pm25",
+				time: { iso: "2026-08-26T17:00:00+07:00" },
+				iaqi: { pm25: { v: 18 }, pm10: { v: 24 } },
+				forecast: { daily: { pm25: aqiForecast } },
+			},
+		}) as {
+			weather: {
+				forecast: Record<string, Record<string, number | null>>;
+			};
+			airQuality: {
+				current: { aqi: number; pm25: number };
+				forecast: Record<
+					string,
+					Record<string, { average: number; maximum: number }>
+				>;
+			};
+		};
+
+		assert.equal(compact.weather.forecast["24H"].maxTemperatureC, 23);
+		assert.equal(compact.weather.forecast["24H"].totalPrecipitationMm, 24);
+		assert.equal(compact.weather.forecast["72H"].maxTemperatureC, 71);
+		assert.equal(compact.weather.forecast["7D"].totalPrecipitationMm, 28);
+		assert.equal(compact.airQuality.current.aqi, 54);
+		assert.equal(compact.airQuality.current.pm25, 18);
+		assert.equal(compact.airQuality.forecast["72H"].pm25.maximum, 4);
+		assert.ok(JSON.stringify(compact).length < 4_000);
+		assert.equal("hourly" in compact.weather, false);
+	});
+
+	test("returns null for an unavailable snapshot", () => {
+		assert.equal(compactEnvironmentSnapshotForRisk(null), null);
 	});
 });
