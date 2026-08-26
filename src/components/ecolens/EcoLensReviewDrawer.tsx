@@ -10,7 +10,6 @@ import {
 	X,
 } from "lucide-react";
 import type { FormEvent } from "react";
-import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import {
 	Drawer,
@@ -67,8 +66,13 @@ export function EcoLensReviewDrawer({
 	onRetake,
 	onSubmit,
 }: EcoLensReviewDrawerProps) {
+	const handleOpenChange = (nextOpen: boolean) => {
+		if (isSubmitting && !nextOpen) return;
+		onOpenChange(nextOpen);
+	};
+
 	return (
-		<Drawer open={open} onOpenChange={onOpenChange} showSwipeHandle>
+		<Drawer open={open} onOpenChange={handleOpenChange} showSwipeHandle>
 			<DrawerContent className="[--drawer-bleed-background:#fff] [--drawer-content-max-height:min(88dvh,48rem)] border-neutral-200 bg-white text-neutral-900 shadow-[0_-20px_60px_rgba(15,23,42,.12)]">
 				<div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col overflow-y-auto">
 					<DrawerHeader className="border-b border-neutral-100 px-5 pb-3.5 pt-2 text-left sm:px-7">
@@ -85,7 +89,8 @@ export function EcoLensReviewDrawer({
 									</span>
 								</div>
 								<DrawerDescription className="mt-1 text-xs text-neutral-500">
-									Periksa hasil klasifikasi AI dan lengkapi deskripsi sebelum menyimpan laporan ke sistem.
+									Periksa hasil klasifikasi AI dan lengkapi deskripsi sebelum
+									menyimpan laporan ke sistem.
 								</DrawerDescription>
 							</div>
 
@@ -93,6 +98,7 @@ export function EcoLensReviewDrawer({
 								type="button"
 								variant="ghost"
 								size="icon"
+								disabled={isSubmitting}
 								onClick={() => onOpenChange(false)}
 								className="rounded-md text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700"
 								aria-label="Tutup review laporan"
@@ -115,7 +121,8 @@ export function EcoLensReviewDrawer({
 								{analysis?.urgency && (
 									<span
 										className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-											analysis.urgency === "Sangat Tinggi" || analysis.urgency === "Tinggi"
+											analysis.urgency === "Sangat Tinggi" ||
+											analysis.urgency === "Tinggi"
 												? "bg-red-50 text-red-700"
 												: analysis.urgency === "Sedang"
 													? "bg-amber-50 text-amber-700"
@@ -165,14 +172,17 @@ export function EcoLensReviewDrawer({
 									</p>
 									<div className="mt-3 flex items-center gap-1.5 border-t border-sky-100 pt-2.5 text-[10px] text-neutral-500">
 										<CheckCircle2 className="size-3 text-emerald-600" />
-										<span>Kategori dan deskripsi telah disesuaikan secara otomatis.</span>
+										<span>
+											Kategori dan deskripsi telah disesuaikan secara otomatis.
+										</span>
 									</div>
 								</div>
 							)}
 
 							{!analysis && !analysisError && (
 								<div className="rounded-lg border border-neutral-200/80 bg-neutral-50 p-4 text-xs text-neutral-500 text-center">
-									Foto siap ditinjau. Anda dapat mengisi form secara manual di samping.
+									Foto siap ditinjau. Anda dapat mengisi form secara manual di
+									samping.
 								</div>
 							)}
 						</div>
@@ -180,12 +190,16 @@ export function EcoLensReviewDrawer({
 						{/* Kolom Kanan: Form Koreksi & Simpan */}
 						<div className="space-y-4 rounded-lg border border-neutral-100 bg-white p-4 shadow-xs">
 							<div className="space-y-1.5">
-								<Label htmlFor="ecolens-category" className="text-xs font-medium text-neutral-700">
+								<Label
+									htmlFor="ecolens-category"
+									className="text-xs font-medium text-neutral-700"
+								>
 									Kategori Masalah
 								</Label>
 								<select
 									id="ecolens-category"
 									value={category}
+									disabled={isSubmitting}
 									onChange={(event) => {
 										const selectedCategory = ECO_LENS_CATEGORIES.find(
 											(item) => item === event.target.value,
@@ -203,7 +217,10 @@ export function EcoLensReviewDrawer({
 							</div>
 
 							<div className="space-y-1.5">
-								<Label htmlFor="ecolens-location" className="text-xs font-medium text-neutral-700">
+								<Label
+									htmlFor="ecolens-location"
+									className="text-xs font-medium text-neutral-700"
+								>
 									Lokasi Kejadian
 								</Label>
 								<div className="relative">
@@ -213,6 +230,7 @@ export function EcoLensReviewDrawer({
 										type="text"
 										value={location}
 										maxLength={240}
+										disabled={isSubmitting}
 										onChange={(event) => onLocationChange(event.target.value)}
 										placeholder="Nama jalan, area, atau patokan lokasi"
 										aria-invalid={Boolean(errors.location)}
@@ -244,6 +262,7 @@ export function EcoLensReviewDrawer({
 									value={description}
 									maxLength={1_000}
 									rows={4}
+									disabled={isSubmitting}
 									onChange={(event) => onDescriptionChange(event.target.value)}
 									placeholder="Jelaskan detail kondisi yang terjadi..."
 									aria-invalid={Boolean(errors.description)}
@@ -284,7 +303,9 @@ export function EcoLensReviewDrawer({
 									{isSubmitting ? (
 										<>
 											<RefreshCw className="size-3.5 animate-spin" />
-											Menyimpan Laporan...
+											<span className="whitespace-normal text-center leading-4">
+												Mengumpulkan konteks &amp; menyimpan...
+											</span>
 										</>
 									) : (
 										<>
@@ -295,7 +316,8 @@ export function EcoLensReviewDrawer({
 								</Button>
 							</div>
 							<p className="text-center text-[10px] text-neutral-400">
-								Laporan dan metadata EcoLens akan tersimpan di database sistem.
+								Laporan akan disimpan bersama konteks lingkungan dan analisis
+								risiko.
 							</p>
 						</div>
 					</form>

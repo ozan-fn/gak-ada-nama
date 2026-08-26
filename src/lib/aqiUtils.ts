@@ -1,3 +1,13 @@
+export type AQIStation = {
+  id: number | string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  aqi: number;
+  uid?: number;
+  distance?: number;
+};
+
 // AQI color scale (standard international)
 export function getAQIColor(aqi: number): string {
   if (aqi <= 50) return "bg-emerald-500"; // Good

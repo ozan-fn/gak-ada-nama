@@ -188,17 +188,18 @@ export function useNotifications() {
     }
 
     const nearbyHighAQI = stations
-      .filter((s) => s.aqi > settings.aqiThreshold && s.distance < 10)
+      .filter((s) => s.aqi > settings.aqiThreshold && (s.distance ?? 0) < 10)
       .slice(0, 3); // Max 3 nearby reports
 
     // Update or create notifications untuk nearby stations
     nearbyHighAQI.forEach((station) => {
       const notifId = `nearby-${station.name}`;
+      const distanceKm = station.distance ?? 0;
       upsertNotification(
         notifId,
         "nearby_report",
         "Laporan Kualitas Udara Terdekat",
-        `AQI ${station.aqi} di ${station.name}, ${Math.round(station.distance)}km dari Anda.`
+        `AQI ${station.aqi} di ${station.name}, ${Math.round(distanceKm)}km dari Anda.`
       );
     });
 

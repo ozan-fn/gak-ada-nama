@@ -230,7 +230,7 @@ export default function DashboardAppHeader() {
             <DropdownMenuSeparator />
 
             <DropdownMenuItem
-              onClick={() => navigate({ to: "/dashboard/profile" })}
+              onClick={() => navigate({ to: "/dashboard/settings" })}
             >
               <User className="mr-2 size-4" />
               Profil
