@@ -10,6 +10,8 @@ import {
   Thermometer,
   CloudRain,
   Wind,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import {
   animate,
@@ -96,6 +98,7 @@ export default function MobileDashboard({
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
   const [collapsedY, setCollapsedY] = useState<number | null>(null);
   const [expanded, setExpanded] = useState(false);
+  const [showLegend, setShowLegend] = useState(false);
   const y = useMotionValue(0);
   const dragControls = useDragControls();
 
@@ -275,12 +278,14 @@ export default function MobileDashboard({
             setShowLayers,
             showRainRadar,
             setShowRainRadar,
+            showFireLayer,
+            setShowFireLayer,
           } = context;
           const activeAlertsCount = alerts.length;
 
           return (
             <>
-              {/* Top Left Container: Active Alerts */}
+              {/* Top Left Container: Active Alerts + Map Legend */}
               <motion.div
                 style={{ opacity: controlsOpacity }}
                 className="absolute left-3 top-3 z-10 flex flex-col gap-2"
@@ -298,6 +303,60 @@ export default function MobileDashboard({
                       </span>
                     </button>
                   </Link>
+                )}
+
+                {/* Map Legend - Below Active Alerts or in its place */}
+                {(showRainRadar || showFireLayer) && (
+                  <div className="flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white/90 shadow-sm backdrop-blur-sm">
+                    <button
+                      type="button"
+                      onClick={() => setShowLegend(!showLegend)}
+                      className="flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-neutral-50"
+                    >
+                      <h4 className="text-xs font-bold text-neutral-800">
+                        Map Legend
+                      </h4>
+
+                      {showLegend ? (
+                        <ChevronDown className="h-3 w-3 text-neutral-600" />
+                      ) : (
+                        <ChevronUp className="h-3 w-3 text-neutral-600" />
+                      )}
+                    </button>
+
+                    {showLegend && (
+                      <div className="px-3 pb-3">
+                        {showFireLayer && (
+                          <div className="border-t border-neutral-100 pt-2">
+                            <p className="mb-2 text-[10px] font-semibold text-neutral-700">
+                              Fire Hotspots (5d)
+                            </p>
+
+                            <div className="flex flex-col gap-1 text-[10px] text-neutral-600">
+                              <div className="flex items-center gap-2">
+                                <span className="h-2 w-2 shrink-0 rounded-full border border-white bg-[#fbbf24] shadow-sm" />
+                                <span>Medium (50-65%)</span>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <span className="h-2 w-2 shrink-0 rounded-full border border-white bg-[#f97316] shadow-sm" />
+                                <span>High (65-80%)</span>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <span className="h-2 w-2 shrink-0 rounded-full border border-white bg-[#dc2626] shadow-sm" />
+                                <span>Very High (&gt;80%)</span>
+                              </div>
+                            </div>
+
+                            <p className="mt-2 text-[9px] italic text-neutral-500">
+                              NASA FIRMS VIIRS
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 )}
               </motion.div>
 
@@ -386,6 +445,16 @@ export default function MobileDashboard({
                           className="h-4 w-4 rounded border-neutral-300 cursor-pointer"
                         />
                         <span>Rain Radar</span>
+                      </label>
+
+                      <label className="flex items-center gap-2 text-sm text-neutral-700 cursor-pointer mt-2">
+                        <input
+                          type="checkbox"
+                          checked={showFireLayer}
+                          onChange={(e) => setShowFireLayer(e.target.checked)}
+                          className="h-4 w-4 rounded border-neutral-300 cursor-pointer"
+                        />
+                        <span>Fire Hotspots</span>
                       </label>
                     </div>
                   )}

@@ -1,4 +1,4 @@
-import { useRef, useCallback, useMemo, useEffect, memo } from "react";
+import { useRef, useCallback, useMemo, useEffect, memo, useState } from "react";
 import {
   Layers,
   Navigation,
@@ -10,11 +10,14 @@ import {
   CloudRain,
   Wind,
   Droplet,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { BaseEnvironmentMap, type MapContext } from "./maps/BaseEnvironmentMap";
 import { Skeleton } from "./ui/skeleton";
 import * as maplibregl from "maplibre-gl";
+import { useLocalFireData } from "#/hooks/useFireData";
 
 interface UserLocation {
   latitude: number | null;
@@ -30,6 +33,7 @@ interface DashboardMapCardProps {
 
 // Content component
 function DashboardMapContent({ context }: { context: MapContext }) {
+  const [showLegend, setShowLegend] = useState(false);
   const {
     alerts,
     locate,
@@ -39,13 +43,15 @@ function DashboardMapContent({ context }: { context: MapContext }) {
     setShowLayers,
     showRainRadar,
     setShowRainRadar,
+    showFireLayer,
+    setShowFireLayer,
   } = context;
 
   const activeAlertsCount = alerts.length;
 
   return (
     <>
-      {/* Top Left Container: Active Alerts - Hidden on mobile */}
+      {/* Top Left Container: Active Alerts + Map Legend - Hidden on mobile */}
       <div className="absolute left-3 top-3 z-10 hidden flex-col gap-2 lg:flex">
         {activeAlertsCount > 0 && (
           <Link to="/dashboard/risk-map">
@@ -60,6 +66,58 @@ function DashboardMapContent({ context }: { context: MapContext }) {
               </span>
             </button>
           </Link>
+        )}
+
+        {/* Map Legend - Below Active Alerts */}
+        {(showRainRadar || showFireLayer) && (
+          <div className="flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white/90 shadow-sm backdrop-blur-sm">
+            <button
+              type="button"
+              onClick={() => setShowLegend(!showLegend)}
+              className="flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-neutral-50"
+            >
+              <h4 className="text-xs font-bold text-neutral-800">Map Legend</h4>
+
+              {showLegend ? (
+                <ChevronDown className="h-3 w-3 text-neutral-600" />
+              ) : (
+                <ChevronUp className="h-3 w-3 text-neutral-600" />
+              )}
+            </button>
+
+            {showLegend && (
+              <div className="px-3 pb-3">
+                {showFireLayer && (
+                  <div className="border-t border-neutral-100 pt-2">
+                    <p className="mb-2 text-[10px] font-semibold text-neutral-700">
+                      Fire Hotspots (5d)
+                    </p>
+
+                    <div className="flex flex-col gap-1 text-[10px] text-neutral-600">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 shrink-0 rounded-full border border-white bg-[#fbbf24] shadow-sm" />
+                        <span>Medium (50-65%)</span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 shrink-0 rounded-full border border-white bg-[#f97316] shadow-sm" />
+                        <span>High (65-80%)</span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 shrink-0 rounded-full border border-white bg-[#dc2626] shadow-sm" />
+                        <span>Very High (&gt;80%)</span>
+                      </div>
+                    </div>
+
+                    <p className="mt-2 text-[9px] italic text-neutral-500">
+                      NASA FIRMS VIIRS
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -90,9 +148,7 @@ function DashboardMapContent({ context }: { context: MapContext }) {
                     <AlertTriangle className="h-4 w-4 text-amber-500" />
                   )}
                 </span>
-                <span className="flex-1 text-neutral-700">
-                  {alert.message}
-                </span>
+                <span className="flex-1 text-neutral-700">{alert.message}</span>
               </div>
             ))}
           </div>
@@ -143,6 +199,16 @@ function DashboardMapContent({ context }: { context: MapContext }) {
                 />
                 <span>Rain Radar</span>
               </label>
+
+              <label className="flex items-center gap-2 text-sm text-neutral-700 cursor-pointer mt-2">
+                <input
+                  type="checkbox"
+                  checked={showFireLayer}
+                  onChange={(e) => setShowFireLayer(e.target.checked)}
+                  className="h-4 w-4 rounded border-neutral-300 cursor-pointer"
+                />
+                <span>Fire Hotspots</span>
+              </label>
             </div>
           )}
         </div>
@@ -188,33 +254,45 @@ function DashboardMapContent({ context }: { context: MapContext }) {
 function DashboardMapCard({ userLocation }: DashboardMapCardProps) {
   const markerRef = useRef<maplibregl.Marker | null>(null);
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
-  
+
+  // Fetch local fire data around user (100km radius for fast loading)
+  const { points: localFirePoints } = useLocalFireData(
+    userLocation.latitude,
+    userLocation.longitude,
+    100, // 100km radius around user
+  );
+
   // Stabilize coords to prevent unnecessary callback changes
   const coords = useMemo(
     () => ({ lat: userLocation.latitude, lng: userLocation.longitude }),
-    [userLocation.latitude, userLocation.longitude]
+    [userLocation.latitude, userLocation.longitude],
   );
-  
+
   // Create marker when map is fully ready
-  const handleMapReady = useCallback((mapInstance: maplibregl.Map) => {
-    mapInstanceRef.current = mapInstance;
-    
-    if (!coords.lat || !coords.lng) {
-      console.log('[DashboardMap] No user location for marker');
-      return;
-    }
+  const handleMapReady = useCallback(
+    (mapInstance: maplibregl.Map) => {
+      mapInstanceRef.current = mapInstance;
 
-    console.log('[DashboardMap] Map ready, creating blue dot marker at:', coords.lat, coords.lng);
+      if (!coords.lat || !coords.lng) {
+        console.log("[DashboardMap] No user location for marker");
+        return;
+      }
 
-    // Remove old marker if exists
-    if (markerRef.current) {
-      markerRef.current.remove();
-    }
+      console.log(
+        "[DashboardMap] Map ready, creating blue dot marker at:",
+        coords.lat,
+        coords.lng,
+      );
 
-    // Create custom blue dot marker
-    const markerEl = document.createElement("div");
-    markerEl.className = "user-location-marker";
-    markerEl.style.cssText = `
+      // Remove old marker if exists
+      if (markerRef.current) {
+        markerRef.current.remove();
+      }
+
+      // Create custom blue dot marker
+      const markerEl = document.createElement("div");
+      markerEl.className = "user-location-marker";
+      markerEl.style.cssText = `
       width: 24px;
       height: 24px;
       display: flex;
@@ -223,8 +301,8 @@ function DashboardMapCard({ userLocation }: DashboardMapCardProps) {
       cursor: pointer;
     `;
 
-    const dot = document.createElement("div");
-    dot.style.cssText = `
+      const dot = document.createElement("div");
+      dot.style.cssText = `
       width: 16px;
       height: 16px;
       border-radius: 50%;
@@ -234,17 +312,19 @@ function DashboardMapCard({ userLocation }: DashboardMapCardProps) {
       transition: all 0.3s ease;
     `;
 
-    markerEl.appendChild(dot);
+      markerEl.appendChild(dot);
 
-    markerRef.current = new maplibregl.Marker({ 
-      element: markerEl,
-      anchor: 'center'
-    })
-      .setLngLat([coords.lng, coords.lat])
-      .addTo(mapInstance);
+      markerRef.current = new maplibregl.Marker({
+        element: markerEl,
+        anchor: "center",
+      })
+        .setLngLat([coords.lng, coords.lat])
+        .addTo(mapInstance);
 
-    console.log('[DashboardMap] ✓ Blue dot marker added');
-  }, [coords]);
+      console.log("[DashboardMap] ✓ Blue dot marker added");
+    },
+    [coords],
+  );
 
   // Keep marker alive and update position smoothly
   useEffect(() => {
@@ -252,8 +332,12 @@ function DashboardMapCard({ userLocation }: DashboardMapCardProps) {
 
     // If marker doesn't exist, create it
     if (!markerRef.current) {
-      console.log('[DashboardMap] Re-creating blue dot marker at:', coords.lat, coords.lng);
-      
+      console.log(
+        "[DashboardMap] Re-creating blue dot marker at:",
+        coords.lat,
+        coords.lng,
+      );
+
       const markerEl = document.createElement("div");
       markerEl.className = "user-location-marker";
       markerEl.style.cssText = `
@@ -278,22 +362,26 @@ function DashboardMapCard({ userLocation }: DashboardMapCardProps) {
 
       markerEl.appendChild(dot);
 
-      markerRef.current = new maplibregl.Marker({ 
+      markerRef.current = new maplibregl.Marker({
         element: markerEl,
-        anchor: 'center'
+        anchor: "center",
       })
         .setLngLat([coords.lng, coords.lat])
         .addTo(mapInstanceRef.current);
     } else {
       // Marker exists, just update position smoothly
-      console.log('[DashboardMap] Updating marker position smoothly to:', coords.lat, coords.lng);
+      console.log(
+        "[DashboardMap] Updating marker position smoothly to:",
+        coords.lat,
+        coords.lng,
+      );
       markerRef.current.setLngLat([coords.lng, coords.lat]);
     }
 
     // Cleanup only on unmount
     return () => {
       if (markerRef.current) {
-        console.log('[DashboardMap] Cleaning up marker on unmount');
+        console.log("[DashboardMap] Cleaning up marker on unmount");
         markerRef.current.remove();
         markerRef.current = null;
       }
@@ -310,7 +398,7 @@ function DashboardMapCard({ userLocation }: DashboardMapCardProps) {
   }
 
   // Use user location if available, fallback to Jakarta
-  const center: [number, number] = 
+  const center: [number, number] =
     userLocation.latitude && userLocation.longitude
       ? [userLocation.longitude, userLocation.latitude]
       : [106.8456, -6.2088];
@@ -333,6 +421,7 @@ function DashboardMapCard({ userLocation }: DashboardMapCardProps) {
       autoLocateOnMount={false}
       aqiRadiusKm={50}
       maxBounds={bounds}
+      customFireData={localFirePoints}
       onMapReady={handleMapReady}
     >
       {(context) => <DashboardMapContent context={context} />}

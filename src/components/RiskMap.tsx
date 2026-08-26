@@ -12,6 +12,8 @@ import {
   CheckCircle,
   XCircle,
   AlertOctagon,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { BaseEnvironmentMap, type MapContext } from "./maps/BaseEnvironmentMap";
 import {
@@ -21,6 +23,11 @@ import {
 import { indonesiaLocations } from "#/data/indonesia-locations";
 import { findNearestCity } from "#/lib/geoUtils";
 import type { ReportMapPin } from "#/lib/reports.functions";
+import {
+  groupNearbyReports,
+  createReportMarkers,
+  createSelectedLocationMarker,
+} from "#/lib/mapMarkers";
 
 const defaultView = {
   center: [118.0, -2.5] as [number, number],
@@ -32,52 +39,6 @@ const defaultView = {
 export type NearbyReportPin = ReportMapPin & {
   distanceKm: number;
 };
-
-function groupNearbyReports(
-  reports: NearbyReportPin[],
-): NearbyReportPin[][] {
-  const overlapThreshold = 0.0015;
-  const groups: NearbyReportPin[][] = [];
-
-  for (const report of reports) {
-    const existingGroup = groups.find((group) =>
-      group.some(
-        (candidate) =>
-          Math.abs(candidate.latitude - report.latitude) <= overlapThreshold &&
-          Math.abs(candidate.longitude - report.longitude) <= overlapThreshold,
-      ),
-    );
-
-    if (existingGroup) {
-      existingGroup.push(report);
-    } else {
-      groups.push([report]);
-    }
-  }
-
-  return groups;
-}
-
-function createReportMarkerElement(title: string, reportCount: number) {
-  const marker = document.createElement("button");
-  marker.type = "button";
-  marker.className =
-    "risk-report-marker flex size-9 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-amber-400 text-amber-950 shadow-lg transition-colors hover:bg-amber-300 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2";
-  marker.ariaLabel =
-    reportCount > 1 ? `${reportCount} laporan di lokasi ini` : `Laporan: ${title}`;
-  marker.title =
-    reportCount > 1 ? `${reportCount} laporan di lokasi ini` : title;
-  marker.style.pointerEvents = "auto";
-  marker.style.zIndex = "20";
-
-  const icon = document.createElement("span");
-  icon.className = "text-xl font-black leading-none";
-  icon.textContent = reportCount > 1 ? String(reportCount) : "!";
-  icon.setAttribute("aria-hidden", "true");
-  marker.appendChild(icon);
-
-  return marker;
-}
 
 // Content component that can use hooks
 function RiskMapContent({
@@ -106,6 +67,7 @@ function RiskMapContent({
   onReportSelect?: (report: NearbyReportPin) => void;
 }) {
   const reportMarkersRef = useRef<maplibregl.Marker[]>([]);
+  const [showLegend, setShowLegend] = useState(true);
   const {
     map,
     alerts,
@@ -115,6 +77,8 @@ function RiskMapContent({
     setShowLayers,
     showRainRadar,
     setShowRainRadar,
+    showFireLayer,
+    setShowFireLayer,
     aqiFilter,
     setAqiFilter,
     showMarkers,
@@ -122,40 +86,32 @@ function RiskMapContent({
   } = context;
 
   useEffect(() => {
+    console.log('[RiskMap] Marker effect triggered', { 
+      reportsCount: reports.length, 
+      isMapReady,
+      mapExists: !!map.current 
+    });
+    
     reportMarkersRef.current.forEach((marker) => {
       marker.remove();
     });
     reportMarkersRef.current = [];
 
-    if (!map.current || !isMapReady) return;
+    if (!map.current || !isMapReady) {
+      console.log('[RiskMap] Skipping markers - map not ready');
+      return;
+    }
     const mapInstance = map.current;
 
-    const reportGroups = groupNearbyReports(reports);
-    const markers = reportGroups.map((reportGroup) => {
-      const primaryReport = reportGroup[0];
-      const markerElement = createReportMarkerElement(
-        primaryReport.title,
-        reportGroup.length,
-      );
-      const marker = new maplibregl.Marker({
-        element: markerElement,
-        anchor: "bottom",
-      })
-        .setLngLat([primaryReport.longitude, primaryReport.latitude])
-        .addTo(mapInstance);
-
-      markerElement.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        onReportSelect?.(primaryReport);
-      });
-      markerElement.addEventListener("pointerdown", (event) => {
-        event.stopPropagation();
-      });
-
-      return marker;
+    console.log('[RiskMap] Creating markers:', { 
+      totalReports: reports.length,
+      groupCount: groupNearbyReports(reports).length 
     });
+    
+    const markers = createReportMarkers(reports, mapInstance, onReportSelect);
     reportMarkersRef.current = markers;
+    
+    console.log('[RiskMap] Total markers created:', markers.length);
 
     return () => {
       markers.forEach((marker) => {
@@ -183,15 +139,15 @@ function RiskMapContent({
       const clickedReportGroup = groupNearbyReports(reports).find(
         (reportGroup) => {
           const primaryReport = reportGroup[0];
-        const reportPoint = map.current?.project([
+          const reportPoint = map.current?.project([
             primaryReport.longitude,
             primaryReport.latitude,
-        ]);
-        if (!reportPoint) return false;
+          ]);
+          if (!reportPoint) return false;
 
           const horizontalDistance = reportPoint.x - e.point.x;
           const verticalDistance = reportPoint.y - e.point.y;
-        return Math.hypot(horizontalDistance, verticalDistance) <= 24;
+          return Math.hypot(horizontalDistance, verticalDistance) <= 24;
         },
       );
 
@@ -293,6 +249,16 @@ function RiskMapContent({
                 <span>Rain Radar</span>
               </label>
 
+              <label className="flex items-center gap-2 text-sm text-neutral-700 cursor-pointer mb-2">
+                <input
+                  type="checkbox"
+                  checked={showFireLayer}
+                  onChange={(e) => setShowFireLayer(e.target.checked)}
+                  className="h-4 w-4 rounded border-neutral-300 cursor-pointer"
+                />
+                <span>Fire Hotspots</span>
+              </label>
+
               <label className="flex items-center gap-2 text-sm text-neutral-700 cursor-pointer mb-3 pb-3 border-b border-neutral-100">
                 <input
                   type="checkbox"
@@ -300,7 +266,7 @@ function RiskMapContent({
                   onChange={(e) => setShowMarkers(e.target.checked)}
                   className="h-4 w-4 rounded border-neutral-300 cursor-pointer"
                 />
-                <span>Show Stations (Clusters)</span>
+                <span>Show Stations</span>
               </label>
 
               <p className="mb-2 text-xs font-semibold text-neutral-700">
@@ -368,34 +334,93 @@ function RiskMapContent({
       </div>
 
       {/* Map Legend (Bottom Left) */}
-      <div className="absolute bottom-6 left-3 z-10 flex flex-col rounded-lg border border-neutral-200 bg-white/90 p-3 shadow-sm backdrop-blur-sm">
-        <h4 className="mb-2 text-xs font-bold text-neutral-800">AQI Legend</h4>
-        <div className="flex flex-col gap-1 text-[10px] text-neutral-600">
-          <div className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-full bg-[#00e400] opacity-80" />{" "}
-            Good (0-50)
+      <div className="absolute bottom-3 left-3 z-10 flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white/90 shadow-sm backdrop-blur-sm">
+        <button
+          type="button"
+          onClick={() => setShowLegend(!showLegend)}
+          className="flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-neutral-50"
+        >
+          <h4 className="text-xs font-bold text-neutral-800">Map Legend</h4>
+
+          {showLegend ? (
+            <ChevronDown className="h-3 w-3 text-neutral-600" />
+          ) : (
+            <ChevronUp className="h-3 w-3 text-neutral-600" />
+          )}
+        </button>
+
+        {showLegend && (
+          <div className="px-3 pb-3">
+            {/* AQI Legend */}
+            <div className="border-t border-neutral-100 pt-2">
+              <p className="mb-2 text-[10px] font-semibold text-neutral-700">
+                AQI Quality
+              </p>
+
+              <div className="flex flex-col gap-1 text-[10px] text-neutral-600">
+                <div className="flex items-center gap-2">
+                  <span className="h-3 w-3 shrink-0 rounded-full bg-[#00e400] opacity-80" />
+                  <span>Good (0-50)</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="h-3 w-3 shrink-0 rounded-full bg-[#ffff00] opacity-80" />
+                  <span>Moderate (51-100)</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="h-3 w-3 shrink-0 rounded-full bg-[#ff7e00] opacity-80" />
+                  <span>Unhealthy (101-150)</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="h-3 w-3 shrink-0 rounded-full bg-[#ff0000] opacity-80" />
+                  <span>Unhealthy (151-200)</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="h-3 w-3 shrink-0 rounded-full bg-[#99004c] opacity-80" />
+                  <span>Very Unhealthy (201-300)</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="h-3 w-3 shrink-0 rounded-full bg-[#7e0023] opacity-80" />
+                  <span>Hazardous (&gt;300)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Fire Legend */}
+            {showFireLayer && (
+              <div className="mt-3 border-t border-neutral-100 pt-3">
+                <p className="mb-2 text-[10px] font-semibold text-neutral-700">
+                  Fire Hotspots (5d)
+                </p>
+
+                <div className="flex flex-col gap-1 text-[10px] text-neutral-600">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 shrink-0 rounded-full border border-white bg-[#fbbf24] shadow-sm" />
+                    <span>Medium (50-65%)</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 shrink-0 rounded-full border border-white bg-[#f97316] shadow-sm" />
+                    <span>High (65-80%)</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 shrink-0 rounded-full border border-white bg-[#dc2626] shadow-sm" />
+                    <span>Very High (&gt;80%)</span>
+                  </div>
+                </div>
+
+                <p className="mt-2 text-[9px] italic text-neutral-500">
+                  NASA FIRMS VIIRS
+                </p>
+              </div>
+            )}
           </div>
-          <div className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-full bg-[#ffff00] opacity-80" />{" "}
-            Moderate (51-100)
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-full bg-[#ff7e00] opacity-80" />{" "}
-            Unhealthy for Sensitive (101-150)
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-full bg-[#ff0000] opacity-80" />{" "}
-            Unhealthy (151-200)
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-full bg-[#99004c] opacity-80" />{" "}
-            Very Unhealthy (201-300)
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-full bg-[#7e0023] opacity-80" />{" "}
-            Hazardous (&gt;300)
-          </div>
-        </div>
+        )}
       </div>
 
       {/* AI Recommendation Panel */}
@@ -537,6 +562,8 @@ export default function RiskMap({
   const [bearing, setBearing] = useState(0);
   const [showAIPanel, setShowAIPanel] = useState(false);
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
+  const selectedMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const lastFlyLocationRef = useRef<string | null>(null);
   const [aqiRadius, setAqiRadius] = useState(1000); // Default Indonesia-wide
   const [isMapReady, setIsMapReady] = useState(false);
 
@@ -544,12 +571,24 @@ export default function RiskMap({
   useEffect(() => {
     if (!mapInstanceRef.current || !isMapReady || !flyToLocation) return;
 
+    const locationKey = `${flyToLocation.latitude},${flyToLocation.longitude}`;
+    
+    // Skip if already flew to this exact location
+    if (lastFlyLocationRef.current === locationKey) return;
+    lastFlyLocationRef.current = locationKey;
+
     const mapInstance = mapInstanceRef.current;
-    const selectedMarker = new maplibregl.Marker({ color: "#dc2626" })
-      .setLngLat([flyToLocation.longitude, flyToLocation.latitude])
-      .addTo(mapInstance);
-    selectedMarker.getElement().ariaLabel = "Titik wilayah terpilih";
-    selectedMarker.getElement().title = "Wilayah terpilih";
+    
+    // Remove old marker
+    selectedMarkerRef.current?.remove();
+    
+    const selectedMarker = createSelectedLocationMarker(
+      flyToLocation.latitude,
+      flyToLocation.longitude,
+      mapInstance
+    );
+    
+    selectedMarkerRef.current = selectedMarker;
 
     // Adjust AQI radius untuk regional detail
     setAqiRadius(100); // 100km radius untuk city-level detail
@@ -559,10 +598,6 @@ export default function RiskMap({
       zoom: 10, // Regional view untuk lihat AQI area sekitar
       duration: 1500,
     });
-
-    return () => {
-      selectedMarker.remove();
-    };
   }, [flyToLocation, isMapReady]);
 
   return (

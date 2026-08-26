@@ -7,6 +7,7 @@ import { useAQIStations } from "#/hooks/useAQIStations";
 import { useEnvironmentData } from "#/hooks/useEnvironmentData";
 import { useEnvironmentAlerts } from "#/hooks/useEnvironmentAlerts";
 import { usePrecipitationGrid } from "#/hooks/usePrecipitationGrid";
+import { useFireData, type FirePoint } from "#/hooks/useFireData";
 
 export interface MapContext {
   map: React.MutableRefObject<maplibregl.Map | null>;
@@ -22,6 +23,10 @@ export interface MapContext {
   setShowLayers: (show: boolean) => void;
   showRainRadar: boolean;
   setShowRainRadar: (show: boolean) => void;
+  showFireLayer: boolean;
+  setShowFireLayer: (show: boolean) => void;
+  firePoints: ReturnType<typeof useFireData>["points"];
+  fireLoading: boolean;
   aqiFilter: 'all' | 'good' | 'moderate' | 'unhealthy' | 'hazardous';
   setAqiFilter: (filter: 'all' | 'good' | 'moderate' | 'unhealthy' | 'hazardous') => void;
   showMarkers: boolean;
@@ -47,6 +52,9 @@ interface BaseEnvironmentMapProps {
   // Override AQI center location (for search feature)
   aqiCenterLocation?: { latitude: number; longitude: number } | null;
 
+  // Override fire data (for local area fire data)
+  customFireData?: FirePoint[];
+
   // Render props pattern - children receive map context
   children?: (context: MapContext) => ReactNode;
 
@@ -65,6 +73,7 @@ export function BaseEnvironmentMap({
   autoLocateOnMount = false,
   aqiRadiusKm = 1000,
   aqiCenterLocation,
+  customFireData,
   children,
   onMapReady,
 }: BaseEnvironmentMapProps) {
@@ -80,6 +89,7 @@ export function BaseEnvironmentMap({
 
   const [showLayers, setShowLayers] = useState(false);
   const [showRainRadar, setShowRainRadar] = useState(false);
+  const [showFireLayer, setShowFireLayer] = useState(false);
   const [aqiFilter, setAqiFilter] = useState<'all' | 'good' | 'moderate' | 'unhealthy' | 'hazardous'>('all');
   const [showMarkers, setShowMarkers] = useState(true);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -112,6 +122,12 @@ export function BaseEnvironmentMap({
     userLon: userLocation.longitude ?? undefined,
     radiusKm: 300, // 300km radius around user
   });
+
+  // Fetch fire data for Indonesia (global)
+  const { points: globalFirePoints, loading: fireLoading } = useFireData();
+  
+  // Use custom fire data if provided (for local area), otherwise use global
+  const firePoints = customFireData ?? globalFirePoints;
 
   // Initialize map only once
   useEffect(() => {
@@ -610,6 +626,138 @@ export function BaseEnvironmentMap({
     }
   }, [precipitationPoints, showRainRadar]);
 
+  // Add Fire Hotspots Heatmap visualization layer
+  useEffect(() => {
+    if (!map.current || fireLoading) {
+      console.log('[Fire Layer] Waiting for map or fire data...', { mapReady: !!map.current, fireLoading });
+      return;
+    }
+
+    const mapInstance = map.current;
+
+    // Try to add layer immediately if style is already loaded
+    if (mapInstance.isStyleLoaded()) {
+      addFireLayer();
+      return;
+    }
+
+    // Otherwise wait for style to load (with timeout)
+    const timeoutId = setTimeout(() => {
+      if (mapInstance.isStyleLoaded()) {
+        addFireLayer();
+      }
+    }, 3000);
+
+    const handleStyleLoad = () => {
+      clearTimeout(timeoutId);
+      addFireLayer();
+    };
+
+    mapInstance.once("styledata", handleStyleLoad);
+
+    return () => {
+      clearTimeout(timeoutId);
+      mapInstance.off("styledata", handleStyleLoad);
+    };
+
+    function addFireLayer() {
+      if (!mapInstance) return;
+
+      console.log('[Fire Layer] Starting fire layer rendering...');
+      console.log('[Fire Layer] Total fire points available:', firePoints.length);
+
+      // Remove existing layers if any
+      if (mapInstance.getLayer("fire-heatmap")) {
+        mapInstance.removeLayer("fire-heatmap");
+        console.log('[Fire Layer] Removed existing fire-heatmap layer');
+      }
+      if (mapInstance.getSource("fire-source")) {
+        mapInstance.removeSource("fire-source");
+        console.log('[Fire Layer] Removed existing fire-source');
+      }
+
+      // If no fire data, don't add any layer
+      if (firePoints.length === 0) {
+        console.log('[Fire Layer] ℹ️ No fire points to display');
+        return;
+      }
+
+      // Convert fire points to GeoJSON
+      const geojson = {
+        type: "FeatureCollection" as const,
+        features: firePoints.map((point) => ({
+          type: "Feature" as const,
+          geometry: {
+            type: "Point" as const,
+            coordinates: [point.lon, point.lat],
+          },
+          properties: {
+            brightness: point.brightness,
+            confidence: point.confidence,
+            frp: point.frp,
+          },
+        })),
+      };
+
+      console.log('[Fire Layer] 🔥 GeoJSON features created:', geojson.features.length);
+      console.log('[Fire Layer] 🔥 Sample fire point:', {
+        coords: geojson.features[0]?.geometry.coordinates,
+        props: geojson.features[0]?.properties,
+      });
+
+      // Add fire data source
+      mapInstance.addSource("fire-source", {
+        type: "geojson",
+        data: geojson,
+      });
+
+      // Add fire points as precise circles (like NASA FIRMS)
+      mapInstance.addLayer({
+        id: "fire-heatmap",
+        type: "circle",
+        source: "fire-source",
+        paint: {
+          // Color based on confidence level
+          "circle-color": [
+            "case",
+            [">=", ["get", "confidence"], 80],
+            "#dc2626", // High confidence (red)
+            [">=", ["get", "confidence"], 65],
+            "#f97316", // Medium-high confidence (orange)
+            "#fbbf24"  // Medium confidence (yellow)
+          ],
+          // Small precise circles
+          "circle-radius": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            0, 1,     // Far zoom: tiny dots
+            5, 2,     // Medium zoom: visible dots
+            9, 4,     // Close zoom: clear circles
+            12, 6     // Very close: larger circles
+          ],
+          // Slight opacity for overlapping fires
+          "circle-opacity": showFireLayer ? 0.8 : 0,
+          // Bright stroke for visibility
+          "circle-stroke-width": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            0, 0,
+            5, 0.5,
+            9, 1
+          ],
+          "circle-stroke-color": "#ffffff",
+          "circle-stroke-opacity": showFireLayer ? 0.6 : 0,
+        },
+      });
+
+      console.log('[Fire Layer] ✅ Fire circle markers layer added successfully');
+      console.log('[Fire Layer] Visualization: Precise circles (like NASA FIRMS)');
+      console.log('[Fire Layer] Layer visibility:', showFireLayer ? 'visible' : 'hidden');
+    }
+  }, [firePoints, fireLoading, showFireLayer]);
+
   const handleZoom = (delta: number) => {
     if (!map.current) return;
     map.current.zoomTo(map.current.getZoom() + delta);
@@ -629,6 +777,10 @@ export function BaseEnvironmentMap({
     setShowLayers,
     showRainRadar,
     setShowRainRadar,
+    showFireLayer,
+    setShowFireLayer,
+    firePoints,
+    fireLoading,
     aqiFilter,
     setAqiFilter,
     showMarkers,
@@ -636,7 +788,7 @@ export function BaseEnvironmentMap({
   };
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-white dark:bg-neutral-900">
+    <div className="relative h-full w-full bg-white dark:bg-neutral-900">
       <div ref={mapContainer} className="h-full w-full" />
       {children?.(mapContext)}
     </div>

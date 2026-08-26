@@ -118,18 +118,11 @@ export default function DashboardAppHeader() {
         }
       `}
     >
-      {/* =========================================================
-          LEFT
-      ========================================================= */}
       <div className="flex min-w-0 items-center gap-3 pr-4">
         <SidebarTrigger className="-ml-1 size-7 shrink-0 rounded-lg" />
 
         <div className="hidden h-5 w-px bg-border sm:block" />
 
-        {/* =====================================================
-            MOBILE / SMALL SCREEN TITLE
-            < md = berada di samping SidebarTrigger
-        ===================================================== */}
         {!isRiskMapRoute && (
           <span className="truncate text-sm font-medium text-neutral-700 md:hidden dark:text-neutral-200">
             {pageTitle}
@@ -137,10 +130,6 @@ export default function DashboardAppHeader() {
         )}
       </div>
 
-      {/* =========================================================
-          CENTER - DESKTOP / TABLET
-          md+ = benar-benar berada di tengah viewport
-      ========================================================= */}
       <div
         className="
           pointer-events-none
@@ -153,7 +142,12 @@ export default function DashboardAppHeader() {
           md:flex
         "
       >
-        <div className="pointer-events-auto">
+        <div
+          className={`
+            pointer-events-auto
+            ${isRiskMapRoute ? "w-[320px] lg:w-105 xl:w-125" : "w-auto"}
+          `}
+        >
           {isRiskMapRoute ? (
             <LocationSearchBar onLocationSelect={handleLocationSearch} />
           ) : (
@@ -164,9 +158,6 @@ export default function DashboardAppHeader() {
         </div>
       </div>
 
-      {/* =========================================================
-          RIGHT
-      ========================================================= */}
       <div className="ml-4 flex items-center justify-end gap-2">
         <AQIIndicator />
 

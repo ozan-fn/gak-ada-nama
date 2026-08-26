@@ -78,7 +78,10 @@ function RouteComponent() {
   const localTime = useLocalTime(location.longitude);
   const navigate = useNavigate({ from: Route.fullPath });
   const { lat, lng, city } = Route.useSearch();
-  const [isMobile, setIsMobile] = useState(false);
+  // Initialize with correct value to prevent double render
+  const [isMobile, setIsMobile] = useState(() => 
+    typeof window !== 'undefined' ? window.innerWidth < 1024 : false
+  );
 
   // Detect mobile screen size
   useEffect(() => {

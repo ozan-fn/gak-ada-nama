@@ -10,13 +10,19 @@ import {
   useEffect,
   useRef,
   useState,
-  useMemo,
   useCallback,
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { BaseEnvironmentMap } from "./maps/BaseEnvironmentMap";
 import * as maplibregl from "maplibre-gl";
 import type { NearbyReportPin } from "./RiskMap";
+import { indonesiaLocations } from "#/data/indonesia-locations";
+import { findNearestCity } from "#/lib/geoUtils";
+import {
+  groupNearbyReports,
+  createReportMarkers,
+  createSelectedLocationMarker,
+} from "#/lib/mapMarkers";
 
 interface MobileRiskMapProps {
   location: {
@@ -51,52 +57,6 @@ interface MobileRiskMapProps {
 
 const HANDLE_HEIGHT = 80;
 
-function groupNearbyReports(reports: NearbyReportPin[]): NearbyReportPin[][] {
-  const overlapThreshold = 0.0015;
-  const groups: NearbyReportPin[][] = [];
-
-  for (const report of reports) {
-    const existingGroup = groups.find((group) =>
-      group.some(
-        (candidate) =>
-          Math.abs(candidate.latitude - report.latitude) <= overlapThreshold &&
-          Math.abs(candidate.longitude - report.longitude) <= overlapThreshold,
-      ),
-    );
-
-    if (existingGroup) {
-      existingGroup.push(report);
-    } else {
-      groups.push([report]);
-    }
-  }
-
-  return groups;
-}
-
-function createReportMarkerElement(title: string, reportCount: number) {
-  const marker = document.createElement("button");
-  marker.type = "button";
-  marker.className =
-    "risk-report-marker flex size-9 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-amber-400 text-amber-950 shadow-lg transition-colors hover:bg-amber-300 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2";
-  marker.ariaLabel =
-    reportCount > 1
-      ? `${reportCount} laporan di lokasi ini`
-      : `Laporan: ${title}`;
-  marker.title =
-    reportCount > 1 ? `${reportCount} laporan di lokasi ini` : title;
-  marker.style.pointerEvents = "auto";
-  marker.style.zIndex = "20";
-
-  const icon = document.createElement("span");
-  icon.className = "text-xl font-black leading-none";
-  icon.textContent = reportCount > 1 ? String(reportCount) : "!";
-  icon.setAttribute("aria-hidden", "true");
-  marker.appendChild(icon);
-
-  return marker;
-}
-
 export default function MobileRiskMap({
   location,
   stableLocation,
@@ -108,9 +68,10 @@ export default function MobileRiskMap({
   renderSheetContent,
 }: MobileRiskMapProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
-  const markerRef = useRef<maplibregl.Marker | null>(null);
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
   const reportMarkersRef = useRef<maplibregl.Marker[]>([]);
+  const selectedMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const lastLocationKey = useRef<string | null>(null);
   const [collapsedY, setCollapsedY] = useState<number | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [bearing, setBearing] = useState(0);
@@ -118,51 +79,17 @@ export default function MobileRiskMap({
   const y = useMotionValue(0);
   const dragControls = useDragControls();
 
-  const coords = useMemo(
-    () => ({ lat: stableLocation.latitude, lng: stableLocation.longitude }),
-    [stableLocation.latitude, stableLocation.longitude],
-  );
+  // Static initial center
+  const initialCenter: [number, number] = [118.0, -2.5];
 
-  const center: [number, number] = useMemo(
-    () =>
-      selectedLocation
-        ? [selectedLocation.longitude, selectedLocation.latitude]
-        : stableLocation.latitude && stableLocation.longitude
-          ? [stableLocation.longitude, stableLocation.latitude]
-          : [118.0, -2.5],
-    [selectedLocation, stableLocation.latitude, stableLocation.longitude],
-  );
-
-  const aqiRadius = useMemo(
-    () => (selectedLocation ? 100 : 1000),
-    [selectedLocation],
-  );
-
+  // Bottom sheet collapse logic
   useEffect(() => {
     if (!sheetRef.current) return;
-    
-    const updateCollapsedY = () => {
-      if (!sheetRef.current) return;
-      const fullHeight = sheetRef.current.offsetHeight;
-      const peek = Math.max(fullHeight - HANDLE_HEIGHT, 0);
-      setCollapsedY(peek);
-      if (!expanded) {
-        y.set(peek);
-      }
-    };
-
-    updateCollapsedY();
-
-    const observer = new ResizeObserver(() => {
-      updateCollapsedY();
-    });
-
-    observer.observe(sheetRef.current);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [y, expanded]);
+    const fullHeight = sheetRef.current.offsetHeight;
+    const peek = Math.max(fullHeight - HANDLE_HEIGHT, 0);
+    setCollapsedY(peek);
+    y.set(peek);
+  }, [y]);
 
   const contentOpacity = useTransform(y, [0, collapsedY ?? 1], [1, 0]);
   const controlsOpacity = useTransform(y, [0, collapsedY ?? 1], [0, 1]);
@@ -188,139 +115,34 @@ export default function MobileRiskMap({
     snapTo(expanded ? collapsedY : 0, !expanded);
   };
 
-  const handleMapReady = useCallback(
-    (mapInstance: maplibregl.Map) => {
-      mapInstanceRef.current = mapInstance;
-      setIsMapReady(true);
-
-      mapInstance.on("rotate", () => {
-        setBearing(mapInstance.getBearing() ?? 0);
-      });
-
-      if (!coords.lat || !coords.lng) return;
-      if (typeof document === "undefined") return;
-
-      if (markerRef.current) {
-        markerRef.current.remove();
-      }
-
-      const markerEl = document.createElement("div");
-      markerEl.className = "user-location-marker";
-      markerEl.style.cssText = `
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-      `;
-
-      const dot = document.createElement("div");
-      dot.style.cssText = `
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        background-color: #3b82f6;
-        border: 3px solid white;
-        box-shadow: 0 0 6px rgba(0,0,0,0.4);
-        transition: all 0.3s ease;
-      `;
-
-      markerEl.appendChild(dot);
-
-      markerRef.current = new maplibregl.Marker({
-        element: markerEl,
-        anchor: "center",
-      })
-        .setLngLat([coords.lng, coords.lat])
-        .addTo(mapInstance);
-    },
-    [coords],
-  );
-
-  useEffect(() => {
-    if (!mapInstanceRef.current || !coords.lat || !coords.lng) return;
-    if (typeof document === "undefined") return;
-
-    if (!markerRef.current) {
-      const markerEl = document.createElement("div");
-      markerEl.className = "user-location-marker";
-      markerEl.style.cssText = `
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-      `;
-
-      const dot = document.createElement("div");
-      dot.style.cssText = `
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        background-color: #3b82f6;
-        border: 3px solid white;
-        box-shadow: 0 0 6px rgba(0,0,0,0.4);
-        transition: all 0.3s ease;
-      `;
-
-      markerEl.appendChild(dot);
-
-      markerRef.current = new maplibregl.Marker({
-        element: markerEl,
-        anchor: "center",
-      })
-        .setLngLat([coords.lng, coords.lat])
-        .addTo(mapInstanceRef.current);
-    } else {
-      markerRef.current.setLngLat([coords.lng, coords.lat]);
-    }
-
-    return () => {
-      if (markerRef.current) {
-        markerRef.current.remove();
-        markerRef.current = null;
-      }
-    };
-  }, [coords]);
-
   // Report markers
   useEffect(() => {
+    console.log("[MobileRiskMap] Marker effect triggered", {
+      reportsCount: reports.length,
+      isMapReady,
+      mapExists: !!mapInstanceRef.current,
+    });
+
     reportMarkersRef.current.forEach((marker) => {
       marker.remove();
     });
     reportMarkersRef.current = [];
 
-    if (!mapInstanceRef.current || !isMapReady) return;
+    if (!mapInstanceRef.current || !isMapReady) {
+      console.log("[MobileRiskMap] Skipping markers - map not ready");
+      return;
+    }
     const mapInstance = mapInstanceRef.current;
 
-    const reportGroups = groupNearbyReports(reports);
-    const markers = reportGroups.map((reportGroup) => {
-      const primaryReport = reportGroup[0];
-      const markerElement = createReportMarkerElement(
-        primaryReport.title,
-        reportGroup.length,
-      );
-      const marker = new maplibregl.Marker({
-        element: markerElement,
-        anchor: "bottom",
-      })
-        .setLngLat([primaryReport.longitude, primaryReport.latitude])
-        .addTo(mapInstance);
-
-      markerElement.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        onReportSelect?.(primaryReport);
-      });
-      markerElement.addEventListener("pointerdown", (event) => {
-        event.stopPropagation();
-      });
-
-      return marker;
+    console.log("[MobileRiskMap] Creating markers:", {
+      totalReports: reports.length,
+      groupCount: groupNearbyReports(reports).length,
     });
+
+    const markers = createReportMarkers(reports, mapInstance, onReportSelect);
     reportMarkersRef.current = markers;
+
+    console.log("[MobileRiskMap] Total markers created:", markers.length);
 
     return () => {
       markers.forEach((marker) => {
@@ -330,18 +152,24 @@ export default function MobileRiskMap({
     };
   }, [isMapReady, onReportSelect, reports]);
 
-  // Map click handler
+  // Map click handler - simple approach like RiskMap
   useEffect(() => {
     if (!mapInstanceRef.current || !isMapReady || !onLocationSelect) return;
 
     const handleMapClick = (e: maplibregl.MapMouseEvent) => {
-      if (e.originalEvent.defaultPrevented) return;
+      console.log("[MobileRiskMap] Map clicked at:", e.lngLat);
+
+      if (e.originalEvent.defaultPrevented) {
+        console.log("[MobileRiskMap] Click prevented by default");
+        return;
+      }
 
       const eventTarget = e.originalEvent.target;
       if (
         eventTarget instanceof Element &&
         eventTarget.closest(".maplibregl-marker, .maplibregl-popup")
       ) {
+        console.log("[MobileRiskMap] Clicked on marker, ignoring");
         return;
       }
 
@@ -361,14 +189,22 @@ export default function MobileRiskMap({
       );
 
       if (clickedReportGroup) {
+        console.log(
+          "[MobileRiskMap] Clicked on report:",
+          clickedReportGroup[0],
+        );
         onReportSelect?.(clickedReportGroup[0]);
         return;
       }
 
       const { lng, lat } = e.lngLat;
-      const { findNearestCity } = require("#/lib/geoUtils");
-      const { indonesiaLocations } = require("#/data/indonesia-locations");
       const nearestCity = findNearestCity(lat, lng, indonesiaLocations);
+
+      console.log("[MobileRiskMap] Calling onLocationSelect with:", {
+        latitude: lat,
+        longitude: lng,
+        city: `${nearestCity.name}, ${nearestCity.province}`,
+      });
 
       onLocationSelect({
         latitude: lat,
@@ -384,15 +220,51 @@ export default function MobileRiskMap({
     };
   }, [isMapReady, onLocationSelect, onReportSelect, reports]);
 
-  // Fly to selected location
+  // Red marker for selected location - prevent effect loops
   useEffect(() => {
     if (!mapInstanceRef.current || !isMapReady || !selectedLocation) return;
 
-    mapInstanceRef.current.flyTo({
-      center: [selectedLocation.longitude, selectedLocation.latitude],
+    const map = mapInstanceRef.current;
+    const { latitude, longitude } = selectedLocation;
+    const locationKey = `${latitude},${longitude}`;
+
+    // Skip if same location
+    if (lastLocationKey.current === locationKey) {
+      console.log("[MobileRiskMap] Skipping - same location key");
+      return;
+    }
+
+    lastLocationKey.current = locationKey;
+
+    console.log("[MobileRiskMap] Effect run for NEW location:", {
+      latitude,
+      longitude,
+    });
+
+    // Remove old marker FIRST
+    if (selectedMarkerRef.current) {
+      console.log("[MobileRiskMap] Removing old marker");
+      selectedMarkerRef.current.remove();
+      selectedMarkerRef.current = null;
+    }
+
+    // Create marker
+    console.log("[MobileRiskMap] Creating new marker...");
+    const selectedMarker = createSelectedLocationMarker(
+      latitude,
+      longitude,
+      map,
+    );
+    selectedMarkerRef.current = selectedMarker;
+
+    // Fly to location
+    map.flyTo({
+      center: [longitude, latitude],
       zoom: 10,
       duration: 1500,
     });
+
+    // NO cleanup - let marker persist
   }, [selectedLocation, isMapReady]);
 
   const resetView = () => {
@@ -423,15 +295,23 @@ export default function MobileRiskMap({
     }
   };
 
+  const handleMapReady = useCallback((map: maplibregl.Map) => {
+    mapInstanceRef.current = map;
+    setIsMapReady(true);
+    map.on("rotate", () => {
+      setBearing(map.getBearing() ?? 0);
+    });
+  }, []);
+
   return (
     <div className="relative h-full w-full overflow-hidden bg-neutral-100">
       <BaseEnvironmentMap
-        initialCenter={center}
-        initialZoom={selectedLocation ? 10 : 4.5}
+        initialCenter={initialCenter}
+        initialZoom={4.5}
         autoFitStations={false}
         autoZoomOnLocate={false}
         autoLocateOnMount={false}
-        aqiRadiusKm={aqiRadius}
+        aqiRadiusKm={1000}
         aqiCenterLocation={
           selectedLocation
             ? {
@@ -449,6 +329,8 @@ export default function MobileRiskMap({
             setShowLayers,
             showRainRadar,
             setShowRainRadar,
+            showFireLayer,
+            setShowFireLayer,
             aqiFilter,
             setAqiFilter,
             showMarkers,
@@ -508,6 +390,16 @@ export default function MobileRiskMap({
                           className="h-4 w-4 rounded border-neutral-300 cursor-pointer"
                         />
                         <span>Rain Radar</span>
+                      </label>
+
+                      <label className="flex items-center gap-2 text-sm text-neutral-700 cursor-pointer mb-3 pb-3 border-b border-neutral-100">
+                        <input
+                          type="checkbox"
+                          checked={showFireLayer}
+                          onChange={(e) => setShowFireLayer(e.target.checked)}
+                          className="h-4 w-4 rounded border-neutral-300 cursor-pointer"
+                        />
+                        <span>Fire Hotspots</span>
                       </label>
 
                       <label className="flex items-center gap-2 text-sm text-neutral-700 cursor-pointer mb-3 pb-3 border-b border-neutral-100">
