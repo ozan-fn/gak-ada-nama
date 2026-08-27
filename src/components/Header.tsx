@@ -68,16 +68,17 @@ export function Header() {
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 mx-auto w-full max-w-5xl border-transparent border-b md:rounded-md md:border md:transition-all md:ease-out",
+        "sticky top-0 z-50 mx-auto w-full max-w-5xl border-b border-transparent md:top-2 md:rounded-xl md:border md:transition-all md:duration-300 md:ease-out",
         {
-          "border-border bg-background/95 backdrop-blur-sm supports-backdrop-filter:bg-background/50 md:top-2 md:max-w-4xl md:shadow":
+          "border-neutral-200/60 bg-white/65 shadow-sm backdrop-blur-xl supports-backdrop-filter:bg-white/50 md:max-w-4xl dark:border-neutral-800/60 dark:bg-neutral-900/65":
             scrolled,
+          "bg-transparent": !scrolled,
         },
       )}
     >
       <nav
         className={cn(
-          "flex h-14 w-full items-center justify-between px-4 md:h-12 md:transition-all md:ease-out",
+          "flex h-14 w-full items-center justify-between px-4 transition-all duration-300 md:h-12 md:ease-out",
           {
             "md:px-2": scrolled,
           },
@@ -85,13 +86,10 @@ export function Header() {
       >
         <Link
           to="/"
-          className={cn(
-            "rounded-md p-0.5 font-semibold transition-colors duration-300",
-            {
-              "text-foreground hover:bg-muted": scrolled || !isHome,
-              "text-white hover:bg-white/10": !scrolled && isHome,
-            },
-          )}
+          className={cn({
+            "text-foreground": scrolled || !isHome,
+            "text-white": !scrolled && isHome,
+          })}
         >
           <img
             src={scrolled ? logoBlue : logoWhite}

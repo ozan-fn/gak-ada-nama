@@ -15,30 +15,37 @@ export default function HeroSection() {
         <div className="relative z-10 min-h-screen px-6 flex flex-col justify-center">
           <div className="mx-auto flex max-w-3xl flex-col items-center text-center text-white">
             <div className="mb-6 flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 pl-2 pr-3 py-1 text-xs md:text-sm backdrop-blur-md">
-              <span className="rounded-sm bg-cyan-500 px-2 py-0.5 text-[10px] font-semibold text-white">
+              <span className="rounded-sm bg-sky-500 px-2 py-0.5 text-[10px] font-semibold text-white">
                 Live
               </span>
               <span className="text-white/90">
-                Pemantauan Lingkungan
+                Pemantauan Risiko Lingkungan
               </span>
             </div>
-
             <div className="flex flex-col items-center text-center space-y-4">
-              <h1 className="max-w-3xl text-4xl font-semibold leading-tight tracking-tight md:text-5xl lg:text-6xl">
-                Pahami Lingkungan dan Antisipasi Resikonya
+              <h1 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight md:text-4xl lg:text-5xl">
+                Pantau Lingkungan, Cegah Bencana Akibat Ulah Manusia
               </h1>
-
-              <p className="max-w-2xl mx-auto text-sm md:text-base text-white/80 font-normal leading-relaxed">
-                Kenali kondisi lingkungan di sekitarmu, dapatkan peringatan risiko
-                    berbasis AI, dan ambil tindakan sebelum masalah berkembang.
+              <p className="max-w-xl mx-auto text-sm md:text-base text-white/80 font-normal leading-relaxed">
+                Kenali kondisi lingkungan di sekitarmu secara real-time, deteksi
+                risiko yang dipicu aktivitas manusia, dan ambil tindakan sebelum
+                masalah berkembang menjadi bencana.
               </p>
             </div>
 
-            <div className="mt-6 flex flex-row items-center gap-4">
-              <Button size="lg" className="p-4 font-semibold">
+            <div className="mt-6 flex flex-row items-center gap-3">
+              <Button
+                size="lg"
+                className="rounded-lg border border-sky-400/30 bg-sky-500 px-5 font-semibold text-white shadow-lg shadow-sky-500/20 transition-all duration-200 hover:bg-sky-400 hover:shadow-sky-500/30"
+              >
                 Lihat Demo
               </Button>
-              <Button variant="secondary" size="lg" className="p-4 font-semibold">
+
+              <Button
+                variant="ghost"
+                size="lg"
+                className="rounded-lg border border-white/25 bg-white/10 px-5 font-semibold text-white backdrop-blur-md transition-all duration-200 hover:border-white/40 hover:bg-white/20"
+              >
                 Jelajahi Platform
               </Button>
             </div>
@@ -56,9 +63,7 @@ export default function HeroSection() {
           </div>
 
           {/* Content area */}
-          <div className="p-6 min-h-130">
-            {/* Content goes here */}
-          </div>
+          <div className="p-6 min-h-130">{/* Content goes here */}</div>
         </div>
       </main>
     </div>

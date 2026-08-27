@@ -196,7 +196,7 @@ function Dashboard() {
 
               <button
                 type="button"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-sky-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-sky-600"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-sky-400/30 bg-sky-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm shadow-sky-500/20 transition-all duration-200 hover:bg-sky-400 hover:shadow-sky-500/30"
               >
                 <Download className="h-3.5 w-3.5" />
                 <span>Ekspor</span>

@@ -1,6 +1,5 @@
 import {
   Bell,
-  ChartNoAxesCombined,
   ClipboardList,
   History,
   Home,
@@ -70,11 +69,6 @@ const menuItems = [
   {
     group: "Wawasan",
     items: [
-      {
-        label: "Dampak Risiko",
-        icon: ChartNoAxesCombined,
-        to: "/dashboard/impact-analysis",
-      },
       {
         label: "Aktivitas",
         icon: History,

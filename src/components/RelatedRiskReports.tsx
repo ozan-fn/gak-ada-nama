@@ -30,7 +30,7 @@ export default function RelatedRiskReports({
 		<section className="rounded-lg bg-white p-4 shadow-sm">
 			<div className="flex items-center justify-between gap-3">
 				<div className="flex items-start gap-3">
-					<div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+					<div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
 						<FileText className="size-4.5" />
 					</div>
 					<div>
@@ -60,14 +60,14 @@ export default function RelatedRiskReports({
 								onClick={() => onReportSelect?.(report)}
 								className={`flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors hover:bg-neutral-100 ${
 									isSelected
-										? "bg-emerald-50 ring-1 ring-inset ring-emerald-100"
+										? "bg-sky-50 ring-1 ring-inset ring-sky-100"
 										: "bg-neutral-50"
 								}`}
 							>
 								<div
 									className={`flex size-7 shrink-0 items-center justify-center rounded-lg text-[10px] font-semibold ${
 										isSelected
-											? "bg-emerald-600 text-white"
+											? "bg-sky-600 text-white"
 											: "bg-white text-neutral-600 shadow-sm"
 									}`}
 								>

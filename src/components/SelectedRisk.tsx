@@ -109,7 +109,7 @@ export default function SelectedRisk({ selectedLocation }: SelectedRiskProps) {
 		<section className="rounded-lg bg-white p-4 shadow-sm">
 			<div className="flex items-start justify-between gap-3">
 				<div className="flex min-w-0 items-start gap-3">
-					<div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+					<div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
 						<Wind className="size-4.5" />
 					</div>
 					<div className="min-w-0">
@@ -151,7 +151,7 @@ export default function SelectedRisk({ selectedLocation }: SelectedRiskProps) {
 						className="rounded-lg border border-neutral-100 p-2.5"
 					>
 						<p className="flex items-center gap-1 text-[8px] font-medium text-neutral-400">
-							<Icon className="size-3 text-emerald-600" />
+							<Icon className="size-3 text-sky-600" />
 							{label}
 						</p>
 						<p className="mt-1.5 text-xs font-semibold text-neutral-900">

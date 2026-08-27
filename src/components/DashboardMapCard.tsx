@@ -12,6 +12,7 @@ import {
   Droplet,
   ChevronDown,
   ChevronUp,
+  ArrowUpRight,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { BaseEnvironmentMap, type MapContext } from "./maps/BaseEnvironmentMap";
@@ -193,9 +194,10 @@ function DashboardMapContent({ context }: { context: MapContext }) {
           <Link to="/dashboard/risk-map">
             <button
               type="button"
-              className="mt-2 w-full rounded-md bg-sky-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-sky-600"
+              className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-md border border-sky-400/30 bg-sky-500 px-3 py-1.5 text-xs font-medium text-white shadow-sm shadow-sky-500/15 transition-colors duration-200 hover:bg-sky-400"
             >
-              View Risk Map →
+              <span>Lihat Peta Risiko</span>
+              <ArrowUpRight className="size-3" />
             </button>
           </Link>
         </div>
