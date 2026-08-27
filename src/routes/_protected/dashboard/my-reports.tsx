@@ -8,6 +8,7 @@ import {
 	Clock,
 	Clock3,
 	CloudRain,
+	Eye,
 	FileQuestion,
 	Flame,
 	MapPin,
@@ -568,6 +569,23 @@ function MyReportsPage() {
 																		{assessmentMeta.label}
 																	</span>
 																)}
+															</div>
+
+															<div className="mt-3 flex justify-end">
+																<Button
+render={
+										<Link
+											to="/dashboard/report-detail/$reportId"
+											params={{ reportId: report.id }}
+										/>
+									}
+																	variant="outline"
+																	size="sm"
+																	className="h-8 gap-1.5 rounded-lg border-neutral-200 text-[11px] font-semibold text-neutral-700 hover:bg-neutral-50"
+																>
+																	<Eye className="size-3.5" />
+																	Lihat Detail
+																</Button>
 															</div>
 
 															{isRefreshing && (
