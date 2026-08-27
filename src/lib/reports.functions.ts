@@ -45,6 +45,18 @@ type ReportResult = Prisma.ReportGetPayload<{
 	include: typeof reportResultInclude;
 }>;
 
+type StoredRiskAssessmentSource = Pick<
+	NonNullable<ReportResult["riskAssessment"]>,
+	| "score"
+	| "level"
+	| "confidence"
+	| "summary"
+	| "horizons"
+	| "factors"
+	| "potentialImpacts"
+	| "recommendedActions"
+>;
+
 type EnvironmentCollection = {
 	snapshot: Prisma.InputJsonObject;
 	providerStatus: Prisma.InputJsonObject;
@@ -275,7 +287,7 @@ async function computeAssessment({
 }
 
 function storedRiskToView(
-	assessment: ReportResult["riskAssessment"],
+	assessment: StoredRiskAssessmentSource | null,
 ): RiskAssessmentView | null {
 	if (
 		!assessment ||
@@ -315,6 +327,18 @@ function providerErrorsFromRecord(
 	return Array.isArray(errors)
 		? errors.filter((error): error is string => typeof error === "string")
 		: [];
+}
+
+function storedAssessmentStatusToView(status: string): RiskAssessmentStatus {
+	switch (status) {
+		case "COMPLETE":
+		case "PARTIAL":
+		case "PENDING":
+		case "FAILED":
+			return status;
+		default:
+			return "PENDING";
+	}
 }
 
 function resultToPublicView(report: ReportResult): CreateReportResult {
@@ -726,6 +750,7 @@ export type ReportMapPin = {
 	locationName: string;
 	latitude: number;
 	longitude: number;
+	riskAssessment: ReportAssessmentSummary | null;
 };
 
 export const getReportMapPinsFn = createServerFn({ method: "GET" }).handler(
@@ -743,20 +768,65 @@ export const getReportMapPinsFn = createServerFn({ method: "GET" }).handler(
 				locationName: true,
 				latitude: true,
 				longitude: true,
+				incidentClusterId: true,
+				riskAssessment: {
+					select: {
+						status: true,
+						score: true,
+						level: true,
+						confidence: true,
+						summary: true,
+						horizons: true,
+						factors: true,
+						potentialImpacts: true,
+						recommendedActions: true,
+						nearbyReportCount: true,
+						providerStatus: true,
+					},
+				},
 			},
 		});
 
-		return reports.filter(
-			(report): report is ReportMapPin =>
-				typeof report.latitude === "number" &&
-				Number.isFinite(report.latitude) &&
-				report.latitude >= -90 &&
-				report.latitude <= 90 &&
-				typeof report.longitude === "number" &&
-				Number.isFinite(report.longitude) &&
-				report.longitude >= -180 &&
-				report.longitude <= 180,
-		);
+		return reports.flatMap((report) => {
+			const { latitude, longitude } = report;
+			if (
+				typeof latitude !== "number" ||
+				!Number.isFinite(latitude) ||
+				latitude < -90 ||
+				latitude > 90 ||
+				typeof longitude !== "number" ||
+				!Number.isFinite(longitude) ||
+				longitude < -180 ||
+				longitude > 180
+			) {
+				return [];
+			}
+
+			const assessment = report.riskAssessment;
+
+			return [
+				{
+					id: report.id,
+					title: report.title,
+					category: report.category,
+					urgency: report.urgency,
+					locationName: report.locationName,
+					latitude,
+					longitude,
+					riskAssessment: assessment
+						? {
+								status: storedAssessmentStatusToView(assessment.status),
+								nearbyReportCount: assessment.nearbyReportCount,
+								incidentClusterId: report.incidentClusterId,
+								risk: storedRiskToView(assessment),
+								providerErrors: providerErrorsFromRecord(
+									assessment.providerStatus,
+								),
+							}
+						: null,
+				},
+			];
+		});
 	},
 );
 
