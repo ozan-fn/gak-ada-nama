@@ -7,6 +7,7 @@ import {
 	fetchWeatherByCoordinates,
 } from "#/lib/environment.server";
 import { prisma } from "#/lib/prisma";
+import { uploadImageDataUrl } from "#/lib/r2";
 import {
 	ACTIVE_REPORT_STATUSES,
 	assessReportRisk,
@@ -448,7 +449,11 @@ export const createReportFn = createServerFn({ method: "POST" })
 				locationName,
 				latitude: data.latitude,
 				longitude: data.longitude,
-				images: data.images ?? [],
+				images: await Promise.all(
+					(data.images ?? [])
+						.filter(Boolean)
+						.map((image) => uploadImageDataUrl(image)),
+				),
 				user: { connect: { id: session.user.id } },
 				...(existingClusterId
 					? {

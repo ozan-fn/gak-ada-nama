@@ -19,6 +19,7 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1119.0",
     "@base-ui/react": "^1.6.0",
     "@better-auth/prisma-adapter": "^1.6.25",
     "@fontsource-variable/geist": "^5.3.0",
