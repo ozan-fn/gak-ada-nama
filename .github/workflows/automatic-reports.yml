@@ -1,0 +1,43 @@
+name: Automatic environmental reports
+
+on:
+  schedule:
+    - cron: "0 */3 * * *"
+  workflow_dispatch:
+    inputs:
+      region_id:
+        description: "Optional region ID, for example purwokerto"
+        required: false
+        type: string
+
+concurrency:
+  group: automatic-environmental-reports
+  cancel-in-progress: false
+
+jobs:
+  run-monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Trigger automatic report monitor
+        env:
+          BASE_URL: ${{ secrets.AUTOMATIC_REPORT_BASE_URL }}
+          CRON_SECRET: ${{ secrets.AUTOMATIC_REPORT_CRON_SECRET }}
+          REGION_ID: ${{ inputs.region_id }}
+        run: |
+          test -n "$BASE_URL"
+          test -n "$CRON_SECRET"
+
+          request_body='{}'
+          if [ -n "$REGION_ID" ]; then
+            request_body="$(jq -cn --arg regionId "$REGION_ID" '{regionId: $regionId}')"
+          fi
+
+          curl --fail-with-body --show-error --silent \
+            --retry 2 \
+            --retry-delay 5 \
+            --request POST \
+            --header "Authorization: Bearer $CRON_SECRET" \
+            --header "Content-Type: application/json" \
+            --data "$request_body" \
+            "${BASE_URL%/}/api/internal/automatic-reports/run"

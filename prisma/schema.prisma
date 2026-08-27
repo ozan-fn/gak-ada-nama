@@ -94,6 +94,14 @@ model Report {
   // Foto/Media
   images String[]
 
+  // Asal dan bukti laporan. Semua laporan tetap memakai koleksi Report yang sama.
+  source               String   @default("HUMAN")
+  sourceConfidence     Float?
+  sourceMetadata       Json?
+  deduplicationKey     String?  @unique
+  observedAt           DateTime?
+  accuracyRadiusMeters Int?
+
   // Relasi ke User
   userId String @db.ObjectId
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -112,6 +120,7 @@ model Report {
   @@index([userId])
   @@index([status])
   @@index([category])
+  @@index([source])
   @@index([incidentClusterId])
   @@map("report")
 }

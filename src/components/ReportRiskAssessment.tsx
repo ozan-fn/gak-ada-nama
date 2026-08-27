@@ -1,6 +1,7 @@
 import {
 	AlertCircle,
 	AlertTriangle,
+	Bot,
 	Brain,
 	CheckCircle2,
 	Clock3,
@@ -164,6 +165,7 @@ export default function ReportRiskAssessment({
 	const level = levelConfig[risk.level];
 	const status = statusConfig[assessment.status];
 	const confidence = Math.round(risk.confidence * 100);
+	const isAutomatic = report.source === "ENVIRONMENT_MONITOR";
 
 	return (
 		<div className="space-y-3">
@@ -175,9 +177,11 @@ export default function ReportRiskAssessment({
 						</div>
 						<div className="min-w-0">
 							<p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
-								{selectionMode === "location"
-									? "Laporan prioritas di lokasi"
-									: "Risiko yang dianalisis"}
+								{isAutomatic
+									? "Terdeteksi otomatis"
+									: selectionMode === "location"
+										? "Laporan prioritas di lokasi"
+										: "Risiko yang dianalisis"}
 							</p>
 							<h3
 								id="report-risk-assessment-title"
@@ -186,10 +190,26 @@ export default function ReportRiskAssessment({
 								{report.title}
 							</h3>
 							<div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-neutral-500">
+								{isAutomatic && (
+									<span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-700">
+										<Bot className="size-3" />
+										Prita Environmental Monitor
+										{report.sourceConfidence !== null &&
+											` · ${Math.round(report.sourceConfidence * 100)}%`}
+									</span>
+								)}
 								{locationName && (
 									<span className="inline-flex items-center gap-1">
 										<MapPin className="size-3" />
 										{locationName}
+									</span>
+								)}
+								{isAutomatic && report.accuracyRadiusMeters && (
+									<span>
+										Radius ketepatan ±
+										{report.accuracyRadiusMeters >= 1_000
+											? `${(report.accuracyRadiusMeters / 1_000).toFixed(1)} km`
+											: `${report.accuracyRadiusMeters} m`}
 									</span>
 								)}
 								<span
@@ -208,6 +228,12 @@ export default function ReportRiskAssessment({
 						{level.label}
 					</span>
 				</div>
+				{isAutomatic && (
+					<p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-[9px] leading-relaxed text-emerald-800">
+						Status terverifikasi berarti threshold sensor lingkungan terpenuhi,
+						bukan konfirmasi saksi manusia.
+					</p>
+				)}
 			</section>
 
 			<section className="rounded-lg bg-white p-4 shadow-sm">

@@ -5,6 +5,7 @@ export type EnvironmentCoordinates = {
 
 export type EnvironmentFetchOptions = {
 	signal?: AbortSignal;
+	pastDays?: number;
 };
 
 export type OpenMeteoResponse = {
@@ -194,6 +195,9 @@ export async function fetchWeatherByCoordinates(
 		timezone: "Asia/Jakarta",
 		forecast_days: "7",
 	});
+	if (options.pastDays && options.pastDays > 0) {
+		params.set("past_days", String(Math.min(7, Math.floor(options.pastDays))));
+	}
 
 	const response = await fetch(
 		`https://api.open-meteo.com/v1/forecast?${params}`,
