@@ -5,6 +5,7 @@ import { ObjectId } from "mongodb";
 import { prisma } from "./prisma";
 
 export const auth = betterAuth({
+    baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3001",
     database: prismaAdapter(prisma, {
         provider: "mongodb"
     }),

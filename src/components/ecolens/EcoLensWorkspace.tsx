@@ -1,5 +1,11 @@
 import { useServerFn } from "@tanstack/react-start";
-import { type FormEvent, useEffect, useRef, useState } from "react";
+import {
+	type FormEvent,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import {
 	EcoLensCameraViewport,
 	type EcoLensStage,
@@ -13,7 +19,11 @@ import { processUploadedImage } from "#/components/ecolens/imageUtils";
 import { useEcoLensCamera } from "#/components/ecolens/useEcoLensCamera";
 import { useEcoLensLocation } from "#/components/ecolens/useEcoLensLocation";
 import { analyzeEcoLens } from "#/lib/ecolens.functions";
-import { createReportFn } from "#/lib/reports.functions";
+import {
+	type CreateReportResult,
+	createReportFn,
+	refreshReportAssessmentFn,
+} from "#/lib/reports.functions";
 import type { EcoLensAnalysis, EcoLensCategory } from "#/types/ecolens";
 
 const EMPTY_CATEGORY: EcoLensCategory = "Lainnya";
@@ -21,10 +31,13 @@ const EMPTY_CATEGORY: EcoLensCategory = "Lainnya";
 export function EcoLensWorkspace() {
 	const analyzeEcoLensFn = useServerFn(analyzeEcoLens);
 	const createReport = useServerFn(createReportFn);
+	const refreshReportAssessment = useServerFn(refreshReportAssessmentFn);
 	const camera = useEcoLensCamera();
 	const gps = useEcoLensLocation();
 	const mountedRef = useRef(false);
 	const latestAnalysisRequest = useRef(0);
+	const submitLockRef = useRef(false);
+	const activeResultReportIdRef = useRef<string | null>(null);
 
 	const [stage, setStage] = useState<EcoLensStage>("idle");
 	const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -37,7 +50,11 @@ export function EcoLensWorkspace() {
 	const [formErrors, setFormErrors] = useState<EcoLensFormErrors>({});
 	const [captureError, setCaptureError] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [submissionResult, setSubmissionResult] =
+		useState<CreateReportResult | null>(null);
 
+	// Kamera memang hanya dimulai sekali saat workspace pertama kali dipasang.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: startup mount-only mencegah permintaan izin kamera berulang.
 	useEffect(() => {
 		mountedRef.current = true;
 		void handleStartCamera();
@@ -65,6 +82,8 @@ export function EcoLensWorkspace() {
 		setFormErrors({});
 		setCaptureError(null);
 		setReviewOpen(false);
+		setSubmissionResult(null);
+		activeResultReportIdRef.current = null;
 	};
 
 	const handleStartCamera = async () => {
@@ -114,7 +133,10 @@ export function EcoLensWorkspace() {
 		} catch (error) {
 			if (latestAnalysisRequest.current !== requestId) return;
 
-			console.error("[EcoLens] Terjadi kesalahan saat memproses analisis:", error);
+			console.error(
+				"[EcoLens] Terjadi kesalahan saat memproses analisis:",
+				error,
+			);
 			setAnalysis(null);
 			setAnalysisError(
 				"Analisis tidak dapat dijalankan saat ini. Kamu tetap dapat melengkapi draf secara manual.",
@@ -180,6 +202,7 @@ export function EcoLensWorkspace() {
 
 	const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
+		if (submitLockRef.current) return;
 
 		const nextErrors: EcoLensFormErrors = {};
 		if (!location.trim()) {
@@ -192,9 +215,12 @@ export function EcoLensWorkspace() {
 		setFormErrors(nextErrors);
 		if (Object.keys(nextErrors).length > 0) return;
 
+		submitLockRef.current = true;
 		setIsSubmitting(true);
+		setSubmissionResult(null);
+		activeResultReportIdRef.current = null;
 		try {
-			await createReport({
+			const result = await createReport({
 				data: {
 					title: `${category} di ${location.trim()}`,
 					description: description.trim(),
@@ -216,6 +242,8 @@ export function EcoLensWorkspace() {
 			});
 
 			if (!mountedRef.current) return;
+			activeResultReportIdRef.current = result.report.id;
+			setSubmissionResult(result);
 			setReviewOpen(false);
 			setStage("demo-success");
 		} catch (error) {
@@ -226,11 +254,23 @@ export function EcoLensWorkspace() {
 					: "Gagal menyimpan laporan. Silakan coba beberapa saat lagi.";
 			setFormErrors({ description: message });
 		} finally {
+			submitLockRef.current = false;
 			if (mountedRef.current) {
 				setIsSubmitting(false);
 			}
 		}
 	};
+
+	const handleRefreshAssessment = useCallback(
+		async (reportId: string) => {
+			const result = await refreshReportAssessment({ data: { reportId } });
+			if (mountedRef.current && activeResultReportIdRef.current === reportId) {
+				setSubmissionResult(result);
+			}
+			return result;
+		},
+		[refreshReportAssessment],
+	);
 
 	const handleCreateAnother = () => {
 		clearDraft();
@@ -296,7 +336,9 @@ export function EcoLensWorkspace() {
 
 			<EcoLensSuccessDialog
 				open={stage === "demo-success"}
+				result={submissionResult}
 				onCreateAnother={handleCreateAnother}
+				onRefreshAssessment={handleRefreshAssessment}
 			/>
 		</main>
 	);

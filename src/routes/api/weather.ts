@@ -1,47 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-
-type OpenMeteoResponse = {
-  latitude: number;
-  longitude: number;
-  elevation: number;
-  timezone: string;
-  current: {
-    time: string;
-    temperature_2m: number;
-    relative_humidity_2m: number;
-    apparent_temperature: number;
-    precipitation: number;
-    rain: number;
-    wind_speed_10m: number;
-    cloud_cover: number;
-    uv_index: number;
-  };
-  hourly: {
-    time: string[];
-    temperature_2m: number[];
-    precipitation_probability: number[];
-    precipitation: number[];
-  };
-  daily: {
-    time: string[];
-    precipitation_sum: number[];
-    rain_sum: number[];
-    precipitation_probability_max: number[];
-  };
-};
-
-// Indonesia major cities coordinates
-const CITY_COORDS: Record<string, [number, number]> = {
-  jakarta: [-6.2088, 106.8456],
-  surabaya: [-7.2575, 112.7521],
-  bandung: [-6.9175, 107.6191],
-  medan: [3.5952, 98.6722],
-  semarang: [-6.9667, 110.4167],
-  makassar: [-5.1477, 119.4327],
-  palembang: [-2.9761, 104.7754],
-  yogyakarta: [-7.7956, 110.3695],
-  bali: [-8.4095, 115.1889],
-};
+import { fetchWeatherByCoordinates, resolveWeatherCityCoordinates } from "#/lib/environment.server";
 
 export const Route = createFileRoute("/api/weather")({
   server: {
@@ -53,42 +11,18 @@ export const Route = createFileRoute("/api/weather")({
         const lng = url.searchParams.get("lng") || url.searchParams.get("lon"); // Accept both lon and lng
 
         try {
-          // Get coordinates
-          let latitude: number;
-          let longitude: number;
-
-          if (lat && lng) {
-            latitude = parseFloat(lat);
-            longitude = parseFloat(lng);
-          } else if (CITY_COORDS[city]) {
-            [latitude, longitude] = CITY_COORDS[city];
-          } else {
-            // Default to Jakarta
-            [latitude, longitude] = CITY_COORDS.jakarta;
-          }
-
-          // Open-Meteo API (FREE, no API key needed)
-          const params = new URLSearchParams({
-            latitude: latitude.toString(),
-            longitude: longitude.toString(),
-            current:
-              "temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,wind_speed_10m,cloud_cover,uv_index",
-            hourly: "temperature_2m,precipitation_probability,precipitation",
-            daily:
-              "precipitation_sum,rain_sum,precipitation_probability_max",
-            timezone: "Asia/Jakarta",
-            forecast_days: "7",
+          const parsedLatitude = lat === null ? Number.NaN : Number.parseFloat(lat);
+          const parsedLongitude = lng === null ? Number.NaN : Number.parseFloat(lng);
+          const coordinates =
+            Number.isFinite(parsedLatitude) && Number.isFinite(parsedLongitude)
+              ? {
+                  latitude: parsedLatitude,
+                  longitude: parsedLongitude,
+                }
+              : resolveWeatherCityCoordinates(city);
+          const data = await fetchWeatherByCoordinates(coordinates, {
+            signal: request.signal,
           });
-
-          const res = await fetch(
-            `https://api.open-meteo.com/v1/forecast?${params}`
-          );
-
-          if (!res.ok) {
-            throw new Error(`Open-Meteo API error: ${res.status}`);
-          }
-
-          const data = (await res.json()) as OpenMeteoResponse;
 
           return new Response(JSON.stringify(data), {
             status: 200,
@@ -106,7 +40,7 @@ export const Route = createFileRoute("/api/weather")({
             {
               status: 500,
               headers: { "Content-Type": "application/json" },
-            }
+            },
           );
         }
       },

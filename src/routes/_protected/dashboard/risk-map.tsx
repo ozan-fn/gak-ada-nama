@@ -1,13 +1,15 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Brain, Clock, MapPin } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { Clock, MapPin } from "lucide-react";
-import RiskMap from "#/components/RiskMap";
 import MobileRiskMap from "#/components/MobileRiskMap";
+import RelatedRiskReports from "#/components/RelatedRiskReports";
+import ReportRiskAssessment from "#/components/ReportRiskAssessment";
+import RiskMap, { type NearbyReportPin } from "#/components/RiskMap";
 import SelectedRisk from "#/components/SelectedRisk";
-import { useUserLocation } from "#/hooks/useUserLocation";
-import { getIndonesianTimezone } from "#/lib/timezoneUtils";
-import { getReportMapPinsFn } from "#/lib/reports.functions";
 import { Skeleton } from "#/components/ui/skeleton";
+import { useUserLocation } from "#/hooks/useUserLocation";
+import { getReportMapPinsFn } from "#/lib/reports.functions";
+import { getIndonesianTimezone } from "#/lib/timezoneUtils";
 
 // Define search params schema
 type RiskMapSearch = {
@@ -18,12 +20,7 @@ type RiskMapSearch = {
 
 const REPORT_RADIUS_KM = 5;
 
-function calculateDistanceKm(
-  latitudeA: number,
-  longitudeA: number,
-  latitudeB: number,
-  longitudeB: number,
-) {
+function calculateDistanceKm(latitudeA: number, longitudeA: number, latitudeB: number, longitudeB: number) {
   const earthRadiusKm = 6371;
   const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
   const latitudeDelta = toRadians(latitudeB - latitudeA);
@@ -31,11 +28,7 @@ function calculateDistanceKm(
   const startLatitude = toRadians(latitudeA);
   const endLatitude = toRadians(latitudeB);
 
-  const haversine =
-    Math.sin(latitudeDelta / 2) ** 2 +
-    Math.cos(startLatitude) *
-      Math.cos(endLatitude) *
-      Math.sin(longitudeDelta / 2) ** 2;
+  const haversine = Math.sin(latitudeDelta / 2) ** 2 + Math.cos(startLatitude) * Math.cos(endLatitude) * Math.sin(longitudeDelta / 2) ** 2;
 
   return 2 * earthRadiusKm * Math.asin(Math.sqrt(haversine));
 }
@@ -72,16 +65,39 @@ function useLocalTime(longitude?: number | null) {
   return `${time} ${timezone.label}`;
 }
 
+function RiskInformationHeader({ loading, localTime }: { loading: boolean; localTime: string }) {
+  return (
+    <section className="rounded-lg bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-700">
+            <Brain className="size-3.5" />
+            Analisis AI
+          </div>
+          <h2 className="mt-2 text-sm font-semibold text-neutral-900">Informasi Risiko</h2>
+          <p className="mt-1 text-[10px] leading-relaxed text-neutral-500">Ringkasan assessment dan kondisi wilayah yang dipilih.</p>
+        </div>
+
+        {loading ? (
+          <Skeleton className="h-7 w-28 shrink-0 rounded-md" />
+        ) : (
+          <div className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-neutral-50 px-2.5 py-1.5 text-[10px] text-neutral-500">
+            <Clock className="size-3.5" />
+            <span className="font-semibold text-neutral-700">{localTime}</span>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 function RouteComponent() {
   const reportPins = Route.useLoaderData();
   const location = useUserLocation();
-  const localTime = useLocalTime(location.longitude);
   const navigate = useNavigate({ from: Route.fullPath });
   const { lat, lng, city } = Route.useSearch();
   // Initialize with correct value to prevent double render
-  const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== "undefined" ? window.innerWidth < 1024 : false,
-  );
+  const [isMobile, setIsMobile] = useState(() => (typeof window !== "undefined" ? window.innerWidth < 1024 : false));
 
   // Detect mobile screen size
   useEffect(() => {
@@ -100,6 +116,8 @@ function RouteComponent() {
     longitude: number;
     city: string;
   } | null>(null);
+  const [selectedReport, setSelectedReport] = useState<NearbyReportPin | null>(null);
+  const localTime = useLocalTime(selectedLocation?.longitude ?? location.longitude);
 
   // Stabilize location object
   const stableLocation = useMemo(
@@ -110,18 +128,12 @@ function RouteComponent() {
       loading: location.loading,
       error: location.error,
     }),
-    [
-      location.latitude,
-      location.longitude,
-      location.city,
-      location.loading,
-      location.error,
-    ],
+    [location.latitude, location.longitude, location.city, location.loading, location.error],
   );
 
   // Sync search params to selectedLocation
   useEffect(() => {
-    if (lat && lng && city) {
+    if (lat !== undefined && lng !== undefined && city) {
       setSelectedLocation({
         latitude: lat,
         longitude: lng,
@@ -131,11 +143,7 @@ function RouteComponent() {
   }, [lat, lng, city]);
 
   // Handle location selection from map
-  const handleLocationSelect = (loc: {
-    latitude: number;
-    longitude: number;
-    city: string;
-  }) => {
+  const handleLocationSelect = (loc: { latitude: number; longitude: number; city: string }) => {
     setSelectedLocation(loc);
     // Update URL search params
     navigate({
@@ -150,16 +158,23 @@ function RouteComponent() {
     return reportPins
       .map((report) => ({
         ...report,
-        distanceKm: calculateDistanceKm(
-          selectedLocation.latitude,
-          selectedLocation.longitude,
-          report.latitude,
-          report.longitude,
-        ),
+        distanceKm: calculateDistanceKm(selectedLocation.latitude, selectedLocation.longitude, report.latitude, report.longitude),
       }))
       .filter((report) => report.distanceKm <= REPORT_RADIUS_KM)
       .sort((reportA, reportB) => reportA.distanceKm - reportB.distanceKm);
   }, [reportPins, selectedLocation]);
+
+  const prioritizedReports = useMemo(
+    () =>
+      [...nearbyReports].sort((reportA, reportB) => {
+        const scoreDifference = (reportB.riskAssessment?.risk?.score ?? -1) - (reportA.riskAssessment?.risk?.score ?? -1);
+
+        return scoreDifference || reportA.distanceKm - reportB.distanceKm;
+      }),
+    [nearbyReports],
+  );
+
+  const focusedAssessmentReport = useMemo(() => selectedReport ?? prioritizedReports.find((report) => report.riskAssessment?.risk) ?? prioritizedReports.find((report) => report.riskAssessment) ?? null, [prioritizedReports, selectedReport]);
 
   // Render mobile layout if screen is small
   if (isMobile) {
@@ -172,11 +187,14 @@ function RouteComponent() {
           radiusKm={REPORT_RADIUS_KM}
           selectedLocation={selectedLocation}
           onLocationSelect={handleLocationSelect}
+          onReportSelect={setSelectedReport}
           renderSheetContent={() => (
-            <SelectedRisk
-              selectedLocation={selectedLocation}
-              nearbyReports={nearbyReports}
-            />
+            <div className="space-y-3">
+              <RiskInformationHeader loading={location.loading} localTime={localTime} />
+              <ReportRiskAssessment report={focusedAssessmentReport} locationName={selectedLocation?.city} selectionMode={selectedReport ? "manual" : "location"} />
+              <SelectedRisk selectedLocation={selectedLocation} />
+              <RelatedRiskReports reports={prioritizedReports} selectedReport={focusedAssessmentReport} onReportSelect={setSelectedReport} />
+            </div>
           )}
         />
       </div>
@@ -195,9 +213,7 @@ function RouteComponent() {
                 <span>Peta Risiko</span>
               </div>
 
-              <span className="text-xs font-medium text-neutral-800">
-                Visualisasi risiko lingkungan per wilayah
-              </span>
+              <span className="text-xs font-medium text-neutral-800">Visualisasi risiko lingkungan per wilayah</span>
 
               {selectedLocation && (
                 <span className="rounded-full border border-red-100 bg-white px-2 py-1 text-[11px] font-semibold text-red-600">
@@ -211,16 +227,7 @@ function RouteComponent() {
               {location.loading ? (
                 <Skeleton className="h-8 w-32 rounded-lg" />
               ) : (
-                <div
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50/80 px-2.5 py-1.5 text-xs font-medium text-neutral-700"
-                  title={
-                    selectedLocation
-                      ? "Lokasi Terpilih"
-                      : location.error
-                        ? `Fallback: ${location.error}`
-                        : "Lokasi Anda Saat Ini"
-                  }
-                >
+                <div className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50/80 px-2.5 py-1.5 text-xs font-medium text-neutral-700" title={selectedLocation ? "Lokasi Terpilih" : location.error ? `Fallback: ${location.error}` : "Lokasi Anda Saat Ini"}>
                   <MapPin className="h-3.5 w-3.5 text-neutral-600" />
                   <span>{selectedLocation?.city || location.city}</span>
                 </div>
@@ -230,42 +237,30 @@ function RouteComponent() {
 
           {/* Map */}
           <div className="h-[calc(100vh-9.5rem)] overflow-hidden rounded-lg bg-white shadow-sm">
-            <RiskMap
-              reports={nearbyReports}
-              radiusKm={REPORT_RADIUS_KM}
-              onLocationSelect={handleLocationSelect}
-              flyToLocation={selectedLocation}
-            />
+            <RiskMap reports={nearbyReports} radiusKm={REPORT_RADIUS_KM} onLocationSelect={handleLocationSelect} flyToLocation={selectedLocation} />
           </div>
         </div>
 
         {/* Right */}
-        <div className="flex w-full flex-col gap-3 rounded-xl bg-muted/50 p-2 lg:w-1/3">
-          {/* Header */}
-          <div className="flex items-center justify-between px-1 py-1.5">
-            <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-              Informasi Risiko
-            </h2>
+        <div className="flex w-full flex-col gap-3 rounded-xl bg-muted/50 p-2 lg:h-[calc(100vh-4.5rem)] lg:w-1/3">
+          <RiskInformationHeader loading={location.loading} localTime={localTime} />
 
-            {/* Local Time Pill */}
-            {location.loading ? (
-              <Skeleton className="h-7 w-36 rounded-md" />
-            ) : (
-              <div className="inline-flex items-center gap-1.5 rounded-md border border-neutral-200/80 bg-neutral-100/70 px-2.5 py-1 text-xs text-neutral-600 dark:border-neutral-800 dark:bg-neutral-800/60 dark:text-neutral-400">
-                <Clock className="h-3.5 w-3.5 text-neutral-600 dark:text-neutral-400" />
-                <span>Waktu lokal:</span>
-                <span className="font-semibold text-neutral-800 dark:text-neutral-200">
-                  {localTime}
-                </span>
-              </div>
-            )}
+          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-0.5">
+            {/* Highest-risk report assessment from the selected location */}
+            <div className="shrink-0">
+              <ReportRiskAssessment report={focusedAssessmentReport} locationName={selectedLocation?.city} selectionMode={selectedReport ? "manual" : "location"} />
+            </div>
+
+            {/* Current environmental conditions */}
+            <div className="shrink-0">
+              <SelectedRisk selectedLocation={selectedLocation} />
+            </div>
+
+            {/* Reports available around the selected location */}
+            <div className="shrink-0">
+              <RelatedRiskReports reports={prioritizedReports} selectedReport={focusedAssessmentReport} onReportSelect={setSelectedReport} />
+            </div>
           </div>
-
-          {/* Selection panel - shows selected location or user location */}
-          <SelectedRisk
-            selectedLocation={selectedLocation}
-            nearbyReports={nearbyReports}
-          />
         </div>
       </div>
     </main>
