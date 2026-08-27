@@ -102,7 +102,8 @@ export default function DashboardAppHeader() {
   return (
     <header
       className={`
-        relative z-50 grid h-14 shrink-0
+        sticky top-0 z-50
+        grid h-14 shrink-0
         grid-cols-[auto_1fr_auto]
         items-center
         bg-white/80 px-4
@@ -111,6 +112,7 @@ export default function DashboardAppHeader() {
         ease-linear
         group-has-data-[collapsible=icon]/sidebar-wrapper:h-12
         dark:bg-neutral-900/80
+        isolate
         ${
           isNoBorderRoute
             ? "border-b-0"

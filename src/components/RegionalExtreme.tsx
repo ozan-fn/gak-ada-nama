@@ -1,10 +1,4 @@
-import {
-  AlertTriangle,
-  MoreVertical,
-  Wind,
-  CloudRain,
-  Mountain,
-} from "lucide-react";
+import { AlertTriangle, Wind, CloudRain, Mountain } from "lucide-react";
 import { useEnvironmentData } from "#/hooks/useEnvironmentData";
 import { RegionalExtremeSkeleton } from "./skeletons/RegionalExtremeSkeleton";
 
@@ -33,7 +27,7 @@ export default function RegionalExtreme({ location }: RegionalExtremeProps) {
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-neutral-200/60 px-3 py-2 md:px-4">
+      <div className="flex items-center justify-between border-b border-neutral-200/60 p-2 md:px-4">
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-semibold text-neutral-900">
             Cuaca Ekstrem Wilayah
@@ -43,14 +37,6 @@ export default function RegionalExtreme({ location }: RegionalExtremeProps) {
             Hari Ini
           </span>
         </div>
-
-        <button
-          type="button"
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:bg-neutral-100"
-          aria-label="Opsi lainnya"
-        >
-          <MoreVertical className="h-4 w-4" />
-        </button>
       </div>
 
       {/* Content */}

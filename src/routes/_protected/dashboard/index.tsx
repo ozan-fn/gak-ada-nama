@@ -18,11 +18,15 @@ export const Route = createFileRoute("/_protected/dashboard/")({
   component: Dashboard,
 });
 
+/** Custom hook to track real-time local clock according to regional timezone. */
 function useLocalTime(longitude?: number | null) {
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
-    const interval = setInterval(() => setNow(new Date()), 1000 * 30);
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 1000 * 30);
+
     return () => clearInterval(interval);
   }, []);
 
@@ -42,18 +46,21 @@ function Dashboard() {
   const localTime = useLocalTime(location.longitude);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Detect mobile screen size
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 1024);
     };
-    
+
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+
+    window.addEventListener("resize", checkMobile);
+
+    return () => {
+      window.removeEventListener("resize", checkMobile);
+    };
   }, []);
 
-  // Stabilize location object to prevent unnecessary re-renders
+  // Memoize location payload to preserve reference equality and prevent child map re-renders
   const stableLocation = useMemo(
     () => ({
       latitude: location.latitude,
@@ -71,30 +78,30 @@ function Dashboard() {
     ],
   );
 
-  // Prepare location params for API calls (memoized)
   const locationParams = useMemo(
     () =>
       location.latitude && location.longitude
-        ? { latitude: location.latitude, longitude: location.longitude }
-        : { city: "jakarta" },
+        ? {
+            latitude: location.latitude,
+            longitude: location.longitude,
+          }
+        : {
+            city: "jakarta",
+          },
     [location.latitude, location.longitude],
   );
 
-  // Fetch environment data for alerts
   const envData = useEnvironmentData(location);
 
-  // Get real-time alerts based on environment conditions
   const alerts = useEnvironmentAlerts(envData);
-  const primaryAlert = alerts[0]; // Show the most important alert
+  const primaryAlert = alerts[0];
 
-  // Severity badge colors
   const severityColors = {
     info: "bg-sky-50 text-sky-700",
     warning: "bg-amber-50 text-amber-700",
     danger: "bg-red-50 text-red-700",
   };
 
-  // Render mobile layout if screen is small
   if (isMobile) {
     return (
       <MobileDashboard
@@ -108,16 +115,13 @@ function Dashboard() {
 
   return (
     <main className="min-h-screen">
-      {/* Mobile */}
-      {/* Dashboard */}
       <div className="flex flex-col gap-2 p-4 lg:flex-row lg:items-stretch">
-        {/* Left */}
-        <div className="flex w-full flex-col gap-3 rounded-xl bg-muted/50 p-2 lg:w-2/3">
+        {/* Left Section: Map & Key Environmental Trends */}
+        <div className="flex w-full flex-col gap-3 rounded-xl bg-muted/50 p-2 lg:w-2/3 lg:self-stretch">
           {/* Live Alert Header */}
-          <div className="flex flex-col gap-2 rounded-lg bg-white p-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-2.5 sm:py-2 shadow-xs">
+          <div className="flex shrink-0 flex-col gap-2 rounded-lg bg-white p-2.5 shadow-xs sm:flex-row sm:items-center sm:justify-between sm:px-2.5 sm:py-2">
             <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-600 sm:text-sm">
               {envData.loading ? (
-                // Skeleton for alert banner
                 <>
                   <Skeleton className="h-6 w-16 rounded-full" />
                   <Skeleton className="h-4 w-48" />
@@ -137,12 +141,10 @@ function Dashboard() {
                     </span>
                   </div>
 
-                  {/* Alert Message */}
-                  <span className="font-medium text-xs text-neutral-800">
+                  <span className="text-xs font-medium text-neutral-800">
                     {primaryAlert.message}
                   </span>
 
-                  {/* Action Link */}
                   {primaryAlert.actionLink ? (
                     <Link
                       to={primaryAlert.actionLink}
@@ -166,16 +168,16 @@ function Dashboard() {
                   <div className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
                     <span>Aman</span>
                   </div>
-                  <span className="font-medium text-xs text-neutral-800">
+
+                  <span className="text-xs font-medium text-neutral-800">
                     Tidak ada peringatan cuaca saat ini
                   </span>
                 </>
               )}
             </div>
 
-            {/* Sisi Kanan: Kontrol Lokasi & Tombol Ekspor */}
+            {/* Location Indicator & Data Export */}
             <div className="flex shrink-0 items-center gap-2">
-              {/* Display Current Location */}
               {location.loading ? (
                 <Skeleton className="h-8 w-32 rounded-lg" />
               ) : (
@@ -192,7 +194,6 @@ function Dashboard() {
                 </div>
               )}
 
-              {/* Tombol Ekspor */}
               <button
                 type="button"
                 className="inline-flex items-center gap-1.5 rounded-lg bg-sky-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-sky-600"
@@ -203,55 +204,58 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* Map Integration */}
-          <div className="h-125 overflow-hidden rounded-lg bg-white shadow-sm">
+          {/* Interactive Environment Map */}
+          <div className="h-125 shrink-0 overflow-hidden rounded-lg bg-white shadow-sm">
             <DashboardMapCard userLocation={stableLocation} />
           </div>
-          {/* Bottom */}
-          <div className="flex flex-1 flex-col gap-3 sm:flex-row">
-            {/* Regional Extremes */}
-            <div className="flex w-full items-center justify-center rounded-lg bg-white shadow-sm sm:w-[37.5%]">
+
+          {/* Environmental Extremes & Air Quality Analytics */}
+          <div className="flex min-h-0 flex-1 flex-col gap-3 sm:flex-row">
+            <div className="flex w-full items-stretch justify-center overflow-hidden rounded-lg bg-white shadow-sm sm:w-[37.5%]">
               <RegionalExtreme location={locationParams} />
             </div>
-            {/* Chart AQI */}
-            <div className="w-full overflow-hidden rounded-lg bg-white shadow-sm sm:w-[62.5%]">
+
+            <div className="flex w-full items-stretch overflow-hidden rounded-lg bg-white shadow-sm sm:w-[62.5%]">
               <ChartAQITrend location={locationParams} />
             </div>
           </div>
         </div>
-        {/* Right */}
-        <div className="flex w-full flex-col gap-3 rounded-xl bg-muted/50 p-2 lg:w-1/3">
-          {/* Detail Overview Header */}
-          <div className="flex items-center justify-between px-1 py-1.5">
-            {/* Title */}
+
+        {/* Right Section: Regional Risk & Weather Analytics */}
+        <div className="flex w-full flex-col gap-3 rounded-xl bg-muted/50 p-2 lg:w-1/3 lg:self-stretch">
+          {/* Detail Overview Header & Timezone Clock */}
+          <div className="flex shrink-0 items-center justify-between px-1 py-1.5">
             <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
               Detail Overview
             </h2>
 
-            {/* Local Time Pill */}
             {location.loading ? (
               <Skeleton className="h-7 w-36 rounded-md" />
             ) : (
               <div className="inline-flex items-center gap-1.5 rounded-md border border-neutral-200/80 bg-neutral-100/70 px-2.5 py-1 text-xs text-neutral-600 dark:border-neutral-800 dark:bg-neutral-800/60 dark:text-neutral-400">
                 <Clock className="h-3.5 w-3.5 text-neutral-600 dark:text-neutral-400" />
+
                 <span>Waktu lokal:</span>
+
                 <span className="font-semibold text-neutral-800 dark:text-neutral-200">
                   {localTime}
                 </span>
               </div>
             )}
           </div>
-          {/* Region Risk */}
-          <div className="flex items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm">
-            <RegionRisk location={locationParams} />
-          </div>
-          {/* Weather Information */}
-          <div className="flex items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm">
-            <WeatherInformation location={locationParams} />
-          </div>
-          {/* Precipitation Overview */}
-          <div className="flex items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm">
-            <PrecipitationOverview location={locationParams} />
+
+          <div className="flex min-h-0 flex-1 flex-col gap-3">
+            <div className="flex flex-1 items-stretch overflow-hidden rounded-lg bg-white shadow-sm">
+              <RegionRisk location={locationParams} />
+            </div>
+
+            <div className="flex flex-1 items-stretch overflow-hidden rounded-lg bg-white shadow-sm">
+              <WeatherInformation location={locationParams} />
+            </div>
+
+            <div className="flex flex-1 items-stretch overflow-hidden rounded-lg bg-white shadow-sm">
+              <PrecipitationOverview location={locationParams} />
+            </div>
           </div>
         </div>
       </div>

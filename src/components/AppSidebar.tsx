@@ -24,7 +24,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Separator } from "./ui/separator";
-import PritaLogo from "@/assets/images/prita-logo.png";
+import logoBlue from "@/assets/images/logo-blue.png";
 
 const menuItems = [
   {
@@ -102,13 +102,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <Link to="/dashboard" className="no-underline">
               <SidebarMenuButton size="lg" tooltip="Prita">
-                <img src={PritaLogo} alt="Prita Logo" className="h-8 w-8" />
-                <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-logo font-semibold">Prita</span>
-                  <span className="text-xs text-muted-foreground">
-                    Pemantauan Risiko Lingkungan
-                  </span>
-                </div>
+                <img src={logoBlue} alt="Prita Logo" className="h-6" />
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>

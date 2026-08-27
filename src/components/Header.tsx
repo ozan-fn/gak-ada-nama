@@ -8,7 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useRef, useEffect } from "react";
 import { LayoutDashboard, LogOut } from "lucide-react";
 
-import PritaLogo from "@/assets/images/prita-logo.png";
+import logoBlue from "@/assets/images/logo-blue.png";
+import logoWhite from "@/assets/images/logo-white.png";
 
 export const navLinks = [
   {
@@ -85,15 +86,18 @@ export function Header() {
         <Link
           to="/"
           className={cn(
-            "flex items-center rounded-md p-0.5 font-semibold transition-colors duration-300",
+            "rounded-md p-0.5 font-semibold transition-colors duration-300",
             {
               "text-foreground hover:bg-muted": scrolled || !isHome,
               "text-white hover:bg-white/10": !scrolled && isHome,
             },
           )}
         >
-          <img src={PritaLogo} alt="Prita Logo" className="h-8 w-8" />
-          <span className="ml-2 text-lg font-logo font-semibold">Prita</span>
+          <img
+            src={scrolled ? logoBlue : logoWhite}
+            alt="Prita Logo"
+            className="h-6.5"
+          />
         </Link>
         <div className="hidden items-center gap-2 md:flex">
           <div>

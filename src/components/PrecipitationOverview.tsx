@@ -1,4 +1,3 @@
-import { MoreVertical, ArrowRight } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -61,9 +60,9 @@ export default function PrecipitationOverview({
     precipitationData[0];
 
   return (
-    <div className="flex min-h-70 h-full w-full flex-col justify-between p-3 md:p-4">
-      {/* Bagian Atas: Judul & Subjudul */}
-      <div className="flex items-start justify-between">
+    <div className="flex min-h-70 w-full flex-col p-2 md:p-4">
+      {/* Header */}
+      <div className="flex shrink-0 items-start justify-between">
         <div>
           <h2 className="text-base font-semibold text-neutral-900">
             Intensitas Hujan
@@ -73,19 +72,10 @@ export default function PrecipitationOverview({
             Pembaruan estimasi curah hujan setiap jam
           </p>
         </div>
-
-        {/* Tombol Opsi */}
-        <button
-          type="button"
-          className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-100"
-          aria-label="Opsi lainnya"
-        >
-          <MoreVertical className="h-4 w-4" />
-        </button>
       </div>
 
-      {/* Ringkasan Angka Utama */}
-      <div className="mt-1">
+      {/* Summary */}
+      <div className="mt-1 shrink-0">
         <p className="text-[11px] font-medium text-neutral-400">
           Total Curah Hujan
         </p>
@@ -99,9 +89,9 @@ export default function PrecipitationOverview({
         </div>
       </div>
 
-      {/* Grafik */}
-      <div className="relative -mt-1.5 w-full" style={{ height: "144px" }}>
-        <ResponsiveContainer width="100%" height={144}>
+      {/* Chart */}
+      <div className="mt-1 h-35 w-full min-w-0 shrink-0">
+        <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={precipitationData}
             barSize={18}
@@ -154,16 +144,6 @@ export default function PrecipitationOverview({
           </BarChart>
         </ResponsiveContainer>
       </div>
-
-      {/* Tombol Aksi */}
-      <button
-        type="button"
-        className="mt-3 flex h-8 w-full items-center justify-between rounded-lg bg-neutral-100 px-3 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-200"
-      >
-        <span>Lihat Rincian</span>
-
-        <ArrowRight className="h-4 w-4" />
-      </button>
     </div>
   );
 }

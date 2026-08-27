@@ -2,9 +2,15 @@ import {
   CloudRain,
   Thermometer,
   Wind,
-  MoreVertical,
   ArrowRight,
+  MoreVertical,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useEnvironmentData } from "#/hooks/useEnvironmentData";
 import { useUserLocation } from "#/hooks/useUserLocation";
 import { useDynamicBaseline } from "#/hooks/useDynamicBaseline";
@@ -23,7 +29,6 @@ export default function RegionRisk({ location }: RegionRiskProps) {
 
   const { weather, aqi, loading } = useEnvironmentData(location);
 
-  // Fetch DYNAMIC baseline from real APIs (Open-Meteo + AQICN)
   const { baseline: dynamicBaseline, loading: baselineLoading } =
     useDynamicBaseline(
       userLocation.latitude,
@@ -35,7 +40,6 @@ export default function RegionRisk({ location }: RegionRiskProps) {
     return <RegionRiskSkeleton />;
   }
 
-  // Determine which city to use for baseline
   let cityForBaseline: string | null = null;
 
   if (location && "city" in location) {
@@ -44,27 +48,20 @@ export default function RegionRisk({ location }: RegionRiskProps) {
     cityForBaseline = userLocation.city;
   }
 
-  // Use dynamic baseline if available,
-  // otherwise fallback to static regional baseline
   let NORMAL_TEMP: number;
   let NORMAL_RAIN_PROB: number;
   let NORMAL_AQI: number;
   let NORMAL_HUMIDITY: number;
 
   if (dynamicBaseline && !baselineLoading) {
-    // Real historical data from APIs
     NORMAL_TEMP = dynamicBaseline.temp;
     NORMAL_AQI = dynamicBaseline.aqi;
     NORMAL_HUMIDITY = dynamicBaseline.humidity;
-
-    // Convert rainSum (mm/day) to rough precipitation probability
-    // 0mm = ~10%, 5mm = ~50%, 10mm = ~80%, 20mm+ = ~95%
     NORMAL_RAIN_PROB = Math.min(
       95,
       Math.round(10 + dynamicBaseline.rainSum * 7),
     );
   } else {
-    // Fallback to static baseline while loading
     const staticBaseline = getRegionalBaseline(cityForBaseline);
 
     NORMAL_TEMP = staticBaseline.temp;
@@ -73,19 +70,16 @@ export default function RegionRisk({ location }: RegionRiskProps) {
     NORMAL_HUMIDITY = staticBaseline.humidity;
   }
 
-  // Current values
   const temp = Math.round(weather.current.temperature);
   const rainProb = Math.round(weather.daily.precipitationProbability[0] || 0);
   const aqiValue = aqi.aqi;
   const humidity = Math.round(weather.current.humidity);
 
-  // Anomaly detection
   const tempAnomaly = temp - NORMAL_TEMP;
   const rainAnomaly = rainProb - NORMAL_RAIN_PROB;
   const aqiAnomaly = aqiValue - NORMAL_AQI;
   const humidityAnomaly = humidity - NORMAL_HUMIDITY;
 
-  // Layer 1: Environmental Risk (weighted composite)
   const tempRisk = Math.abs(tempAnomaly) * 2;
   const rainRisk = Math.max(0, rainAnomaly) * 1.5;
   const aqiRisk = Math.max(0, aqiAnomaly) * 0.8;
@@ -96,23 +90,44 @@ export default function RegionRisk({ location }: RegionRiskProps) {
     Math.round(tempRisk + rainRisk + aqiRisk + humidityRisk),
   );
 
-  // Real report count from API
   const reportCount = 0;
 
-  // Calculate risk level
   let level = "Rendah";
   let levelColor = "text-emerald-600";
+  let barBg = "border-emerald-100 bg-emerald-50";
+  let barText = "text-emerald-700";
 
   if (score >= 70) {
     level = "Tinggi";
     levelColor = "text-red-600";
-  } else if (score >= 50) {
-    level = "Sedang";
-    levelColor = "text-amber-600";
+    barBg = "border-red-100 bg-red-50";
+    barText = "text-red-700";
   } else if (score >= 30) {
     level = "Sedang";
     levelColor = "text-amber-600";
+    barBg = "border-amber-100 bg-amber-50";
+    barText = "text-amber-700";
   }
+
+  // Faktor dominan penyumbang skor risiko
+  const factors = [
+    { label: "suhu", risk: tempRisk, anomaly: tempAnomaly, unit: "°C" },
+    { label: "curah hujan", risk: rainRisk, anomaly: rainAnomaly, unit: "%" },
+    {
+      label: "kualitas udara",
+      risk: aqiRisk,
+      anomaly: aqiAnomaly,
+      unit: " AQI",
+    },
+  ].sort((a, b) => b.risk - a.risk);
+
+  const topFactor = factors[0];
+  const factorInsight =
+    topFactor.risk > 5
+      ? `Penyumbang utama: ${topFactor.label} ${
+          topFactor.anomaly > 0 ? "lebih tinggi" : "lebih rendah"
+        } ${Math.abs(Math.round(topFactor.anomaly))}${topFactor.unit} dari rata-rata wilayah.`
+      : "Semua indikator berada dekat dengan rata-rata normal wilayah.";
 
   const conditions = [
     {
@@ -133,7 +148,7 @@ export default function RegionRisk({ location }: RegionRiskProps) {
   ];
 
   return (
-    <div className="flex h-full w-full flex-col justify-between bg-white p-3 md:p-6">
+    <div className="flex h-full w-full flex-col justify-between bg-white p-2 md:p-4">
       {/* Top Section */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-5">
@@ -160,14 +175,28 @@ export default function RegionRisk({ location }: RegionRiskProps) {
           </div>
         </div>
 
-        {/* More Button */}
-        <button
-          type="button"
-          className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-100"
-          aria-label="Opsi lainnya"
-        >
-          <MoreVertical className="h-4 w-4" />
-        </button>
+        {/* More Menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-100"
+            aria-label="Opsi lainnya"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem>
+              <div className="flex flex-1 flex-col">
+                <span className="font-medium">Laporan Komunitas</span>
+                <span className="text-xs text-neutral-500">
+                  {reportCount > 0
+                    ? `${reportCount} laporan mendukung`
+                    : "Belum ada laporan"}
+                </span>
+              </div>
+              <ArrowRight className="h-3.5 w-3.5 text-neutral-400" />
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Description */}
@@ -179,8 +208,15 @@ export default function RegionRisk({ location }: RegionRiskProps) {
         .
       </p>
 
+      {/* Insight bar — faktor dominan */}
+      <div className={`mt-2 rounded-lg border ${barBg} px-3 py-2`}>
+        <p className={`text-[11px] leading-relaxed ${barText}`}>
+          {factorInsight}
+        </p>
+      </div>
+
       {/* Conditions */}
-      <div className="mt-6 grid grid-cols-3 gap-3">
+      <div className="mt-3 grid grid-cols-3 gap-3">
         {conditions.map(({ icon: Icon, label, value }, idx) => {
           const colors = ["text-blue-500", "text-orange-500", "text-teal-500"];
 
@@ -198,20 +234,6 @@ export default function RegionRisk({ location }: RegionRiskProps) {
           );
         })}
       </div>
-
-      {/* Footer */}
-      <button
-        type="button"
-        className="mt-6 flex h-9 w-full items-center justify-between rounded-lg bg-neutral-100 px-3.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-200"
-      >
-        <span>
-          {reportCount > 0
-            ? `${reportCount} laporan mendukung`
-            : "Belum ada laporan komunitas"}
-        </span>
-
-        <ArrowRight className="h-4 w-4" />
-      </button>
     </div>
   );
 }

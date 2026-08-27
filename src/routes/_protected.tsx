@@ -19,11 +19,13 @@ function ProtectedLayout() {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="flex flex-col overflow-hidden">
+
+      <SidebarInset>
         <DashboardAppHeader />
-        <div className="flex-1 overflow-auto bg-neutral-50/40 dark:bg-neutral-950/40">
+
+        <main className="min-h-0 flex-1 overflow-y-auto bg-neutral-50/40 dark:bg-neutral-950/40">
           <Outlet />
-        </div>
+        </main>
       </SidebarInset>
     </SidebarProvider>
   );

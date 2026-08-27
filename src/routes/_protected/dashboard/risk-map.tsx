@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Clock, MapPin } from "lucide-react";
-import RiskMap, { type NearbyReportPin } from "#/components/RiskMap";
+import RiskMap from "#/components/RiskMap";
 import MobileRiskMap from "#/components/MobileRiskMap";
 import SelectedRisk from "#/components/SelectedRisk";
 import { useUserLocation } from "#/hooks/useUserLocation";
@@ -79,8 +79,8 @@ function RouteComponent() {
   const navigate = useNavigate({ from: Route.fullPath });
   const { lat, lng, city } = Route.useSearch();
   // Initialize with correct value to prevent double render
-  const [isMobile, setIsMobile] = useState(() => 
-    typeof window !== 'undefined' ? window.innerWidth < 1024 : false
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 1024 : false,
   );
 
   // Detect mobile screen size
@@ -88,10 +88,10 @@ function RouteComponent() {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 1024);
     };
-    
+
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   // State for selected location from map click or search
@@ -100,8 +100,6 @@ function RouteComponent() {
     longitude: number;
     city: string;
   } | null>(null);
-  const [selectedReport, setSelectedReport] =
-    useState<NearbyReportPin | null>(null);
 
   // Stabilize location object
   const stableLocation = useMemo(
@@ -129,7 +127,6 @@ function RouteComponent() {
         longitude: lng,
         city,
       });
-      setSelectedReport(null);
     }
   }, [lat, lng, city]);
 
@@ -140,7 +137,6 @@ function RouteComponent() {
     city: string;
   }) => {
     setSelectedLocation(loc);
-    setSelectedReport(null);
     // Update URL search params
     navigate({
       search: { lat: loc.latitude, lng: loc.longitude, city: loc.city },
@@ -170,21 +166,18 @@ function RouteComponent() {
     return (
       <div className="h-[calc(100vh-3.5rem)] overflow-hidden">
         <MobileRiskMap
-        location={location}
-        stableLocation={stableLocation}
-        reports={nearbyReports}
-        radiusKm={REPORT_RADIUS_KM}
-        selectedLocation={selectedLocation}
-        onLocationSelect={handleLocationSelect}
-        onReportSelect={setSelectedReport}
-        renderSheetContent={() => (
-          <SelectedRisk
-            selectedLocation={selectedLocation}
-            nearbyReports={nearbyReports}
-            selectedReport={selectedReport}
-            onReportSelect={setSelectedReport}
-          />
-        )}
+          location={location}
+          stableLocation={stableLocation}
+          reports={nearbyReports}
+          radiusKm={REPORT_RADIUS_KM}
+          selectedLocation={selectedLocation}
+          onLocationSelect={handleLocationSelect}
+          renderSheetContent={() => (
+            <SelectedRisk
+              selectedLocation={selectedLocation}
+              nearbyReports={nearbyReports}
+            />
+          )}
         />
       </div>
     );
@@ -194,9 +187,9 @@ function RouteComponent() {
     <main className="min-h-[calc(100vh-3.5rem)]">
       <div className="flex flex-col gap-2 p-4 lg:flex-row lg:items-stretch">
         {/* Left */}
-        <div className="flex w-full flex-col gap-3 rounded-xl bg-muted/50 p-2 lg:w-2/3">
+        <div className="flex w-full flex-col gap-3 rounded-xl bg-muted/50 p-2 lg:w-2/3 lg:self-stretch">
           {/* Header */}
-          <div className="flex flex-col gap-2 rounded-lg bg-white p-2.5 shadow-xs sm:flex-row sm:items-center sm:justify-between sm:px-2.5 sm:py-2">
+          <div className="flex shrink-0 flex-col gap-2 rounded-lg bg-white p-2.5 shadow-xs sm:flex-row sm:items-center sm:justify-between sm:px-2.5 sm:py-2">
             <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-600 sm:text-sm">
               <div className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600">
                 <span>Peta Risiko</span>
@@ -241,7 +234,6 @@ function RouteComponent() {
               reports={nearbyReports}
               radiusKm={REPORT_RADIUS_KM}
               onLocationSelect={handleLocationSelect}
-              onReportSelect={setSelectedReport}
               flyToLocation={selectedLocation}
             />
           </div>
@@ -273,8 +265,6 @@ function RouteComponent() {
           <SelectedRisk
             selectedLocation={selectedLocation}
             nearbyReports={nearbyReports}
-            selectedReport={selectedReport}
-            onReportSelect={setSelectedReport}
           />
         </div>
       </div>

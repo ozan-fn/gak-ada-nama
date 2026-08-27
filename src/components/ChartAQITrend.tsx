@@ -1,4 +1,4 @@
-import { Activity, MoreVertical } from "lucide-react";
+import { Activity } from "lucide-react";
 import {
   Area,
   AreaChart,
@@ -83,9 +83,9 @@ export function ChartAQITrend({ location }: ChartAQITrendProps) {
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full w-full flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-neutral-200/60 px-3 py-2 md:px-4">
+      <div className="flex shrink-0 items-center justify-between border-b border-neutral-200/60 p-2 md:px-4">
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-semibold text-neutral-900">
             Tren Kualitas Udara (PM2.5)
@@ -105,14 +105,6 @@ export function ChartAQITrend({ location }: ChartAQITrendProps) {
             {status}
           </span>
         </div>
-
-        <button
-          type="button"
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:bg-neutral-100"
-          aria-label="More options"
-        >
-          <MoreVertical className="h-4 w-4" />
-        </button>
       </div>
 
       {/* Chart Content */}

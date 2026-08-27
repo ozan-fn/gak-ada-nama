@@ -5,10 +5,12 @@ export type WeatherData = {
   current: {
     temperature: number;
     humidity: number;
+    apparentTemperature: number;
     precipitation: number;
     rain: number;
     windSpeed: number;
     cloudCover: number;
+    uvIndex: number;
   };
   hourly: {
     time: string[];
@@ -100,10 +102,12 @@ export function useEnvironmentData(location?: LocationParams) {
             current: {
               temperature: raw.current.temperature_2m,
               humidity: raw.current.relative_humidity_2m,
+              apparentTemperature: raw.current.apparent_temperature,
               precipitation: raw.current.precipitation,
               rain: raw.current.rain,
               windSpeed: raw.current.wind_speed_10m,
               cloudCover: raw.current.cloud_cover,
+              uvIndex: raw.current.uv_index,
             },
             hourly: {
               time: raw.hourly.time,

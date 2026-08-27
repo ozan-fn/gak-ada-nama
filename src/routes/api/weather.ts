@@ -9,10 +9,12 @@ type OpenMeteoResponse = {
     time: string;
     temperature_2m: number;
     relative_humidity_2m: number;
+    apparent_temperature: number;
     precipitation: number;
     rain: number;
     wind_speed_10m: number;
     cloud_cover: number;
+    uv_index: number;
   };
   hourly: {
     time: string[];
@@ -70,7 +72,7 @@ export const Route = createFileRoute("/api/weather")({
             latitude: latitude.toString(),
             longitude: longitude.toString(),
             current:
-              "temperature_2m,relative_humidity_2m,precipitation,rain,wind_speed_10m,cloud_cover",
+              "temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,wind_speed_10m,cloud_cover,uv_index",
             hourly: "temperature_2m,precipitation_probability,precipitation",
             daily:
               "precipitation_sum,rain_sum,precipitation_probability_max",
