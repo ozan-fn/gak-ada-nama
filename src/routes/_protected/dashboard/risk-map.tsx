@@ -78,7 +78,10 @@ function RouteComponent() {
   const localTime = useLocalTime(location.longitude);
   const navigate = useNavigate({ from: Route.fullPath });
   const { lat, lng, city } = Route.useSearch();
-  const [isMobile, setIsMobile] = useState(false);
+  // Initialize with correct value to prevent double render
+  const [isMobile, setIsMobile] = useState(() => 
+    typeof window !== 'undefined' ? window.innerWidth < 1024 : false
+  );
 
   // Detect mobile screen size
   useEffect(() => {
@@ -165,7 +168,8 @@ function RouteComponent() {
   // Render mobile layout if screen is small
   if (isMobile) {
     return (
-      <MobileRiskMap
+      <div className="h-[calc(100vh-3.5rem)] overflow-hidden">
+        <MobileRiskMap
         location={location}
         stableLocation={stableLocation}
         reports={nearbyReports}
@@ -181,7 +185,8 @@ function RouteComponent() {
             onReportSelect={setSelectedReport}
           />
         )}
-      />
+        />
+      </div>
     );
   }
 

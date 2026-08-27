@@ -34,7 +34,7 @@ export default function SelectedRisk({
   onReportSelect,
 }: SelectedRiskProps) {
   const userLocation = useUserLocation();
-  
+
   // Memoize activeLocation to prevent infinite re-renders
   const activeLocation = useMemo(() => {
     if (selectedLocation) {
@@ -53,7 +53,12 @@ export default function SelectedRisk({
       longitude: userLocation.longitude,
       city: userLocation.city,
     };
-  }, [selectedLocation, userLocation.latitude, userLocation.longitude, userLocation.city]);
+  }, [
+    selectedLocation,
+    userLocation.latitude,
+    userLocation.longitude,
+    userLocation.city,
+  ]);
 
   const { weather, aqi, loading } = useEnvironmentData(activeLocation);
 
@@ -94,7 +99,9 @@ export default function SelectedRisk({
     );
   } else {
     // ⏳ Fallback to static baseline while loading
-    const staticBaseline = getRegionalBaseline(activeLocation.city || "Jakarta, ID");
+    const staticBaseline = getRegionalBaseline(
+      activeLocation.city || "Jakarta, ID",
+    );
     NORMAL_TEMP = staticBaseline.temp;
     NORMAL_RAIN_PROB = staticBaseline.rainProb;
     NORMAL_AQI = staticBaseline.aqi;
@@ -147,7 +154,9 @@ export default function SelectedRisk({
     { icon: CloudRain, label: "Curah Hujan", value: `${rainProb}%` },
     { icon: Thermometer, label: "Suhu", value: `${temp}°C` },
     { icon: Wind, label: "Kualitas Udara", value: `${aqiValue} AQI` },
-    ...(elevation !== null ? [{ icon: Mountain, label: "Ketinggian", value: `${elevation} mdpl` }] : []),
+    ...(elevation !== null
+      ? [{ icon: Mountain, label: "Ketinggian", value: `${elevation} mdpl` }]
+      : []),
   ];
 
   return (
@@ -208,7 +217,7 @@ export default function SelectedRisk({
       </div>
 
       {/* Reports */}
-      <div className="mt-6 flex flex-1 flex-col border-t border-neutral-100 pt-4">
+      <div className="mt-6 flex flex-col border-t border-neutral-100 pt-4">
         <p className="flex items-center gap-1.5 text-[11px] font-medium text-neutral-400">
           <FileText className="h-3.5 w-3.5" />
           {nearbyReports.length} Laporan di Sekitar
@@ -250,8 +259,8 @@ export default function SelectedRisk({
         )}
 
         {nearbyReports.length > 0 ? (
-          <div className="mt-2.5 max-h-64 divide-y divide-neutral-100 overflow-y-auto pr-1">
-            {nearbyReports.map((report) => (
+          <div className="mt-2.5 divide-y divide-neutral-100">
+            {nearbyReports.slice(0, 2).map((report) => (
               <button
                 type="button"
                 key={report.id}
@@ -293,12 +302,15 @@ export default function SelectedRisk({
       </div>
 
       {/* Footer */}
-      <button
-        type="button"
-        className="mt-6 flex h-9 w-full items-center justify-center rounded-lg bg-neutral-100 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-200"
-      >
-        Lihat Laporan Lengkap
-      </button>
+      {nearbyReports.length > 2 && (
+        <button
+          type="button"
+          className="mt-1 flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-neutral-100 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-200"
+        >
+          <span>Lihat {nearbyReports.length - 2} Laporan Lainnya</span>
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      )}
     </div>
   );
 }

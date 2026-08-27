@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
-import { useEnvironmentData } from "./useEnvironmentData";
-import { useUserLocation } from "./useUserLocation";
+import { useCallback, useEffect, useState } from "react";
 import { useAQIStations } from "./useAQIStations";
+import { useEnvironmentData } from "./useEnvironmentData";
 import { useNotificationSettings } from "./useNotificationSettings";
+import { useUserLocation } from "./useUserLocation";
 
-export type NotificationType = "nearby_report" | "new_warning" | "report_verified" | "simulation_updated";
+export type NotificationType =
+  "nearby_report" | "new_warning" | "report_verified" | "simulation_updated";
 
 export type Notification = {
   id: string;
@@ -67,8 +68,8 @@ export function useNotifications() {
   useEffect(() => {
     const cleanupOldNotifications = () => {
       const now = Date.now();
-      setNotifications((prev) => 
-        prev.filter((n) => now - n.time.getTime() < NOTIFICATION_TTL)
+      setNotifications((prev) =>
+        prev.filter((n) => now - n.time.getTime() < NOTIFICATION_TTL),
       );
     };
 
@@ -82,42 +83,40 @@ export function useNotifications() {
   }, []);
 
   // Upsert notification - update jika sudah ada, create jika baru
-  const upsertNotification = useCallback((
-    id: string,
-    type: NotificationType,
-    title: string,
-    message: string
-  ) => {
-    setNotifications((prev) => {
-      const existingIndex = prev.findIndex((n) => n.id === id);
+  const upsertNotification = useCallback(
+    (id: string, type: NotificationType, title: string, message: string) => {
+      setNotifications((prev) => {
+        const existingIndex = prev.findIndex((n) => n.id === id);
 
-      if (existingIndex !== -1) {
-        // Update existing notification
-        const updated = [...prev];
-        updated[existingIndex] = {
-          ...updated[existingIndex],
+        if (existingIndex !== -1) {
+          // Update existing notification
+          const updated = [...prev];
+          updated[existingIndex] = {
+            ...updated[existingIndex],
+            title,
+            message,
+            time: new Date(), // Update timestamp
+            // Keep read status
+          };
+          return updated;
+        }
+
+        // Create new notification
+        const newNotif: Notification = {
+          id,
+          type,
           title,
           message,
-          time: new Date(), // Update timestamp
-          // Keep read status
+          time: new Date(),
+          read: false,
         };
-        return updated;
-      }
 
-      // Create new notification
-      const newNotif: Notification = {
-        id,
-        type,
-        title,
-        message,
-        time: new Date(),
-        read: false,
-      };
-
-      const updated = [newNotif, ...prev];
-      return updated.slice(0, MAX_NOTIFICATIONS);
-    });
-  }, []);
+        const updated = [newNotif, ...prev];
+        return updated.slice(0, MAX_NOTIFICATIONS);
+      });
+    },
+    [],
+  );
 
   // Monitor AQI untuk warnings - 1 notification per location
   useEffect(() => {
@@ -131,13 +130,20 @@ export function useNotifications() {
         notifId,
         "new_warning",
         "Peringatan Kualitas Udara",
-        `AQI ${currentAQI} di ${userLocation.city}. Batasi aktivitas outdoor.`
+        `AQI ${currentAQI} di ${userLocation.city}. Batasi aktivitas outdoor.`,
       );
     } else {
       // Remove notification jika AQI sudah normal atau fitur dinonaktifkan
       setNotifications((prev) => prev.filter((n) => n.id !== notifId));
     }
-  }, [envData.aqi, envData.loading, userLocation.city, upsertNotification, settings.enableAqiWarnings, settings.aqiThreshold]);
+  }, [
+    envData.aqi,
+    envData.loading,
+    userLocation.city,
+    upsertNotification,
+    settings.enableAqiWarnings,
+    settings.aqiThreshold,
+  ]);
 
   // Monitor temperature - 1 notification per location
   useEffect(() => {
@@ -151,18 +157,26 @@ export function useNotifications() {
         notifId,
         "new_warning",
         "Peringatan Suhu Tinggi",
-        `Suhu ${currentTemp}°C di ${userLocation.city}. Hindari aktivitas berat outdoor.`
+        `Suhu ${currentTemp}°C di ${userLocation.city}. Hindari aktivitas berat outdoor.`,
       );
     } else {
       setNotifications((prev) => prev.filter((n) => n.id !== notifId));
     }
-  }, [envData.weather, envData.loading, userLocation.city, upsertNotification, settings.enableTempWarnings]);
+  }, [
+    envData.weather,
+    envData.loading,
+    userLocation.city,
+    upsertNotification,
+    settings.enableTempWarnings,
+  ]);
 
   // Monitor rain probability - 1 notification per location
   useEffect(() => {
     if (!envData.weather || envData.loading || !userLocation.city) return;
 
-    const rainProb = Math.round(envData.weather.daily.precipitationProbability[0] || 0);
+    const rainProb = Math.round(
+      envData.weather.daily.precipitationProbability[0] || 0,
+    );
     const notifId = `rain-warning-${userLocation.city}`;
 
     if (settings.enableRainWarnings && rainProb >= WARNING_THRESHOLDS.rain) {
@@ -170,12 +184,18 @@ export function useNotifications() {
         notifId,
         "new_warning",
         "Peringatan Hujan Lebat",
-        `Probabilitas hujan ${rainProb}% hari ini. Siapkan payung.`
+        `Probabilitas hujan ${rainProb}% hari ini. Siapkan payung.`,
       );
     } else {
       setNotifications((prev) => prev.filter((n) => n.id !== notifId));
     }
-  }, [envData.weather, envData.loading, userLocation.city, upsertNotification, settings.enableRainWarnings]);
+  }, [
+    envData.weather,
+    envData.loading,
+    userLocation.city,
+    upsertNotification,
+    settings.enableRainWarnings,
+  ]);
 
   // Monitor nearby stations - max 3 nearby reports
   useEffect(() => {
@@ -183,23 +203,26 @@ export function useNotifications() {
 
     if (!settings.enableNearbyReports) {
       // Clear all nearby reports if disabled
-      setNotifications((prev) => prev.filter((n) => n.type !== "nearby_report"));
+      setNotifications((prev) =>
+        prev.filter((n) => n.type !== "nearby_report"),
+      );
       return;
     }
 
     const nearbyHighAQI = stations
-      .filter((s) => s.aqi > settings.aqiThreshold && (s.distance ?? 0) < 10)
+      .filter(
+        (s) => s.aqi > settings.aqiThreshold && (s.distance ?? Infinity) < 10,
+      )
       .slice(0, 3); // Max 3 nearby reports
 
     // Update or create notifications untuk nearby stations
     nearbyHighAQI.forEach((station) => {
       const notifId = `nearby-${station.name}`;
-      const distanceKm = station.distance ?? 0;
       upsertNotification(
         notifId,
         "nearby_report",
         "Laporan Kualitas Udara Terdekat",
-        `AQI ${station.aqi} di ${station.name}, ${Math.round(distanceKm)}km dari Anda.`
+        `AQI ${station.aqi} di ${station.name}, ${Math.round(station.distance ?? 0)}km dari Anda.`,
       );
     });
 
@@ -209,14 +232,19 @@ export function useNotifications() {
         if (n.type !== "nearby_report") return true;
         const stationName = n.id.replace("nearby-", "");
         return nearbyHighAQI.some((s) => s.name === stationName);
-      })
+      }),
     );
-  }, [stations, upsertNotification, settings.enableNearbyReports, settings.aqiThreshold]);
+  }, [
+    stations,
+    upsertNotification,
+    settings.enableNearbyReports,
+    settings.aqiThreshold,
+  ]);
 
   // Mark notification as read
   const markAsRead = useCallback((id: string) => {
     setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
     );
   }, []);
 
