@@ -19,8 +19,8 @@ export default function InsightsHeader({
             onClick={() => setScope(item)}
             className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
               scope === item
-                ? "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"
-                : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+                ? "bg-sky-500 text-white shadow-sm shadow-sky-500/20"
+                : "text-neutral-600 hover:bg-sky-50 hover:text-sky-600"
             }`}
           >
             {item}

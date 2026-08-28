@@ -187,3 +187,36 @@ model ReportRiskAssessment {
   @@index([status])
   @@map("report_risk_assessment")
 }
+
+model Insight {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  title            String
+  summary          String
+  category         String
+  impact           String   // "Tinggi" | "Sedang" | "Rendah"
+  impactScore      Int      // 0-100
+  status           String   @default("ACTIVE") // ACTIVE, RESOLVED, MONITORING
+  centerLatitude   Float
+  centerLongitude  Float
+  locationName     String
+  province         String?
+  reportIds        String[]
+  reportCount      Int      @default(0)
+  validatedCount   Int      @default(0)
+  trend            String   @default("stable") // "up" | "down" | "stable"
+  affectedRadiusKm Float?
+  factors          String[]
+  potentialImpacts String[]
+  whyRisks         String[]
+  weatherContext   Json?
+  aqiContext       Json?
+  generatedAt      DateTime @default(now())
+  expiresAt        DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([status, impactScore])
+  @@index([category, status])
+  @@index([createdAt])
+  @@map("insight")
+}
