@@ -4,6 +4,7 @@ import {
   History,
   Home,
   Map,
+  Newspaper,
   Plus,
   Settings,
 } from "lucide-react";
@@ -48,6 +49,11 @@ const menuItems = [
         label: "Peringatan",
         icon: Bell,
         to: "/dashboard/warnings",
+      },
+      {
+        label: "Insight",
+        icon: Newspaper,
+        to: "/dashboard/insights",
       },
     ],
   },
