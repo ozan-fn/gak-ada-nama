@@ -4,6 +4,8 @@ import { Layers, Minus, Plus, ChevronDown, ChevronUp } from "lucide-react";
 import { BaseEnvironmentMap, type MapContext } from "./maps/BaseEnvironmentMap";
 import { Skeleton } from "./ui/skeleton";
 import type { Warning } from "#/hooks/useEnvironmentWarnings";
+import type { NearbyReportPin } from "#/components/RiskMap";
+import { createReportMarkers, groupNearbyReports } from "#/lib/mapMarkers";
 
 interface UserLocation {
   latitude: number | null;
@@ -16,6 +18,7 @@ interface UserLocation {
 interface WarningsMapProps {
   userLocation: UserLocation;
   warnings: Warning[];
+  reports: NearbyReportPin[];
 }
 
 const severityColors: Record<Warning["severity"], string> = {
@@ -140,6 +143,24 @@ function WarningsMapControls({ context }: { context: MapContext }) {
                   <span className="h-2 w-2 shrink-0 rounded-full border border-white bg-[#3b82f6] shadow-sm" />
                   <span>Lokasi Anda</span>
                 </div>
+
+                <div className="mt-2 border-t border-neutral-100 pt-2">
+                  <p className="mb-1.5 text-[10px] font-semibold text-neutral-700">
+                    Laporan Sekitar
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="flex size-3.5 shrink-0 items-center justify-center rounded-full border border-white bg-amber-400 text-[8px] font-black text-amber-950 shadow-sm">
+                      !
+                    </span>
+                    <span>Laporan komunitas</span>
+                  </div>
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="flex size-3.5 shrink-0 items-center justify-center rounded-full border border-white bg-emerald-500 text-[8px] font-black text-white shadow-sm">
+                      !
+                    </span>
+                    <span>Pemantauan otomatis</span>
+                  </div>
+                </div>
               </div>
 
               {showFireLayer && (
@@ -254,12 +275,16 @@ function WarningsMapControls({ context }: { context: MapContext }) {
 function WarningsMapContent({
   userLocation,
   warnings,
+  reports,
   onMapReady,
 }: WarningsMapProps & { onMapReady: (map: maplibregl.Map) => void }) {
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
   const userMarkerRef = useRef<maplibregl.Marker | null>(null);
   const warningMarkersRef = useRef<maplibregl.Marker[]>([]);
+  const reportMarkersRef = useRef<maplibregl.Marker[]>([]);
   const mountedRef = useRef(false);
+
+  const reportGroups = useMemo(() => groupNearbyReports(reports), [reports]);
 
   const center = useMemo<[number, number]>(() => {
     if (userLocation.latitude !== null && userLocation.longitude !== null) {
@@ -339,6 +364,24 @@ function WarningsMapContent({
     [warnings, userLocation.latitude, userLocation.longitude],
   );
 
+  const syncReportMarkers = useCallback(
+    (map: maplibregl.Map) => {
+      if (!mountedRef.current) return;
+
+      reportMarkersRef.current.forEach((marker) => {
+        marker.remove();
+      });
+
+      reportMarkersRef.current = createReportMarkers(
+        reports,
+        map,
+        undefined,
+        reportGroups,
+      );
+    },
+    [reportGroups, reports],
+  );
+
   const handleMapReady = useCallback(
     (mapInstance: maplibregl.Map) => {
       if (!mountedRef.current) return;
@@ -355,6 +398,7 @@ function WarningsMapContent({
           mapInstance.resize();
           createUserMarker(mapInstance, lat, lng);
           createWarningMarkers(mapInstance);
+          syncReportMarkers(mapInstance);
         });
       }
     },
@@ -363,6 +407,7 @@ function WarningsMapContent({
       userLocation.longitude,
       createUserMarker,
       createWarningMarkers,
+      syncReportMarkers,
       onMapReady,
     ],
   );
@@ -373,6 +418,13 @@ function WarningsMapContent({
 
     createWarningMarkers(map);
   }, [createWarningMarkers]);
+
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    syncReportMarkers(map);
+  }, [syncReportMarkers]);
 
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -405,6 +457,11 @@ function WarningsMapContent({
       });
       warningMarkersRef.current = [];
 
+      reportMarkersRef.current.forEach((marker) => {
+        marker.remove();
+      });
+      reportMarkersRef.current = [];
+
       mapInstanceRef.current = null;
     };
   }, []);
@@ -425,7 +482,7 @@ function WarningsMapContent({
   );
 }
 
-function WarningsMap({ userLocation, warnings }: WarningsMapProps) {
+function WarningsMap({ userLocation, warnings, reports }: WarningsMapProps) {
   const handleMapReady = useCallback(() => {
     // Map ready callback if needed
   }, []);
@@ -443,6 +500,7 @@ function WarningsMap({ userLocation, warnings }: WarningsMapProps) {
       <WarningsMapContent
         userLocation={userLocation}
         warnings={warnings}
+        reports={reports}
         onMapReady={handleMapReady}
       />
     </div>
@@ -455,6 +513,13 @@ export default memo(WarningsMap, (prevProps, nextProps) => {
     prevProps.userLocation.longitude === nextProps.userLocation.longitude &&
     prevProps.userLocation.loading === nextProps.userLocation.loading &&
     prevProps.warnings.length === nextProps.warnings.length &&
-    prevProps.warnings.every((w, i) => w.id === nextProps.warnings[i]?.id)
+    prevProps.warnings.every((w, i) => w.id === nextProps.warnings[i]?.id) &&
+    prevProps.reports.length === nextProps.reports.length &&
+    prevProps.reports.every(
+      (report, index) =>
+        report.id === nextProps.reports[index]?.id &&
+        report.latitude === nextProps.reports[index]?.latitude &&
+        report.longitude === nextProps.reports[index]?.longitude,
+    )
   );
 });

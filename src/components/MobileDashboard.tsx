@@ -1,18 +1,22 @@
+import { Link } from "@tanstack/react-router";
 import {
-  Droplet,
-  Layers,
-  Navigation,
-  Minus,
-  Plus,
-  MapPin,
   AlertTriangle,
-  Factory,
-  Thermometer,
-  CloudRain,
-  Wind,
+  ArrowUpRight,
   ChevronDown,
   ChevronUp,
+  CloudRain,
+  Droplet,
+  Factory,
+  Layers,
+  MapPin,
+  Minus,
+  Navigation,
+  Plus,
+  Thermometer,
+  Wind,
+  X,
 } from "lucide-react";
+import * as maplibregl from "maplibre-gl";
 import {
   animate,
   motion,
@@ -21,21 +25,21 @@ import {
   useTransform,
 } from "motion/react";
 import {
+  type PointerEvent as ReactPointerEvent,
+  useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
-  useMemo,
-  useCallback,
-  type PointerEvent as ReactPointerEvent,
 } from "react";
-import { Link } from "@tanstack/react-router";
 import { ChartAQITrend } from "#/components/ChartAQITrend";
-import RegionalExtreme from "#/components/RegionalExtreme";
 import PrecipitationOverview from "#/components/PrecipitationOverview";
+import RegionalExtreme from "#/components/RegionalExtreme";
 import RegionRisk from "#/components/RegionRisk";
 import WeatherInformation from "#/components/WeatherInformation";
+import { createReportMarkers, groupNearbyReports } from "#/lib/mapMarkers";
 import { BaseEnvironmentMap } from "./maps/BaseEnvironmentMap";
-import * as maplibregl from "maplibre-gl";
+import type { NearbyReportPin } from "./RiskMap";
 import { Skeleton } from "./ui/skeleton";
 
 interface MobileDashboardProps {
@@ -88,6 +92,9 @@ interface MobileDashboardProps {
     loading: boolean;
     error: string | null;
   };
+
+  reports: NearbyReportPin[];
+  reportRadiusKm: number;
 }
 
 const HANDLE_HEIGHT = 80;
@@ -147,6 +154,8 @@ export default function MobileDashboard({
   stableLocation,
   locationParams,
   envData,
+  reports,
+  reportRadiusKm,
 }: MobileDashboardProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
 
@@ -163,6 +172,12 @@ export default function MobileDashboard({
    * We create this only once and then update its position.
    */
   const markerRef = useRef<maplibregl.Marker | null>(null);
+  const reportMarkersRef = useRef<maplibregl.Marker[]>([]);
+  const [isMapReady, setIsMapReady] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<NearbyReportPin | null>(
+    null,
+  );
+  const reportGroups = useMemo(() => groupNearbyReports(reports), [reports]);
 
   /**
    * Prevent the initial flyTo from running more than once.
@@ -212,6 +227,11 @@ export default function MobileDashboard({
         markerRef.current.remove();
         markerRef.current = null;
       }
+
+      reportMarkersRef.current.forEach((marker) => {
+        marker.remove();
+      });
+      reportMarkersRef.current = [];
 
       mapInstanceRef.current = null;
     };
@@ -395,6 +415,7 @@ export default function MobileDashboard({
       console.log("[MobileDashboard] Map ready");
 
       mapInstanceRef.current = mapInstance;
+      setIsMapReady(true);
 
       const updateUserLocation = () => {
         if (!mountedRef.current) return;
@@ -470,11 +491,53 @@ export default function MobileDashboard({
     }
 
     createOrUpdateUserMarker(map, latitude, longitude);
+
+    if (!hasAutoLocatedRef.current) {
+      hasAutoLocatedRef.current = true;
+      map.flyTo({
+        center: [longitude, latitude],
+        zoom: DEFAULT_MAP_ZOOM,
+        duration: 1200,
+        essential: true,
+      });
+    }
   }, [
     stableLocation.latitude,
     stableLocation.longitude,
     createOrUpdateUserMarker,
   ]);
+
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !isMapReady) return;
+
+    reportMarkersRef.current.forEach((marker) => {
+      marker.remove();
+    });
+    const markers = createReportMarkers(
+      reports,
+      map,
+      setSelectedReport,
+      reportGroups,
+    );
+    reportMarkersRef.current = markers;
+
+    return () => {
+      markers.forEach((marker) => {
+        marker.remove();
+      });
+      reportMarkersRef.current = [];
+    };
+  }, [isMapReady, reportGroups, reports]);
+
+  useEffect(() => {
+    if (
+      selectedReport &&
+      !reports.some((report) => report.id === selectedReport.id)
+    ) {
+      setSelectedReport(null);
+    }
+  }, [reports, selectedReport]);
 
   /* ============================================================
    * RENDER
@@ -515,6 +578,13 @@ export default function MobileDashboard({
 
           return (
             <>
+              <motion.div
+                style={{ opacity: controlsOpacity }}
+                className="absolute left-1/2 top-3 z-10 -translate-x-1/2 whitespace-nowrap rounded-full border border-amber-200/80 bg-white/95 px-3 py-1.5 text-xs font-semibold text-neutral-700 shadow-sm backdrop-blur-md"
+              >
+                {reports.length} laporan · {reportRadiusKm} km
+              </motion.div>
+
               {/* ==================================================
                   TOP LEFT
               ================================================== */}
@@ -646,6 +716,45 @@ export default function MobileDashboard({
                     >
                       View Risk Map →
                     </button>
+                  </Link>
+                </motion.div>
+              )}
+
+              {selectedReport && (
+                <motion.div
+                  style={{ opacity: controlsOpacity }}
+                  className="absolute bottom-24 left-3 z-20 w-[min(19rem,calc(100%-4.5rem))] rounded-xl border border-neutral-200 bg-white/95 p-3 shadow-lg backdrop-blur-md"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                        {selectedReport.category} ·{" "}
+                        {selectedReport.distanceKm.toFixed(1)} km
+                      </p>
+                      <h3 className="mt-1 truncate text-sm font-semibold text-neutral-900">
+                        {selectedReport.title}
+                      </h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedReport(null)}
+                      className="flex size-7 shrink-0 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100"
+                      aria-label="Tutup detail laporan"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  </div>
+                  <Link
+                    to="/dashboard/risk-map"
+                    search={{
+                      lat: selectedReport.latitude,
+                      lng: selectedReport.longitude,
+                      city: selectedReport.locationName,
+                    }}
+                    className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-sky-600"
+                  >
+                    Lihat di peta risiko
+                    <ArrowUpRight className="size-3" />
                   </Link>
                 </motion.div>
               )}
@@ -864,7 +973,10 @@ export default function MobileDashboard({
               {/* Region Risk */}
 
               <div className="rounded-2xl bg-white p-4 shadow-sm">
-                <RegionRisk location={locationParams} />
+                <RegionRisk
+                  location={locationParams}
+                  reportCount={reports.length}
+                />
               </div>
             </div>
           </motion.div>
