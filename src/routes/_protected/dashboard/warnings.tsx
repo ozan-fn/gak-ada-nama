@@ -141,7 +141,7 @@ function RouteComponent() {
                 </>
               ) : filteredWarnings.length > 0 ? (
                 <>
-                  <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-orange-50 px-2.5 py-1 text-xs font-medium text-orange-700">
                     <Bell className="h-3 w-3" />
                     <span>Peringatan Aktif</span>
                   </div>
@@ -155,7 +155,7 @@ function RouteComponent() {
                 </>
               ) : nearbyReports.length > 0 ? (
                 <>
-                  <div className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700">
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
                     <FileText className="h-3 w-3" />
                     <span>Laporan Terdeteksi</span>
                   </div>
@@ -167,7 +167,7 @@ function RouteComponent() {
                 </>
               ) : (
                 <>
-                  <div className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-700">
                     <span>Aman</span>
                   </div>
 
@@ -197,135 +197,126 @@ function RouteComponent() {
           </section>
 
           {/* Nearby community reports */}
-          <section className="overflow-hidden rounded-lg bg-white shadow-sm">
-            <div className="flex items-center justify-between gap-3 border-b border-neutral-100 px-4 py-3.5">
-              <div className="flex min-w-0 items-center gap-2.5">
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sky-50">
-                  <FileText className="size-4 text-sky-600" />
-                </div>
-                <div className="min-w-0">
-                  <h2 className="text-sm font-semibold text-neutral-900">
-                    Laporan di sekitar Anda
-                  </h2>
-                  <p className="text-[11px] text-neutral-500">
-                    Dalam radius {NEARBY_REPORT_RADIUS_KM} km dari{" "}
-                    {location.city}
-                  </p>
-                </div>
-              </div>
-              <span className="shrink-0 rounded-full bg-sky-50 px-2.5 py-1 text-[11px] font-semibold text-sky-700">
-                {nearbyReports.length} laporan
-              </span>
-            </div>
-
-            {location.loading ? (
-              <div className="space-y-2 p-4">
-                {[1, 2].map((item) => (
-                  <div
-                    key={item}
-                    className="flex items-center gap-3 rounded-xl border border-neutral-100 p-3"
-                  >
-                    <Skeleton className="size-9 shrink-0 rounded-lg" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-2/3" />
-                      <Skeleton className="h-3 w-1/2" />
-                    </div>
+          {(location.loading || nearbyReports.length > 0) && (
+            <section className="overflow-hidden rounded-lg bg-white shadow-sm">
+              <div className="flex items-center justify-between gap-3 border-b border-neutral-100 px-4 py-3.5">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-50">
+                    <FileText className="size-4 text-blue-600" />
                   </div>
-                ))}
+                  <div className="min-w-0">
+                    <h2 className="text-sm font-semibold text-neutral-900">
+                      Laporan di sekitar Anda
+                    </h2>
+                    <p className="text-[11px] text-neutral-500">
+                      Dalam radius {NEARBY_REPORT_RADIUS_KM} km dari{" "}
+                      {location.city}
+                    </p>
+                  </div>
+                </div>
+                <span className="shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">
+                  {nearbyReports.length} laporan
+                </span>
               </div>
-            ) : nearbyReports.length > 0 ? (
-              <div className="divide-y divide-neutral-100">
-                {nearbyReports.map((report) => {
-                  const risk = report.riskAssessment?.risk;
-                  const isAutomatic = report.source === "ENVIRONMENT_MONITOR";
 
-                  return (
-                    <Link
-                      key={report.id}
-                      to="/dashboard/risk-map"
-                      search={{
-                        lat: report.latitude,
-                        lng: report.longitude,
-                        city: report.locationName,
-                      }}
-                      preload="intent"
-                      className="group flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-sky-50/40"
+              {location.loading ? (
+                <div className="space-y-2 p-4">
+                  {[1, 2].map((item) => (
+                    <div
+                      key={item}
+                      className="flex items-center gap-3 rounded-xl border border-neutral-100 p-3"
                     >
-                      <div
-                        className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${
-                          isAutomatic
-                            ? "bg-emerald-50 text-emerald-600"
-                            : "bg-amber-50 text-amber-600"
-                        }`}
+                      <Skeleton className="size-9 shrink-0 rounded-lg" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-2/3" />
+                        <Skeleton className="h-3 w-1/2" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="divide-y divide-neutral-100">
+                  {nearbyReports.map((report) => {
+                    const risk = report.riskAssessment?.risk;
+                    const isAutomatic = report.source === "ENVIRONMENT_MONITOR";
+
+                    return (
+                      <Link
+                        key={report.id}
+                        to="/dashboard/risk-map"
+                        search={{
+                          lat: report.latitude,
+                          lng: report.longitude,
+                          city: report.locationName,
+                        }}
+                        preload="intent"
+                        className="group flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-neutral-50"
                       >
-                        {isAutomatic ? (
-                          <Bot className="size-4" />
-                        ) : (
-                          <Users className="size-4" />
-                        )}
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
-                            {report.category}
-                          </span>
-                          <span className="text-neutral-300">•</span>
-                          <span className="text-[10px] text-neutral-500">
-                            {isAutomatic ? "Pemantauan otomatis" : "Komunitas"}
-                          </span>
-                        </div>
-                        <h3 className="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-neutral-900">
-                          {report.title}
-                        </h3>
-                        <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-neutral-500">
-                          <span className="inline-flex min-w-0 items-center gap-1">
-                            <MapPin className="size-3 shrink-0" />
-                            <span className="truncate">
-                              {report.locationName}
-                            </span>
-                          </span>
-                          <span className="text-neutral-300">•</span>
-                          <span className="font-medium text-neutral-700">
-                            {report.distanceKm.toFixed(1)} km
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex shrink-0 items-center gap-2">
-                        <span
-                          className={`rounded-lg px-2 py-1 text-[10px] font-bold ${
-                            risk
-                              ? reportRiskStyles[risk.level]
-                              : (reportUrgencyStyles[report.urgency] ??
-                                "bg-neutral-100 text-neutral-600")
+                        <div
+                          className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${
+                            isAutomatic
+                              ? "bg-teal-50 text-teal-600"
+                              : "bg-blue-50 text-blue-600"
                           }`}
                         >
-                          {risk
-                            ? `Skor ${Math.round(risk.score)}`
-                            : report.urgency}
-                        </span>
-                        <ChevronRight className="size-4 text-neutral-300 transition-transform group-hover:translate-x-0.5 group-hover:text-sky-500" />
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center px-6 py-10 text-center">
-                <div className="flex size-10 items-center justify-center rounded-full bg-neutral-100">
-                  <FileText className="size-4 text-neutral-400" />
+                          {isAutomatic ? (
+                            <Bot className="size-4" />
+                          ) : (
+                            <Users className="size-4" />
+                          )}
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+                              {report.category}
+                            </span>
+                            <span className="text-neutral-300">•</span>
+                            <span className="text-[10px] text-neutral-500">
+                              {isAutomatic
+                                ? "Pemantauan otomatis"
+                                : "Komunitas"}
+                            </span>
+                          </div>
+                          <h3 className="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-neutral-900">
+                            {report.title}
+                          </h3>
+                          <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-neutral-500">
+                            <span className="inline-flex min-w-0 items-center gap-1">
+                              <MapPin className="size-3 shrink-0" />
+                              <span className="truncate">
+                                {report.locationName}
+                              </span>
+                            </span>
+                            <span className="text-neutral-300">•</span>
+                            <span className="font-medium text-neutral-700">
+                              {report.distanceKm.toFixed(1)} km
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex shrink-0 items-center gap-2">
+                          <span
+                            className={`rounded-lg px-2 py-1 text-[10px] font-bold ${
+                              risk
+                                ? reportRiskStyles[risk.level]
+                                : (reportUrgencyStyles[report.urgency] ??
+                                  "bg-neutral-100 text-neutral-600")
+                            }`}
+                          >
+                            {risk
+                              ? `Skor ${Math.round(risk.score)}`
+                              : report.urgency}
+                          </span>
+                          <ChevronRight className="size-4 text-neutral-300 transition-transform group-hover:translate-x-0.5 group-hover:text-neutral-400" />
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
-                <h3 className="mt-3 text-sm font-semibold text-neutral-800">
-                  Belum ada laporan di sekitar Anda
-                </h3>
-                <p className="mt-1 max-w-sm text-xs leading-relaxed text-neutral-500">
-                  Laporan dalam radius {NEARBY_REPORT_RADIUS_KM} km akan tampil
-                  di sini.
-                </p>
-              </div>
-            )}
-          </section>
+              )}
+            </section>
+          )}
 
           {/* Warning list */}
           {isLoading ? (
@@ -396,7 +387,7 @@ function RouteComponent() {
                           </div>
                         </div>
 
-                        <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-neutral-400">
+                        <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-neutral-500">
                           <span className="inline-flex items-center gap-1">
                             <MapPin className="h-3.5 w-3.5" />
                             {warning.distance}
@@ -424,14 +415,14 @@ function RouteComponent() {
                         <div className="mt-3 flex items-center gap-2 border-t border-neutral-100 pt-3">
                           <Link
                             to="/dashboard/risk-map"
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-sky-400/30 bg-sky-500 px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm shadow-sky-500/20 transition-all duration-200 hover:bg-sky-400 hover:shadow-sky-500/30"
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-900 px-2.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-neutral-800"
                           >
                             <MapIcon className="h-3.5 w-3.5" />
                             Lihat Peta
                           </Link>
                           <Link
                             to="/dashboard"
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-xs font-medium text-neutral-600 transition-colors hover:bg-neutral-50"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
                           >
                             Lihat Detail
                             <ArrowRight className="h-3.5 w-3.5" />
@@ -443,20 +434,27 @@ function RouteComponent() {
                 );
               })}
             </div>
-          ) : nearbyReports.length === 0 ? (
-            <div className="flex w-full flex-col items-center justify-center rounded-lg bg-white px-6 py-16 text-center shadow-sm">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-100">
-                <BellOff className="h-4 w-4 text-neutral-400" />
+          ) : (
+            <div className="flex w-full flex-col items-center justify-center rounded-lg bg-white px-6 py-20 text-center shadow-sm">
+              <div className="flex size-14 items-center justify-center rounded-xl bg-neutral-50">
+                {nearbyReports.length === 0 ? (
+                  <BellOff className="size-6 text-neutral-400" />
+                ) : (
+                  <Bell className="size-6 text-neutral-400" />
+                )}
               </div>
-              <h3 className="mt-3 text-sm font-semibold text-neutral-800">
-                Tidak ada peringatan aktif
+              <h3 className="mt-4 text-sm font-semibold text-neutral-900">
+                {nearbyReports.length === 0
+                  ? "Tidak ada peringatan aktif"
+                  : "Tidak ada peringatan dengan filter ini"}
               </h3>
-              <p className="mt-1 max-w-sm text-xs leading-relaxed text-neutral-500">
-                Belum ada risiko lingkungan yang signifikan terdeteksi di
-                sekitar lokasi kamu.
+              <p className="mt-2 max-w-sm text-xs leading-relaxed text-neutral-500">
+                {nearbyReports.length === 0
+                  ? "Kondisi lingkungan di sekitar Anda saat ini dalam keadaan aman. Tidak ada risiko signifikan yang terdeteksi."
+                  : "Coba ubah filter peringatan atau lihat semua kategori untuk melihat risiko di sekitar Anda."}
               </p>
             </div>
-          ) : null}
+          )}
         </div>
 
         {/* Right: Map - Desktop Only */}

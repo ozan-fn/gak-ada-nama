@@ -574,19 +574,10 @@ export default function MobileDashboard({
             setShowFireLayer,
           } = context;
 
-          const activeAlertsCount = alerts.length;
-
           return (
             <>
-              <motion.div
-                style={{ opacity: controlsOpacity }}
-                className="absolute left-1/2 top-3 z-10 -translate-x-1/2 whitespace-nowrap rounded-full border border-amber-200/80 bg-white/95 px-3 py-1.5 text-xs font-semibold text-neutral-700 shadow-sm backdrop-blur-md"
-              >
-                {reports.length} laporan · {reportRadiusKm} km
-              </motion.div>
-
               {/* ==================================================
-                  TOP LEFT
+                  TOP LEFT: Laporan dalam Radius
               ================================================== */}
 
               <motion.div
@@ -595,21 +586,12 @@ export default function MobileDashboard({
                 }}
                 className="absolute left-3 top-3 z-10 flex flex-col gap-2"
               >
-                {activeAlertsCount > 0 && (
-                  <Link to="/dashboard/risk-map">
-                    <button
-                      type="button"
-                      className="flex items-center gap-2 rounded-lg border border-white/40 bg-white/60 px-3 py-2 shadow-sm backdrop-blur-md transition-colors hover:bg-white/80"
-                    >
-                      <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-
-                      <span className="text-xs font-medium text-neutral-800">
-                        {activeAlertsCount} Active Alert
-                        {activeAlertsCount > 1 ? "s" : ""}
-                      </span>
-                    </button>
-                  </Link>
-                )}
+                <div className="inline-flex items-center gap-2 rounded-lg border border-amber-200/80 bg-white/95 px-3 py-2 text-xs font-semibold text-neutral-700 shadow-sm backdrop-blur-md">
+                  <MapPin className="size-3.5 text-amber-600" />
+                  <span>
+                    {reports.length} laporan · {reportRadiusKm} km
+                  </span>
+                </div>
 
                 {(showRainRadar || showFireLayer) && (
                   <div className="flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white/90 shadow-sm backdrop-blur-sm">
@@ -723,39 +705,98 @@ export default function MobileDashboard({
               {selectedReport && (
                 <motion.div
                   style={{ opacity: controlsOpacity }}
-                  className="absolute bottom-24 left-3 z-20 w-[min(19rem,calc(100%-4.5rem))] rounded-xl border border-neutral-200 bg-white/95 p-3 shadow-lg backdrop-blur-md"
+                  className="
+                    absolute bottom-24 left-3 z-20
+                    w-[min(19rem,calc(100%-4.5rem))]
+                    overflow-hidden
+                    rounded-xl
+                    border border-neutral-200/80
+                    bg-white/95
+                    shadow-[0_8px_30px_rgba(0,0,0,0.1)]
+                    backdrop-blur-md
+                  "
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-bold uppercase tracking-wide text-amber-700">
-                        {selectedReport.category} ·{" "}
-                        {selectedReport.distanceKm.toFixed(1)} km
-                      </p>
-                      <h3 className="mt-1 truncate text-sm font-semibold text-neutral-900">
-                        {selectedReport.title}
-                      </h3>
+                  <div className="p-3.5">
+                    {/* Header */}
+                    <div className="flex items-start gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="truncate text-[10px] font-medium text-sky-600">
+                            {selectedReport.category}
+                          </span>
+
+                          <span className="size-1 shrink-0 rounded-full bg-neutral-300" />
+
+                          <span className="shrink-0 text-[10px] text-neutral-400">
+                            {selectedReport.distanceKm.toFixed(1)} km
+                          </span>
+                        </div>
+
+                        <h3 className="mt-1.5 truncate text-[13px] font-semibold leading-snug text-neutral-900">
+                          {selectedReport.title}
+                        </h3>
+
+                        <div className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[11px] text-neutral-500">
+                          <MapPin className="size-3 shrink-0 text-neutral-400" />
+                          <span className="truncate">
+                            {selectedReport.locationName}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Close */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedReport(null)}
+                        className="
+                          flex size-7 shrink-0
+                          items-center justify-center
+                          rounded-md
+                          text-neutral-400
+                          transition-colors
+                          hover:bg-neutral-100
+                          hover:text-neutral-700
+                          focus:outline-none
+                          focus:ring-2
+                          focus:ring-neutral-200
+                        "
+                        aria-label="Tutup detail laporan"
+                      >
+                        <X className="size-3.5" />
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedReport(null)}
-                      className="flex size-7 shrink-0 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100"
-                      aria-label="Tutup detail laporan"
+
+                    {/* Action */}
+                    <Link
+                      to="/dashboard/risk-map"
+                      search={{
+                        lat: selectedReport.latitude,
+                        lng: selectedReport.longitude,
+                        city: selectedReport.locationName,
+                      }}
+                      className="
+                        mt-3
+                        flex w-full
+                        items-center justify-between
+                        rounded-md
+                        border border-sky-100
+                        bg-sky-50/70
+                        px-3 py-2
+                        text-[11px]
+                        font-medium
+                        text-sky-700
+                        transition-colors
+                        hover:border-sky-200
+                        hover:bg-sky-50
+                        focus:outline-none
+                        focus:ring-2
+                        focus:ring-sky-100
+                      "
                     >
-                      <X className="size-3.5" />
-                    </button>
+                      <span>Lihat di peta risiko</span>
+                      <ArrowUpRight className="size-3.5 shrink-0" />
+                    </Link>
                   </div>
-                  <Link
-                    to="/dashboard/risk-map"
-                    search={{
-                      lat: selectedReport.latitude,
-                      lng: selectedReport.longitude,
-                      city: selectedReport.locationName,
-                    }}
-                    className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-sky-600"
-                  >
-                    Lihat di peta risiko
-                    <ArrowUpRight className="size-3" />
-                  </Link>
                 </motion.div>
               )}
 

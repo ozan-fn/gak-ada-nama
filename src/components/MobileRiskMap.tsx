@@ -17,6 +17,7 @@ import {
 } from "react";
 
 import { indonesiaLocations } from "#/data/indonesia-locations";
+import { calculateDistanceKm } from "#/lib/distanceUtils";
 import { findNearestCity } from "#/lib/geoUtils";
 import {
   createAutomaticReportUncertaintyGeoJson,
@@ -46,7 +47,6 @@ interface MobileRiskMapProps {
   };
 
   reports: NearbyReportPin[];
-  radiusKm: number;
 
   selectedLocation: {
     latitude: number;
@@ -287,7 +287,6 @@ export default function MobileRiskMap({
   location,
   stableLocation,
   reports,
-  radiusKm,
   selectedLocation,
   onLocationSelect,
   onReportSelect,
@@ -488,6 +487,26 @@ export default function MobileRiskMap({
    * Group reports only when reports actually change.
    */
   const reportGroups = useMemo(() => groupNearbyReports(reports), [reports]);
+
+  /**
+   * Calculate nearby reports within 5km of user location
+   */
+  const nearbyReportsCount = useMemo(() => {
+    const latitude = location.latitude;
+    const longitude = location.longitude;
+    
+    if (!latitude || !longitude) return 0;
+    
+    return reports.filter(report => {
+      const distance = calculateDistanceKm(
+        latitude,
+        longitude,
+        report.latitude,
+        report.longitude
+      );
+      return distance <= 5;
+    }).length;
+  }, [reports, location.latitude, location.longitude]);
 
   /**
    * Create/update REPORT markers.
@@ -901,7 +920,7 @@ export default function MobileRiskMap({
           return (
             <>
               {/* ================================
-							    TOP LEFT - REPORT COUNT
+							    TOP LEFT - REPORT COUNT (follows user location)
 							================================ */}
               <motion.div
                 style={{
@@ -909,11 +928,11 @@ export default function MobileRiskMap({
                 }}
                 className="absolute left-3 top-3 z-10 flex flex-col gap-2"
               >
-                <div className="inline-flex items-center gap-2 rounded-full border border-red-100 bg-white/95 px-3 py-1.5 text-xs font-semibold text-neutral-700 shadow-sm backdrop-blur-md">
-                  <MapPin className="size-3.5 text-red-600" />
+                <div className="inline-flex items-center gap-2 rounded-lg border border-amber-200/80 bg-white/95 px-3 py-2 text-xs font-semibold text-neutral-700 shadow-sm backdrop-blur-md">
+                  <MapPin className="size-3.5 text-amber-600" />
 
                   <span>
-                    {reports.length} laporan dalam radius {radiusKm} km
+                    {nearbyReportsCount} laporan · 5 km
                   </span>
                 </div>
               </motion.div>

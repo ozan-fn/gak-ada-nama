@@ -21,6 +21,7 @@ import {
   generateRecommendation,
   getRecommendationColor,
 } from "#/lib/aiSimulation";
+import { calculateDistanceKm } from "#/lib/distanceUtils";
 import { findNearestCity } from "#/lib/geoUtils";
 import {
   createAutomaticReportUncertaintyGeoJson,
@@ -83,7 +84,6 @@ function RiskMapContent({
   showAIPanel,
   setShowAIPanel,
   reports,
-  radiusKm,
   isMapReady,
   onLocationSelect,
   onReportSelect,
@@ -98,7 +98,6 @@ function RiskMapContent({
     city: string;
   }) => void;
   reports: NearbyReportPin[];
-  radiusKm: number;
   isMapReady: boolean;
   onReportSelect?: (report: NearbyReportPin) => void;
 }) {
@@ -131,6 +130,21 @@ function RiskMapContent({
   const reportGroups = useMemo(() => {
     return groupNearbyReports(reports);
   }, [reports]);
+
+  // Calculate nearby reports within 5km of user location
+  const nearbyReportsCount = useMemo(() => {
+    if (!userLocation.latitude || !userLocation.longitude) return 0;
+    
+    return reports.filter(report => {
+      const distance = calculateDistanceKm(
+        userLocation.latitude!,
+        userLocation.longitude!,
+        report.latitude,
+        report.longitude
+      );
+      return distance <= 5;
+    }).length;
+  }, [reports, userLocation.latitude, userLocation.longitude]);
 
   /** Instantiates or updates the blue user location marker position. */
   const createUserMarker = useCallback(
@@ -399,12 +413,12 @@ function RiskMapContent({
 
   return (
     <>
-      {/* Report Counter Badge */}
-      <div className="absolute left-3 top-3 z-10 inline-flex items-center gap-2 rounded-full border border-red-100 bg-white/95 px-3 py-1.5 text-xs font-semibold text-neutral-700 shadow-sm backdrop-blur-md">
-        <MapPin className="size-3.5 text-red-600" />
+      {/* Report Counter Badge - follows user location */}
+      <div className="absolute left-3 top-3 z-10 inline-flex items-center gap-2 rounded-lg border border-amber-200/80 bg-white/95 px-3 py-2 text-xs font-semibold text-neutral-700 shadow-sm backdrop-blur-md">
+        <MapPin className="size-3.5 text-amber-600" />
 
         <span>
-          {reports.length} laporan dalam radius {radiusKm} km
+          {nearbyReportsCount} laporan dalam radius 5 km
         </span>
       </div>
 
@@ -763,13 +777,11 @@ function RiskMapContent({
 
 export default function RiskMap({
   reports,
-  radiusKm = 5,
   onLocationSelect,
   onReportSelect,
   flyToLocation,
 }: {
   reports: NearbyReportPin[];
-  radiusKm?: number;
   onLocationSelect?: (location: {
     latitude: number;
     longitude: number;
@@ -883,7 +895,6 @@ export default function RiskMap({
           showAIPanel={showAIPanel}
           setShowAIPanel={setShowAIPanel}
           reports={reports}
-          radiusKm={radiusKm}
           isMapReady={isMapReady}
           onLocationSelect={onLocationSelect}
           onReportSelect={onReportSelect}

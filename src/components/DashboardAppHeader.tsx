@@ -31,6 +31,7 @@ import { useSession, signOut } from "#/lib/auth-client";
 import AQIIndicator from "./AQIIndicator";
 import LocationSearchBar from "./LocationSearchBar";
 import NotificationBar from "./NotificationBar";
+import EcoLensLocationSearch from "./ecolens/EcoLensLocationSearch";
 
 export default function DashboardAppHeader() {
   const { data: session } = useSession();
@@ -46,20 +47,27 @@ export default function DashboardAppHeader() {
     pathname === "/dashboard" || pathname === "/dashboard/risk-map";
 
   const isRiskMapRoute = pathname === "/dashboard/risk-map";
+  const isReportRoute = pathname === "/dashboard/report";
 
   const getPageTitle = () => {
     const routes: Record<string, string> = {
       "/dashboard": "Beranda",
-      "/dashboard/warning": "Peringatan",
-      "/dashboard/profile": "Profil",
+      "/dashboard/warnings": "Peringatan",
+      "/dashboard/report": "Buat Laporan",
+      "/dashboard/insights": "Insight",
+      "/dashboard/my-reports": "Laporan Saya",
+      "/dashboard/activity": "Aktivitas",
       "/dashboard/settings": "Pengaturan",
       "/dashboard/notifications": "Notifikasi",
+      "/dashboard/risk-map": "Peta Risiko",
     };
 
     return routes[pathname] ?? "Beranda";
   };
 
   const pageTitle = getPageTitle();
+
+  const showBreadcrumb = !isRiskMapRoute && !isReportRoute && pathname !== "/dashboard";
 
   const getInitials = (name?: string) => {
     if (!name) return "U";
@@ -125,15 +133,25 @@ export default function DashboardAppHeader() {
 
         <div className="hidden h-5 w-px bg-border sm:block" />
 
-        {!isRiskMapRoute && (
+        {showBreadcrumb ? (
           <span className="truncate text-sm font-medium text-neutral-700 md:hidden dark:text-neutral-200">
             {pageTitle}
           </span>
-        )}
+        ) : !isRiskMapRoute && !isReportRoute ? (
+          <span className="truncate text-sm font-medium text-neutral-700 md:hidden dark:text-neutral-200">
+            {pageTitle}
+          </span>
+        ) : null}
 
         {isRiskMapRoute && (
           <div className="flex-1 min-w-0 md:hidden">
             <LocationSearchBar onLocationSelect={handleLocationSearch} />
+          </div>
+        )}
+
+        {isReportRoute && (
+          <div className="flex-1 min-w-0 md:hidden">
+            <EcoLensLocationSearch />
           </div>
         )}
       </div>
@@ -153,11 +171,17 @@ export default function DashboardAppHeader() {
         <div
           className={`
             pointer-events-auto
-            ${isRiskMapRoute ? "w-[320px] lg:w-105 xl:w-125" : "w-auto"}
+            ${isRiskMapRoute || isReportRoute ? "w-[320px] lg:w-105 xl:w-125" : "w-auto"}
           `}
         >
           {isRiskMapRoute ? (
             <LocationSearchBar onLocationSelect={handleLocationSearch} />
+          ) : isReportRoute ? (
+            <EcoLensLocationSearch />
+          ) : showBreadcrumb ? (
+            <span className="whitespace-nowrap text-sm font-medium text-neutral-700 dark:text-neutral-200">
+              {pageTitle}
+            </span>
           ) : (
             <span className="whitespace-nowrap text-sm font-medium text-neutral-700 dark:text-neutral-200">
               {pageTitle}
