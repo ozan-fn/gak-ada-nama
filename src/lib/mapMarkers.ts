@@ -26,11 +26,18 @@ export function groupNearbyReports(
 	return groups;
 }
 
-export function createReportMarkerElement(title: string, reportCount: number) {
+export function createReportMarkerElement(
+	title: string,
+	reportCount: number,
+	isAutomatic = false,
+) {
 	const marker = document.createElement("button");
 	marker.type = "button";
-	marker.className =
-		"risk-report-marker flex size-9 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-amber-400 text-amber-950 shadow-lg transition-colors hover:bg-amber-300 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2";
+	marker.className = `risk-report-marker flex size-9 cursor-pointer items-center justify-center rounded-full border-2 border-white shadow-lg transition-colors hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+		isAutomatic
+			? "bg-emerald-500 text-white hover:bg-emerald-400 focus:ring-emerald-500"
+			: "bg-amber-400 text-amber-950 hover:bg-amber-300 focus:ring-amber-500"
+	}`;
 	marker.ariaLabel =
 		reportCount > 1
 			? `${reportCount} laporan di lokasi ini`
@@ -65,6 +72,7 @@ export function createReportMarkers(
 		const markerElement = createReportMarkerElement(
 			primaryReport.title,
 			reportGroup.length,
+			primaryReport.source === "ENVIRONMENT_MONITOR",
 		);
 		const marker = new maplibregl.Marker({
 			element: markerElement,
@@ -91,6 +99,75 @@ export function createReportMarkers(
 	});
 
 	return markers;
+}
+
+function createAccuracyRing(
+	latitude: number,
+	longitude: number,
+	radiusMeters: number,
+) {
+	const earthRadiusMeters = 6_371_000;
+	const latitudeRadians = (latitude * Math.PI) / 180;
+	const longitudeRadians = (longitude * Math.PI) / 180;
+	const angularDistance = radiusMeters / earthRadiusMeters;
+
+	return Array.from({ length: 65 }, (_, index) => {
+		const bearing = (index / 64) * Math.PI * 2;
+		const ringLatitude = Math.asin(
+			Math.sin(latitudeRadians) * Math.cos(angularDistance) +
+				Math.cos(latitudeRadians) *
+					Math.sin(angularDistance) *
+					Math.cos(bearing),
+		);
+		const ringLongitude =
+			longitudeRadians +
+			Math.atan2(
+				Math.sin(bearing) *
+					Math.sin(angularDistance) *
+					Math.cos(latitudeRadians),
+				Math.cos(angularDistance) -
+					Math.sin(latitudeRadians) * Math.sin(ringLatitude),
+			);
+		return [(ringLongitude * 180) / Math.PI, (ringLatitude * 180) / Math.PI];
+	});
+}
+
+export function createAutomaticReportUncertaintyGeoJson(
+	reports: NearbyReportPin[],
+) {
+	return {
+		type: "FeatureCollection" as const,
+		features: reports.flatMap((report) => {
+			if (
+				report.source !== "ENVIRONMENT_MONITOR" ||
+				report.coordinateSource !== "MONITORING_GRID_CENTROID" ||
+				!report.accuracyRadiusMeters ||
+				report.accuracyRadiusMeters <= 0
+			) {
+				return [];
+			}
+
+			return [
+				{
+					type: "Feature" as const,
+					properties: {
+						id: report.id,
+						title: report.title,
+					},
+					geometry: {
+						type: "Polygon" as const,
+						coordinates: [
+							createAccuracyRing(
+								report.latitude,
+								report.longitude,
+								report.accuracyRadiusMeters,
+							),
+						],
+					},
+				},
+			];
+		}),
+	};
 }
 
 export function createSelectedLocationMarker(

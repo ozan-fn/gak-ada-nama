@@ -1,16 +1,5 @@
-import {
-  AlertCircle,
-  AlertTriangle,
-  CheckCircle2,
-  Clock3,
-  MapPin,
-  MousePointer2,
-  ShieldAlert,
-} from "lucide-react";
-import type {
-  RiskAssessmentStatus,
-  RiskLevel,
-} from "#/types/report-assessment";
+import { AlertCircle, AlertTriangle, Bot, Brain, CheckCircle2, Clock3, MapPin, MousePointer2, ShieldAlert, Sparkles } from "lucide-react";
+import type { RiskAssessmentStatus, RiskLevel } from "#/types/report-assessment";
 import type { NearbyReportPin } from "./RiskMap";
 
 type ReportRiskAssessmentProps = {
@@ -85,81 +74,34 @@ const horizonLabels = {
   "7D": "7 hari",
 } as const;
 
-function EmptyAssessment({
-  report,
-  locationName,
-}: {
-  report?: NearbyReportPin | null;
-  locationName?: string;
-}) {
+function EmptyAssessment({ report, locationName }: { report?: NearbyReportPin | null; locationName?: string }) {
   const assessment = report?.riskAssessment;
   const isFailed = assessment?.status === "FAILED";
   const isPending = assessment?.status === "PENDING";
 
   return (
-    <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
+    <section className="rounded-lg bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] font-medium text-neutral-400">
-            Assessment risiko
-          </p>
-
-          <h3 className="mt-1 text-sm font-semibold text-neutral-900">
-            Risiko laporan
-          </h3>
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-700">
+            <Brain className="size-3.5" />
+            Assessment AI
+          </div>
+          <h3 className="mt-2 text-sm font-semibold text-neutral-900">Risiko laporan</h3>
         </div>
-
-        {assessment && (
-          <span
-            className={`rounded-full px-2.5 py-1 text-[9px] font-semibold ${
-              statusConfig[assessment.status].className
-            }`}
-          >
-            {statusConfig[assessment.status].label}
-          </span>
-        )}
+        {assessment && <span className={`rounded-full px-2 py-1 text-[9px] font-semibold ring-1 ring-inset ${statusConfig[assessment.status].className}`}>{statusConfig[assessment.status].label}</span>}
       </div>
 
-      <div className="mt-3 flex min-h-28 flex-col items-center justify-center rounded-lg border border-dashed border-neutral-200 bg-neutral-50 px-5 py-5 text-center">
-        <div className="flex size-8 items-center justify-center rounded-full bg-white text-neutral-400 shadow-xs">
-          {isFailed ? (
-            <AlertCircle className="size-4 text-red-500" />
-          ) : isPending ? (
-            <Clock3 className="size-4 text-sky-500" />
-          ) : (
-            <MousePointer2 className="size-4" />
-          )}
-        </div>
-
-        <p className="mt-2.5 text-xs font-semibold text-neutral-800">
-          {!report
-            ? locationName
-              ? `Belum ada laporan di ${locationName}`
-              : "Pilih lokasi pada peta"
-            : isFailed
-              ? "Assessment belum berhasil"
-              : isPending
-                ? "Assessment sedang diproses"
-                : "Belum tersedia"}
-        </p>
-
-        <p className="mt-1 max-w-xs text-[10px] leading-relaxed text-neutral-500">
-          {!report
-            ? locationName
-              ? "Belum ditemukan laporan dengan assessment dalam radius wilayah ini."
-              : "Pilih lokasi atau laporan pada peta untuk melihat informasi risikonya."
-            : "Hasil penilaian akan ditampilkan setelah proses assessment selesai."}
-        </p>
+      <div className="mt-4 flex min-h-28 flex-col items-center justify-center rounded-lg bg-neutral-50 px-5 py-6 text-center">
+        <div className="flex size-9 items-center justify-center rounded-full bg-white shadow-sm">{isFailed ? <AlertCircle className="size-4.5 text-red-500" /> : isPending ? <Clock3 className="size-4.5 text-sky-500" /> : <MousePointer2 className="size-4.5 text-neutral-400" />}</div>
+        <p className="mt-3 text-xs font-semibold text-neutral-800">{!report ? (locationName ? `Belum ada assessment laporan di ${locationName}` : "Pilih sebuah wilayah pada peta") : isFailed ? "Assessment laporan belum berhasil" : isPending ? "Assessment laporan sedang diproses" : "Laporan ini belum memiliki assessment"}</p>
+        <p className="mt-1 max-w-xs text-[10px] leading-relaxed text-neutral-500">{!report ? (locationName ? "Tidak ditemukan laporan dengan hasil assessment dalam radius wilayah ini." : "Pilih lokasi untuk menampilkan assessment laporan yang tersedia di sekitarnya.") : "Informasi risiko akan tampil di sini ketika hasil analisis tersedia."}</p>
       </div>
     </section>
   );
 }
 
-export default function ReportRiskAssessment({
-  report,
-  locationName,
-  selectionMode = "manual",
-}: ReportRiskAssessmentProps) {
+export default function ReportRiskAssessment({ report, locationName, selectionMode = "manual" }: ReportRiskAssessmentProps) {
   const assessment = report?.riskAssessment;
   const risk = assessment?.risk;
 
@@ -170,110 +112,78 @@ export default function ReportRiskAssessment({
   const level = levelConfig[risk.level];
   const status = statusConfig[assessment.status];
   const confidence = Math.round(risk.confidence * 100);
+  const isAutomatic = report.source === "ENVIRONMENT_MONITOR";
 
   return (
     <div className="space-y-3">
-      {/* Report */}
-
-      <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-        <div className="flex items-start gap-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-orange-500">
-            <AlertTriangle className="size-4" />
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-[10px] font-medium text-neutral-400">
-                {selectionMode === "location"
-                  ? "Laporan utama"
-                  : "Laporan terpilih"}
-              </p>
-
-              <span
-                className={`shrink-0 rounded-full px-2 py-1 text-[9px] font-semibold ${level.badgeClassName}`}
-              >
-                {level.label}
-              </span>
+      <section className="rounded-lg bg-white p-4 shadow-sm">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-start gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-500">
+              <AlertTriangle className="size-5" />
             </div>
-
-            <h3 className="mt-1 text-sm font-semibold leading-snug text-neutral-900">
-              {report.title}
-            </h3>
-
-            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-              {locationName && (
-                <span className="inline-flex items-center gap-1 text-[10px] text-neutral-500">
-                  <MapPin className="size-3 text-neutral-400" />
-                  {locationName}
+            <div className="min-w-0">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-neutral-400">{isAutomatic ? "Terdeteksi otomatis" : selectionMode === "location" ? "Laporan prioritas di lokasi" : "Risiko yang dianalisis"}</p>
+              <h3 id="report-risk-assessment-title" className="mt-1 text-sm font-semibold leading-snug text-neutral-900">
+                {report.title}
+              </h3>
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-neutral-500">
+                {isAutomatic && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-700">
+                    <Bot className="size-3" />
+                    Prita Environmental Monitor
+                    {report.sourceConfidence !== null && ` · ${Math.round(report.sourceConfidence * 100)}%`}
+                  </span>
+                )}
+                {locationName && (
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin className="size-3" />
+                    {locationName}
+                  </span>
+                )}
+                {isAutomatic && report.accuracyRadiusMeters && <span>Radius ketepatan ±{report.accuracyRadiusMeters >= 1_000 ? `${(report.accuracyRadiusMeters / 1_000).toFixed(1)} km` : `${report.accuracyRadiusMeters} m`}</span>}
+                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold ring-1 ring-inset ${status.className}`}>
+                  <Clock3 className="size-2.5" />
+                  {status.label}
                 </span>
-              )}
-
-              <span
-                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-medium ${status.className}`}
-              >
-                <Clock3 className="size-2.5" />
-                {status.label}
-              </span>
+              </div>
             </div>
           </div>
+          <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[9px] font-semibold ${level.badgeClassName}`}>
+            <ShieldAlert className="size-3" />
+            {level.label}
+          </span>
         </div>
+        {isAutomatic && <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-[9px] leading-relaxed text-emerald-800">Status terverifikasi berarti threshold sensor lingkungan terpenuhi, bukan konfirmasi saksi manusia.</p>}
+        {isAutomatic && report.locationAttribution && <p className="mt-2 text-[9px] leading-relaxed text-neutral-400">Nama lokasi berdasarkan {report.locationAttribution}</p>}
       </section>
 
-      {/* Risk score */}
-
-      <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-        <div className="flex items-end justify-between gap-4">
+      <section className="rounded-lg bg-white p-4 shadow-sm">
+        <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-[10px] font-medium text-neutral-400">
-              Tingkat risiko
-            </p>
-
-            <div className="mt-1 flex items-baseline">
-              <span
-                className={`text-4xl font-bold tracking-tight ${level.scoreClassName}`}
-              >
-                {Math.round(risk.score)}
-              </span>
-
-              <span className="ml-1 text-xs text-neutral-400">/100</span>
+            <div className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-700">
+              <Brain className="size-3.5" />
+              Kondisi risiko saat ini
+            </div>
+            <div className="mt-2 flex items-end">
+              <span className={`font-mono text-4xl font-semibold leading-none tabular-nums ${level.scoreClassName}`}>{Math.round(risk.score)}</span>
+              <span className="mb-0.5 ml-1 text-xs text-neutral-400">/100</span>
             </div>
           </div>
-
           <div className="text-right">
-            <p className="text-[10px] text-neutral-400">Kepercayaan hasil</p>
-
-            <p className="mt-1 text-sm font-semibold text-neutral-800">
-              {confidence}%
-            </p>
+            <p className="text-[9px] uppercase tracking-wide text-neutral-400">Keyakinan</p>
+            <p className="mt-1 text-base font-semibold text-neutral-800">{confidence}%</p>
           </div>
         </div>
-
-        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-neutral-100">
-          <div
-            className={`h-full rounded-full ${level.dotClassName.split(" ")[0]}`}
-            style={{
-              width: `${Math.min(100, Math.max(0, risk.score))}%`,
-            }}
-          />
-        </div>
-
-        <p className="mt-3 text-[11px] leading-relaxed text-neutral-600">
-          {risk.summary}
-        </p>
+        <p className="mt-3 text-[11px] leading-relaxed text-neutral-600">{risk.summary}</p>
 
         {risk.factors.length > 0 && (
           <div className="mt-4 border-t border-neutral-100 pt-3">
-            <p className="text-[10px] font-medium text-neutral-400">
-              Faktor utama
-            </p>
-
+            <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-neutral-400">Faktor pendukung</p>
             <div className="mt-2 space-y-1.5">
               {risk.factors.slice(0, 3).map((factor) => (
-                <div
-                  key={factor}
-                  className="flex items-start gap-2 text-[10px] leading-relaxed text-neutral-600"
-                >
-                  <span className="mt-1.5 size-1 shrink-0 rounded-full bg-orange-400" />
+                <div key={factor} className="flex items-start gap-2 text-[10px] leading-relaxed text-neutral-600">
+                  <span className="mt-1.5 size-1 shrink-0 rounded-full bg-red-400" />
                   <span>{factor}</span>
                 </div>
               ))}
@@ -282,51 +192,28 @@ export default function ReportRiskAssessment({
         )}
       </section>
 
-      {/* Projection */}
-
-      <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+      <section className="rounded-lg bg-white p-4 shadow-sm">
         <div>
-          <p className="text-[10px] font-medium text-neutral-400">
-            Perkiraan kondisi
-          </p>
-
-          <h3 className="mt-1 text-sm font-semibold text-neutral-900">
-            Jika kondisi saat ini berlanjut
-          </h3>
+          <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-neutral-400">Proyeksi risiko</p>
+          <h3 className="mt-1 text-sm font-semibold text-neutral-900">Jika kondisi berlanjut</h3>
         </div>
-
         <div className="mt-4">
           {Object.entries(horizonLabels).map(([key, label], index) => {
             const horizon = risk.horizons[key as keyof typeof risk.horizons];
-
             const horizonLevel = levelConfig[horizon.level];
 
             return (
               <div key={key} className="relative flex gap-3 pb-4 last:pb-0">
-                {index < Object.keys(horizonLabels).length - 1 && (
-                  <span className="absolute bottom-0 left-1.5 top-3 w-px bg-neutral-200" />
-                )}
-
-                <span
-                  className={`relative mt-1 size-3 shrink-0 rounded-full ring-4 ${horizonLevel.dotClassName}`}
-                />
-
+                {index < Object.keys(horizonLabels).length - 1 && <span className="absolute bottom-0 left-[5px] top-3 w-px bg-neutral-200" />}
+                <span className={`relative mt-1 size-3 shrink-0 rounded-full ring-4 ${horizonLevel.dotClassName}`} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-3">
-                    <p className="text-xs font-semibold text-neutral-800">
-                      {label}
-                    </p>
-
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${horizonLevel.badgeClassName}`}
-                    >
+                    <p className="text-xs font-semibold text-neutral-800">{label}</p>
+                    <span className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${horizonLevel.badgeClassName}`}>
                       {Math.round(horizon.score)} · {horizonLevel.label}
                     </span>
                   </div>
-
-                  <p className="mt-1 text-[10px] leading-relaxed text-neutral-500">
-                    {horizon.summary}
-                  </p>
+                  <p className="mt-1 text-[10px] leading-relaxed text-neutral-500">{horizon.summary}</p>
                 </div>
               </div>
             );
@@ -334,38 +221,21 @@ export default function ReportRiskAssessment({
         </div>
       </section>
 
-      {/* Potential impacts */}
-
       {risk.potentialImpacts.length > 0 && (
-        <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-          <div>
-            <p className="text-[10px] font-medium text-neutral-400">
-              Dampak potensial
-            </p>
-
-            <h3 className="mt-1 text-sm font-semibold text-neutral-900">
-              Hal yang perlu diperhatikan
-            </h3>
+        <section>
+          <div className="px-1">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-neutral-400">Konsekuensi</p>
+            <h3 className="mt-1 text-sm font-semibold text-neutral-900">Dampak yang diperkirakan</h3>
           </div>
-
-          <div className="mt-3 space-y-2">
+          <div className="mt-3 grid gap-2">
             {risk.potentialImpacts.slice(0, 3).map((impact, index) => (
-              <div
-                key={impact}
-                className="flex items-start gap-2.5 rounded-lg bg-neutral-50 p-2.5"
-              >
-                <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-orange-50 text-orange-500">
-                  <AlertTriangle className="size-3.5" />
+              <div key={impact} className="flex items-start gap-3 rounded-lg bg-white p-3 shadow-sm">
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-orange-500">
+                  <AlertTriangle className="size-4" />
                 </div>
-
-                <div className="min-w-0">
-                  <p className="text-[9px] font-medium text-neutral-400">
-                    Dampak {index + 1}
-                  </p>
-
-                  <p className="mt-0.5 text-[10px] leading-relaxed text-neutral-700">
-                    {impact}
-                  </p>
+                <div>
+                  <p className="text-[9px] font-semibold uppercase tracking-wide text-neutral-400">Dampak {String(index + 1).padStart(2, "0")}</p>
+                  <p className="mt-1 text-[11px] leading-relaxed text-neutral-700">{impact}</p>
                 </div>
               </div>
             ))}
@@ -373,37 +243,19 @@ export default function ReportRiskAssessment({
         </section>
       )}
 
-      {/* Recommendations */}
-
       {risk.recommendedActions.length > 0 && (
-        <section className="rounded-xl border border-sky-100 bg-sky-50/70 p-4">
-          <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-white text-sky-600 shadow-xs">
-              <ShieldAlert className="size-3.5" />
-            </div>
-
-            <div>
-              <p className="text-[10px] font-medium text-sky-600">
-                Tindakan yang disarankan
-              </p>
-
-              <h3 className="mt-0.5 text-sm font-semibold text-neutral-900">
-                Prioritas penanganan
-              </h3>
-            </div>
+        <section className="rounded-lg bg-neutral-900 p-4 text-white shadow-sm">
+          <div className="flex items-center gap-2 text-emerald-400">
+            <Sparkles className="size-4" />
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em]">Rekomendasi Prita</p>
           </div>
-
-          <div className="mt-3 space-y-1.5">
+          <h3 className="mt-2 text-sm font-semibold">Langkah yang disarankan</h3>
+          <p className="mt-1 text-[10px] leading-relaxed text-neutral-400">Tindakan prioritas berdasarkan kondisi dan proyeksi laporan ini.</p>
+          <div className="mt-3 space-y-2">
             {risk.recommendedActions.slice(0, 3).map((action) => (
-              <div
-                key={action}
-                className="flex items-start gap-2.5 rounded-lg bg-white px-3 py-2.5"
-              >
-                <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-sky-500" />
-
-                <span className="text-[10px] leading-relaxed text-neutral-700">
-                  {action}
-                </span>
+              <div key={action} className="flex gap-2.5 rounded-lg bg-white/5 p-2.5 text-[10px] leading-relaxed text-neutral-200">
+                <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-emerald-400" />
+                <span>{action}</span>
               </div>
             ))}
           </div>

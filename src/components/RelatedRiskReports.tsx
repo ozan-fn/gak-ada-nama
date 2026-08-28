@@ -1,4 +1,10 @@
-import { AlertTriangle, ChevronRight, FileText, MapPin } from "lucide-react";
+import {
+	AlertTriangle,
+	Bot,
+	ChevronRight,
+	FileText,
+	MapPin,
+} from "lucide-react";
 import type { NearbyReportPin } from "./RiskMap";
 
 type RelatedRiskReportsProps = {
@@ -35,7 +41,7 @@ export default function RelatedRiskReports({
 					</div>
 					<div>
 						<p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
-							Bukti lapangan
+							Sumber laporan
 						</p>
 						<h3 className="mt-1 text-sm font-semibold text-neutral-900">
 							Laporan terkait
@@ -52,6 +58,7 @@ export default function RelatedRiskReports({
 					{reports.slice(0, 5).map((report, index) => {
 						const risk = report.riskAssessment?.risk;
 						const isSelected = selectedReport?.id === report.id;
+						const isAutomatic = report.source === "ENVIRONMENT_MONITOR";
 
 						return (
 							<button
@@ -77,6 +84,14 @@ export default function RelatedRiskReports({
 									<p className="line-clamp-2 text-xs font-semibold leading-snug text-neutral-800">
 										{report.title}
 									</p>
+									{isAutomatic && (
+										<p className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[8px] font-semibold text-emerald-700">
+											<Bot className="size-2.5" />
+											Terdeteksi otomatis
+											{report.sourceConfidence !== null &&
+												` · ${Math.round(report.sourceConfidence * 100)}%`}
+										</p>
+									)}
 									<p className="mt-1 flex items-center gap-1 text-[10px] text-neutral-500">
 										<MapPin className="size-3" />
 										{report.category} · {report.distanceKm.toFixed(1)} km

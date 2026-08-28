@@ -23,6 +23,7 @@ import {
 } from "#/lib/aiSimulation";
 import { findNearestCity } from "#/lib/geoUtils";
 import {
+  createAutomaticReportUncertaintyGeoJson,
   createReportMarkers,
   createSelectedLocationMarker,
   groupNearbyReports,
@@ -223,6 +224,59 @@ function RiskMapContent({
       reportMarkersRef.current = [];
     };
   }, [map, isMapReady, reports, reportGroups, onReportSelect]);
+
+  useEffect(() => {
+    const mapInstance = map.current;
+    if (!mapInstance || !isMapReady) return;
+
+    const sourceId = "automatic-report-uncertainty";
+    const fillLayerId = "automatic-report-uncertainty-fill";
+    const lineLayerId = "automatic-report-uncertainty-line";
+    const data = createAutomaticReportUncertaintyGeoJson(reports);
+    const existingSource = mapInstance.getSource(sourceId) as
+      | maplibregl.GeoJSONSource
+      | undefined;
+
+    if (existingSource) {
+      existingSource.setData(data);
+    } else {
+      mapInstance.addSource(sourceId, { type: "geojson", data });
+    }
+
+    if (!mapInstance.getLayer(fillLayerId)) {
+      mapInstance.addLayer({
+        id: fillLayerId,
+        type: "fill",
+        source: sourceId,
+        paint: {
+          "fill-color": "#10b981",
+          "fill-opacity": 0.08,
+        },
+      });
+    }
+
+    if (!mapInstance.getLayer(lineLayerId)) {
+      mapInstance.addLayer({
+        id: lineLayerId,
+        type: "line",
+        source: sourceId,
+        paint: {
+          "line-color": "#059669",
+          "line-opacity": 0.7,
+          "line-width": 1.5,
+          "line-dasharray": [2, 2],
+        },
+      });
+    }
+
+    return () => {
+      if (mapInstance.getLayer(lineLayerId))
+        mapInstance.removeLayer(lineLayerId);
+      if (mapInstance.getLayer(fillLayerId))
+        mapInstance.removeLayer(fillLayerId);
+      if (mapInstance.getSource(sourceId)) mapInstance.removeSource(sourceId);
+    };
+  }, [map, isMapReady, reports]);
 
   // Handle map clicks for selecting report clusters or pin locations
   useEffect(() => {
@@ -499,6 +553,20 @@ function RiskMapContent({
         {showLegend && (
           <div className="px-3 pb-3">
             <div className="border-t border-neutral-100 pt-2">
+              <div className="mb-3 space-y-1.5 border-b border-neutral-100 pb-3 text-[10px] text-neutral-600">
+                <div className="flex items-center gap-2">
+                  <span className="size-3 rounded-full border-2 border-white bg-amber-400 shadow-sm" />
+                  <span>Laporan masyarakat</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="size-3 rounded-full border-2 border-white bg-emerald-500 shadow-sm" />
+                  <span>Terdeteksi otomatis</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="h-3 w-5 rounded-full border border-dashed border-emerald-600 bg-emerald-100/60" />
+                  <span>Area ketidakpastian</span>
+                </div>
+              </div>
               <p className="mb-2 text-[10px] font-semibold text-neutral-700">
                 AQI Quality
               </p>
