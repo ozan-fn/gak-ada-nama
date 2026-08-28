@@ -105,6 +105,21 @@ function RouteComponent() {
     city: string;
   }) => {
     setSelectedLocation(loc);
+    
+    // Clear selected report if it's too far from the new location
+    if (selectedReport) {
+      const distanceToSelectedReport = calculateDistanceKm(
+        loc.latitude,
+        loc.longitude,
+        selectedReport.latitude,
+        selectedReport.longitude,
+      );
+      
+      if (distanceToSelectedReport > REPORT_RADIUS_KM) {
+        setSelectedReport(null);
+      }
+    }
+    
     // Update URL search params
     navigate({
       search: { lat: loc.latitude, lng: loc.longitude, city: loc.city },
@@ -168,17 +183,35 @@ function RouteComponent() {
                 loading={location.loading}
                 localTime={localTime}
               />
-              <ReportRiskAssessment
-                report={focusedAssessmentReport}
-                locationName={selectedLocation?.city}
-                selectionMode={selectedReport ? "manual" : "location"}
-              />
-              <SelectedRisk selectedLocation={selectedLocation} />
-              <RelatedRiskReports
-                reports={prioritizedReports}
-                selectedReport={focusedAssessmentReport}
-                onReportSelect={setSelectedReport}
-              />
+              {nearbyReports.length === 0 ? (
+                <>
+                  <SelectedRisk selectedLocation={selectedLocation} />
+                  <ReportRiskAssessment
+                    report={focusedAssessmentReport}
+                    locationName={selectedLocation?.city}
+                    selectionMode={selectedReport ? "manual" : "location"}
+                  />
+                  <RelatedRiskReports
+                    reports={prioritizedReports}
+                    selectedReport={focusedAssessmentReport}
+                    onReportSelect={setSelectedReport}
+                  />
+                </>
+              ) : (
+                <>
+                  <ReportRiskAssessment
+                    report={focusedAssessmentReport}
+                    locationName={selectedLocation?.city}
+                    selectionMode={selectedReport ? "manual" : "location"}
+                  />
+                  <SelectedRisk selectedLocation={selectedLocation} />
+                  <RelatedRiskReports
+                    reports={prioritizedReports}
+                    selectedReport={focusedAssessmentReport}
+                    onReportSelect={setSelectedReport}
+                  />
+                </>
+              )}
             </div>
           )}
         />
@@ -250,28 +283,57 @@ function RouteComponent() {
           />
 
           <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-0.5">
-            {/* Highest-risk report assessment from the selected location */}
-            <div className="shrink-0">
-              <ReportRiskAssessment
-                report={focusedAssessmentReport}
-                locationName={selectedLocation?.city}
-                selectionMode={selectedReport ? "manual" : "location"}
-              />
-            </div>
+            {nearbyReports.length === 0 ? (
+              <>
+                {/* Current environmental conditions - shown first when no reports */}
+                <div className="shrink-0">
+                  <SelectedRisk selectedLocation={selectedLocation} />
+                </div>
 
-            {/* Current environmental conditions */}
-            <div className="shrink-0">
-              <SelectedRisk selectedLocation={selectedLocation} />
-            </div>
+                {/* Report assessment (empty state) */}
+                <div className="shrink-0">
+                  <ReportRiskAssessment
+                    report={focusedAssessmentReport}
+                    locationName={selectedLocation?.city}
+                    selectionMode={selectedReport ? "manual" : "location"}
+                  />
+                </div>
 
-            {/* Reports available around the selected location */}
-            <div className="shrink-0">
-              <RelatedRiskReports
-                reports={prioritizedReports}
-                selectedReport={focusedAssessmentReport}
-                onReportSelect={setSelectedReport}
-              />
-            </div>
+                {/* Related reports (empty state) */}
+                <div className="shrink-0">
+                  <RelatedRiskReports
+                    reports={prioritizedReports}
+                    selectedReport={focusedAssessmentReport}
+                    onReportSelect={setSelectedReport}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Highest-risk report assessment from the selected location */}
+                <div className="shrink-0">
+                  <ReportRiskAssessment
+                    report={focusedAssessmentReport}
+                    locationName={selectedLocation?.city}
+                    selectionMode={selectedReport ? "manual" : "location"}
+                  />
+                </div>
+
+                {/* Current environmental conditions */}
+                <div className="shrink-0">
+                  <SelectedRisk selectedLocation={selectedLocation} />
+                </div>
+
+                {/* Reports available around the selected location */}
+                <div className="shrink-0">
+                  <RelatedRiskReports
+                    reports={prioritizedReports}
+                    selectedReport={focusedAssessmentReport}
+                    onReportSelect={setSelectedReport}
+                  />
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

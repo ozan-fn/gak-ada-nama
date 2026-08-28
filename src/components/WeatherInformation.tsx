@@ -35,13 +35,36 @@ export default function WeatherInformation({
   const pressure = aqi?.pressure || 1013;
   const uvIndex = Math.round(weather.current.uvIndex ?? 0);
 
+  // UV Index categorization
+  let uvLabel = "Rendah";
+  let uvColor = "text-green-500";
+  let uvInsight = "Aman untuk aktivitas luar ruangan tanpa perlindungan khusus.";
+  
+  if (uvIndex >= 11) {
+    uvLabel = "Ekstrem";
+    uvColor = "text-purple-500";
+    uvInsight = "Bahaya tinggi — hindari sinar matahari langsung.";
+  } else if (uvIndex >= 8) {
+    uvLabel = "Sangat Tinggi";
+    uvColor = "text-red-500";
+    uvInsight = "Hindari paparan langsung. Gunakan tabir surya SPF 50+.";
+  } else if (uvIndex >= 6) {
+    uvLabel = "Tinggi";
+    uvColor = "text-orange-500";
+    uvInsight = "Perlindungan diperlukan — gunakan tabir surya SPF 30+.";
+  } else if (uvIndex >= 3) {
+    uvLabel = "Sedang";
+    uvColor = "text-yellow-500";
+    uvInsight = "Gunakan tabir surya dan topi saat beraktivitas di luar ruangan.";
+  }
+
   const isRaining = weather.current.precipitation > 0;
   const isCloudy = weather.current.cloudCover > 70;
 
   let weatherIcon = Sun;
   let weatherLabel = "Cerah";
   let iconColor = "text-amber-500";
-  let insight = "Kondisi udara cerah, cocok untuk aktivitas luar ruangan.";
+  let insight = uvIndex >= 6 ? uvInsight : "Kondisi udara cerah, cocok untuk aktivitas luar ruangan.";
 
   if (isRaining) {
     weatherIcon = CloudRain;
@@ -79,8 +102,8 @@ export default function WeatherInformation({
     {
       icon: Sunrise,
       label: "Indeks UV",
-      value: `${uvIndex}`,
-      color: "text-amber-500",
+      value: `${uvIndex} - ${uvLabel}`,
+      color: uvColor,
     },
   ];
 

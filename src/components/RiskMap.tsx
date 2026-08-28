@@ -172,11 +172,15 @@ function RiskMapContent({
     if (!hasInitialLocatedRef.current) {
       hasInitialLocatedRef.current = true;
 
-      mapInstance.flyTo({
-        center: [longitude, latitude],
-        zoom: 10,
-        duration: 1200,
-      });
+      // Only fly to user location if there's no selected marker (red marker)
+      // Priority: red marker > blue user dot
+      if (!selectedMarkerRef.current) {
+        mapInstance.flyTo({
+          center: [longitude, latitude],
+          zoom: 10,
+          duration: 1200,
+        });
+      }
     }
   }, [
     map,

@@ -577,6 +577,7 @@ export default function MobileRiskMap({
    * - Does NOT call onLocationSelect.
    * - Therefore it does not create a new red marker.
    * - Does not trigger parent location state.
+   * - Priority: red marker > blue user dot
    */
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -622,12 +623,16 @@ export default function MobileRiskMap({
 
       mapInstanceRef.current.resize();
 
-      mapInstanceRef.current.flyTo({
-        center: [longitude, latitude],
-        zoom: 10,
-        duration: 1200,
-        essential: true,
-      });
+      // Only fly to user location if there's no selected marker (red marker)
+      // Priority: red marker > blue user dot
+      if (!selectedMarkerRef.current) {
+        mapInstanceRef.current.flyTo({
+          center: [longitude, latitude],
+          zoom: 10,
+          duration: 1200,
+          essential: true,
+        });
+      }
     });
   }, [isMapReady, stableLocation.latitude, stableLocation.longitude]);
 
