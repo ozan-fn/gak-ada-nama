@@ -19,6 +19,7 @@ import {
 import { indonesiaLocations } from "#/data/indonesia-locations";
 import { findNearestCity } from "#/lib/geoUtils";
 import {
+  createAutomaticReportUncertaintyGeoJson,
   createReportMarkers,
   createSelectedLocationMarker,
   groupNearbyReports,
@@ -336,6 +337,7 @@ export default function MobileRiskMap({
   const [expanded, setExpanded] = useState(false);
   const [bearing, setBearing] = useState(0);
   const [isMapReady, setIsMapReady] = useState(false);
+  const [aqiRadius, setAqiRadius] = useState(1000);
 
   const y = useMotionValue(0);
 
@@ -544,6 +546,60 @@ export default function MobileRiskMap({
   }, [isMapReady, onReportSelect, reports, reportGroups]);
 
   /**
+   * UNCERTAINTY HEATMAP for automatic AI reports
+   */
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !isMapReady) return;
+
+    const sourceId = "automatic-report-uncertainty";
+    const fillLayerId = "automatic-report-uncertainty-fill";
+    const lineLayerId = "automatic-report-uncertainty-line";
+    const data = createAutomaticReportUncertaintyGeoJson(reports);
+    const existingSource = map.getSource(sourceId) as
+      | maplibregl.GeoJSONSource
+      | undefined;
+
+    if (existingSource) {
+      existingSource.setData(data);
+    } else {
+      map.addSource(sourceId, { type: "geojson", data });
+    }
+
+    if (!map.getLayer(fillLayerId)) {
+      map.addLayer({
+        id: fillLayerId,
+        type: "fill",
+        source: sourceId,
+        paint: {
+          "fill-color": "#10b981",
+          "fill-opacity": 0.08,
+        },
+      });
+    }
+
+    if (!map.getLayer(lineLayerId)) {
+      map.addLayer({
+        id: lineLayerId,
+        type: "line",
+        source: sourceId,
+        paint: {
+          "line-color": "#059669",
+          "line-opacity": 0.7,
+          "line-width": 1.5,
+          "line-dasharray": [2, 2],
+        },
+      });
+    }
+
+    return () => {
+      if (map.getLayer(lineLayerId)) map.removeLayer(lineLayerId);
+      if (map.getLayer(fillLayerId)) map.removeLayer(fillLayerId);
+      if (map.getSource(sourceId)) map.removeSource(sourceId);
+    };
+  }, [isMapReady, reports]);
+
+  /**
    * BLUE USER MARKER
    *
    * This effect only updates the marker position.
@@ -700,6 +756,11 @@ export default function MobileRiskMap({
     selectedMarkerRef.current = selectedMarker;
 
     /**
+     * Update AQI radius for selected location.
+     */
+    setAqiRadius(100);
+
+    /**
      * Fly to the clicked/search location.
      */
     map.flyTo({
@@ -806,14 +867,19 @@ export default function MobileRiskMap({
         autoFitStations={false}
         autoZoomOnLocate={false}
         autoLocateOnMount={false}
-        aqiRadiusKm={1000}
+        aqiRadiusKm={aqiRadius}
         aqiCenterLocation={
           selectedLocation
             ? {
                 latitude: selectedLocation.latitude,
                 longitude: selectedLocation.longitude,
               }
-            : null
+            : stableLocation.latitude !== null && stableLocation.longitude !== null
+              ? {
+                  latitude: stableLocation.latitude,
+                  longitude: stableLocation.longitude,
+                }
+              : null
         }
         onMapReady={handleMapReady}
       >
@@ -1014,38 +1080,59 @@ export default function MobileRiskMap({
                 className="absolute bottom-24 left-3 z-10 flex flex-col rounded-lg border border-neutral-200 bg-white/90 p-3 shadow-sm backdrop-blur-sm"
               >
                 <h4 className="mb-2 text-xs font-bold text-neutral-800">
-                  AQI Legend
+                  Map Legend
                 </h4>
 
-                <div className="flex flex-col gap-1 text-[10px] text-neutral-600">
-                  <div className="flex items-center gap-2">
-                    <span className="h-3 w-3 rounded-full bg-[#00e400] opacity-80" />
-                    Good (0-50)
+                <div className="border-t border-neutral-100 pt-2">
+                  <div className="mb-3 space-y-1.5 border-b border-neutral-100 pb-3 text-[10px] text-neutral-600">
+                    <div className="flex items-center gap-2">
+                      <span className="size-3 rounded-full border-2 border-white bg-amber-400 shadow-sm" />
+                      <span>Laporan masyarakat</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="size-3 rounded-full border-2 border-white bg-emerald-500 shadow-sm" />
+                      <span>Terdeteksi otomatis</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="h-3 w-5 rounded-full border border-dashed border-emerald-600 bg-emerald-100/60" />
+                      <span>Area ketidakpastian</span>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <span className="h-3 w-3 rounded-full bg-[#ffff00] opacity-80" />
-                    Moderate (51-100)
-                  </div>
+                  <p className="mb-2 text-[10px] font-semibold text-neutral-700">
+                    AQI Quality
+                  </p>
 
-                  <div className="flex items-center gap-2">
-                    <span className="h-3 w-3 rounded-full bg-[#ff7e00] opacity-80" />
-                    Unhealthy (101-150)
-                  </div>
+                  <div className="flex flex-col gap-1 text-[10px] text-neutral-600">
+                    <div className="flex items-center gap-2">
+                      <span className="h-3 w-3 rounded-full bg-[#00e400] opacity-80" />
+                      Good (0-50)
+                    </div>
 
-                  <div className="flex items-center gap-2">
-                    <span className="h-3 w-3 rounded-full bg-[#ff0000] opacity-80" />
-                    Unhealthy (151-200)
-                  </div>
+                    <div className="flex items-center gap-2">
+                      <span className="h-3 w-3 rounded-full bg-[#ffff00] opacity-80" />
+                      Moderate (51-100)
+                    </div>
 
-                  <div className="flex items-center gap-2">
-                    <span className="h-3 w-3 rounded-full bg-[#99004c] opacity-80" />
-                    Very Unhealthy (201-300)
-                  </div>
+                    <div className="flex items-center gap-2">
+                      <span className="h-3 w-3 rounded-full bg-[#ff7e00] opacity-80" />
+                      Unhealthy (101-150)
+                    </div>
 
-                  <div className="flex items-center gap-2">
-                    <span className="h-3 w-3 rounded-full bg-[#7e0023] opacity-80" />
-                    Hazardous (&gt;300)
+                    <div className="flex items-center gap-2">
+                      <span className="h-3 w-3 rounded-full bg-[#ff0000] opacity-80" />
+                      Unhealthy (151-200)
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="h-3 w-3 rounded-full bg-[#99004c] opacity-80" />
+                      Very Unhealthy (201-300)
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="h-3 w-3 rounded-full bg-[#7e0023] opacity-80" />
+                      Hazardous (&gt;300)
+                    </div>
                   </div>
                 </div>
               </motion.div>

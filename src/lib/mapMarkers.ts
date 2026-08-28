@@ -81,10 +81,10 @@ export function createReportMarkers(
 			.setLngLat([primaryReport.longitude, primaryReport.latitude])
 			.addTo(mapInstance);
 
-		// Force visibility on marker
-		const markerContainer = marker.getElement();
-		markerContainer.style.cssText =
-			"display: block !important; visibility: visible !important; z-index: 999 !important; pointer-events: auto !important;";
+	// Force visibility on marker
+	const markerContainer = marker.getElement();
+	markerContainer.style.cssText =
+		"display: block !important; visibility: visible !important; z-index: 1 !important; pointer-events: auto !important;";
 
 		markerElement.addEventListener("click", (event) => {
 			event.preventDefault();
