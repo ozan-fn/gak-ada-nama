@@ -5,6 +5,7 @@ import {
   ArrowRight,
   MoreVertical,
 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -199,7 +200,9 @@ export default function RegionRisk({
             <MoreVertical className="h-4 w-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem>
+            <DropdownMenuItem
+              render={<Link to="/dashboard/warnings" preload="intent" />}
+            >
               <div className="flex flex-1 flex-col">
                 <span className="font-medium">Laporan Komunitas</span>
                 <span className="text-xs text-neutral-500">
