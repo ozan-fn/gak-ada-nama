@@ -19,6 +19,15 @@ GROQ_AUTOMATIC_REPORT_MODEL=
 
 `AUTOMATIC_REPORT_MAX_GRID_CELLS` membatasi jumlah grid yang diperiksa per wilayah pada satu run. Jika jumlah grid lebih besar, worker merotasi subset grid setiap slot tiga jam.
 
+Threshold aktif dibuat cukup sensitif untuk memperbanyak kandidat tanpa menaikkan
+semua kandidat menjadi urgensi tinggi:
+
+- Kebakaran: confidence FIRMS minimal 50% dan usia hotspot maksimal 12 jam.
+- Polusi: AQI minimal 101 dan minimal 30 poin di atas baseline wilayah.
+- Potensi banjir: hujan minimal 10 mm/jam atau rolling 24 jam minimal 50 mm.
+- Kandidat pada batas bawah menggunakan urgensi `Sedang`; urgensi naik mengikuti
+  confidence, FRP, AQI, dan intensitas hujan.
+
 Untuk pengujian lokal wilayah Kalimantan, tambahkan:
 
 ```env

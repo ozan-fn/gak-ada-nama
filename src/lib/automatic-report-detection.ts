@@ -4,14 +4,14 @@ import type {
 } from "#/config/automatic-report-regions";
 
 export const AUTOMATIC_REPORT_SOURCE = "ENVIRONMENT_MONITOR" as const;
-export const FIRE_MIN_CONFIDENCE = 70;
-export const FIRE_MAX_AGE_MS = 6 * 60 * 60 * 1_000;
+export const FIRE_MIN_CONFIDENCE = 50;
+export const FIRE_MAX_AGE_MS = 12 * 60 * 60 * 1_000;
 export const FIRE_CLUSTER_DISTANCE_METERS = 1_000;
 export const FIRE_CLUSTER_TIME_MS = 60 * 60 * 1_000;
-export const POLLUTION_MIN_AQI = 151;
-export const POLLUTION_MIN_BASELINE_DELTA = 50;
-export const FLOOD_MIN_HOURLY_RAIN_MM = 20;
-export const FLOOD_MIN_DAILY_RAIN_MM = 100;
+export const POLLUTION_MIN_AQI = 101;
+export const POLLUTION_MIN_BASELINE_DELTA = 30;
+export const FLOOD_MIN_HOURLY_RAIN_MM = 10;
+export const FLOOD_MIN_DAILY_RAIN_MM = 50;
 
 const EARTH_RADIUS_METERS = 6_371_000;
 const KM_PER_LATITUDE_DEGREE = 111.32;
@@ -279,7 +279,11 @@ export function detectFireCandidates({
 			detectorId: "fire-hotspot",
 			category: "Kebakaran",
 			urgency:
-				confidence >= 85 || medoid.frp >= 20 ? "Sangat Tinggi" : "Tinggi",
+				confidence >= 85 || medoid.frp >= 20
+					? "Sangat Tinggi"
+					: confidence >= 70 || medoid.frp >= 10
+						? "Tinggi"
+						: "Sedang",
 			regionId: region.id,
 			regionName: region.name,
 			coordinates: {
@@ -338,7 +342,12 @@ export function detectRegionalCandidates({
 		candidates.push({
 			detectorId: "air-pollution",
 			category: "Polusi",
-			urgency: observation.aqi >= 201 ? "Sangat Tinggi" : "Tinggi",
+			urgency:
+				observation.aqi >= 201
+					? "Sangat Tinggi"
+					: observation.aqi >= 151
+						? "Tinggi"
+						: "Sedang",
 			regionId: region.id,
 			regionName: region.name,
 			coordinates: cell.center,
@@ -396,7 +405,13 @@ export function detectRegionalCandidates({
 		candidates.push({
 			detectorId: "flood-potential",
 			category: "Drainase/Banjir",
-			urgency: dailyThresholdReached ? "Sangat Tinggi" : "Tinggi",
+			urgency:
+				(observation.dailyRainMm ?? 0) >= 100
+					? "Sangat Tinggi"
+					: (observation.currentRainMm ?? 0) >= 20 ||
+							(observation.dailyRainMm ?? 0) >= 75
+						? "Tinggi"
+						: "Sedang",
 			regionId: region.id,
 			regionName: region.name,
 			coordinates: cell.center,

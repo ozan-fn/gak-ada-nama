@@ -12,6 +12,11 @@ import {
 	createMonitoringGrid,
 	detectFireCandidates,
 	detectRegionalCandidates,
+	FIRE_MAX_AGE_MS,
+	FIRE_MIN_CONFIDENCE,
+	FLOOD_MIN_HOURLY_RAIN_MM,
+	POLLUTION_MIN_AQI,
+	POLLUTION_MIN_BASELINE_DELTA,
 	type RegionalEnvironmentObservation,
 	selectFireClusterMedoid,
 } from "./automatic-report-detection";
@@ -126,8 +131,13 @@ describe("FIRMS coordinate detection", () => {
 			region,
 			now,
 			points: [
-				firePoint(-7.424, 109.239, 69),
-				firePoint(-7.424, 109.239, 80, new Date("2026-08-27T01:00:00Z")),
+				firePoint(-7.424, 109.239, FIRE_MIN_CONFIDENCE - 1),
+				firePoint(
+					-7.424,
+					109.239,
+					80,
+					new Date(now.getTime() - FIRE_MAX_AGE_MS - 1),
+				),
 				firePoint(-6.2, 106.8, 90),
 			],
 		});
@@ -159,7 +169,10 @@ describe("regional anomaly detection", () => {
 		const candidates = detectRegionalCandidates({
 			region,
 			cell: centerCell,
-			observation: observation({ aqi: 151, baselineAqi: 100 }),
+			observation: observation({
+				aqi: POLLUTION_MIN_AQI,
+				baselineAqi: POLLUTION_MIN_AQI - POLLUTION_MIN_BASELINE_DELTA,
+			}),
 		});
 		const pollution = candidates.find((item) => item.category === "Polusi");
 		assert.ok(pollution);
@@ -172,7 +185,10 @@ describe("regional anomaly detection", () => {
 			detectRegionalCandidates({
 				region,
 				cell: centerCell,
-				observation: observation({ aqi: 150, baselineAqi: 50 }),
+				observation: observation({
+					aqi: POLLUTION_MIN_AQI - 1,
+					baselineAqi: 50,
+				}),
 			}).filter((item) => item.category === "Polusi").length,
 			0,
 		);
@@ -180,7 +196,10 @@ describe("regional anomaly detection", () => {
 			detectRegionalCandidates({
 				region,
 				cell: centerCell,
-				observation: observation({ aqi: 151, baselineAqi: 102 }),
+				observation: observation({
+					aqi: POLLUTION_MIN_AQI,
+					baselineAqi: POLLUTION_MIN_AQI - POLLUTION_MIN_BASELINE_DELTA + 1,
+				}),
 			}).filter((item) => item.category === "Polusi").length,
 			0,
 		);
@@ -190,12 +209,17 @@ describe("regional anomaly detection", () => {
 		const withElevation = detectRegionalCandidates({
 			region,
 			cell: centerCell,
-			observation: observation({ currentRainMm: 20 }),
+			observation: observation({
+				currentRainMm: FLOOD_MIN_HOURLY_RAIN_MM,
+			}),
 		}).find((item) => item.category === "Drainase/Banjir");
 		const withoutElevation = detectRegionalCandidates({
 			region,
 			cell: centerCell,
-			observation: observation({ currentRainMm: 20, elevationMeters: null }),
+			observation: observation({
+				currentRainMm: FLOOD_MIN_HOURLY_RAIN_MM,
+				elevationMeters: null,
+			}),
 		}).find((item) => item.category === "Drainase/Banjir");
 		assert.ok(withElevation);
 		assert.ok(withoutElevation);

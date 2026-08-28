@@ -42,7 +42,7 @@ export const AUTOMATIC_REPORT_REGIONS: AutomaticReportRegion[] = [
     categories: ["Kebakaran", "Polusi", "Drainase/Banjir"],
   },
   {
-    id: "kalimantan",
+    id: "kalimantan-test",
     name: "Kalimantan",
     enabled: process.env.AUTOMATIC_REPORT_ENABLE_TEST_REGIONS === "true",
     center: {
