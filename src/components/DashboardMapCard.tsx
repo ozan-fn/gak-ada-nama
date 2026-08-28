@@ -1,24 +1,28 @@
-import { useRef, useCallback, useMemo, useEffect, memo, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import {
-  Layers,
-  Navigation,
-  Minus,
-  Plus,
   AlertTriangle,
-  Factory,
-  Thermometer,
-  CloudRain,
-  Wind,
-  Droplet,
+  ArrowUpRight,
   ChevronDown,
   ChevronUp,
-  ArrowUpRight,
+  CloudRain,
+  Droplet,
+  Factory,
+  Layers,
+  MapPin,
+  Minus,
+  Navigation,
+  Plus,
+  Thermometer,
+  Wind,
+  X,
 } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import * as maplibregl from "maplibre-gl";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { NearbyReportPin } from "#/components/RiskMap";
+import { useLocalFireData } from "#/hooks/useFireData";
+import { createReportMarkers, groupNearbyReports } from "#/lib/mapMarkers";
 import { BaseEnvironmentMap, type MapContext } from "./maps/BaseEnvironmentMap";
 import { Skeleton } from "./ui/skeleton";
-import * as maplibregl from "maplibre-gl";
-import { useLocalFireData } from "#/hooks/useFireData";
 
 interface UserLocation {
   latitude: number | null;
@@ -30,6 +34,8 @@ interface UserLocation {
 
 interface DashboardMapCardProps {
   userLocation: UserLocation;
+  reports: NearbyReportPin[];
+  reportRadiusKm: number;
 }
 
 /** Creates the DOM element for the custom user location marker. */
@@ -67,7 +73,19 @@ function createUserLocationMarkerElement(): HTMLDivElement {
   return markerEl;
 }
 
-function DashboardMapContent({ context }: { context: MapContext }) {
+function DashboardMapContent({
+  context,
+  reports,
+  reportRadiusKm,
+  selectedReport,
+  onClearSelectedReport,
+}: {
+  context: MapContext;
+  reports: NearbyReportPin[];
+  reportRadiusKm: number;
+  selectedReport: NearbyReportPin | null;
+  onClearSelectedReport: () => void;
+}) {
   const [showLegend, setShowLegend] = useState<boolean>(false);
 
   const {
@@ -87,6 +105,13 @@ function DashboardMapContent({ context }: { context: MapContext }) {
 
   return (
     <>
+      <div className="absolute left-3 top-3 z-10 inline-flex items-center gap-2 rounded-full border border-amber-200/80 bg-white/95 px-3 py-1.5 text-xs font-semibold text-neutral-700 shadow-sm backdrop-blur-md lg:left-1/2 lg:-translate-x-1/2">
+        <MapPin className="size-3.5 text-amber-600" />
+        <span>
+          {reports.length} laporan dalam radius {reportRadiusKm} km
+        </span>
+      </div>
+
       {/* Top Left Alerts & Legend */}
       <div className="absolute left-3 top-3 z-10 hidden flex-col gap-2 lg:flex">
         {activeAlertsCount > 0 && (
@@ -203,6 +228,46 @@ function DashboardMapContent({ context }: { context: MapContext }) {
         </div>
       )}
 
+      {selectedReport && (
+        <div className="absolute bottom-3 left-3 z-20 w-[min(20rem,calc(100%-4.5rem))] rounded-xl border border-neutral-200 bg-white/95 p-3 shadow-lg backdrop-blur-md">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="mb-1 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                <span>{selectedReport.category}</span>
+                <span className="text-neutral-300">•</span>
+                <span>{selectedReport.distanceKm.toFixed(1)} km</span>
+              </div>
+              <h3 className="truncate text-sm font-semibold text-neutral-900">
+                {selectedReport.title}
+              </h3>
+              <p className="mt-1 truncate text-xs text-neutral-500">
+                {selectedReport.locationName}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClearSelectedReport}
+              className="flex size-7 shrink-0 items-center justify-center rounded-full text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-800"
+              aria-label="Tutup detail laporan"
+            >
+              <X className="size-3.5" />
+            </button>
+          </div>
+          <Link
+            to="/dashboard/risk-map"
+            search={{
+              lat: selectedReport.latitude,
+              lng: selectedReport.longitude,
+              city: selectedReport.locationName,
+            }}
+            className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 hover:text-sky-700 hover:underline"
+          >
+            Lihat di peta risiko
+            <ArrowUpRight className="size-3" />
+          </Link>
+        </div>
+      )}
+
       {/* Top Right Controls */}
       <div className="absolute right-3 top-3 z-10 hidden flex-col rounded-lg border border-neutral-200 bg-white shadow-sm lg:flex">
         <div className="relative">
@@ -293,10 +358,21 @@ function DashboardMapContent({ context }: { context: MapContext }) {
   );
 }
 
-function DashboardMapCard({ userLocation }: DashboardMapCardProps) {
+function DashboardMapCard({
+  userLocation,
+  reports,
+  reportRadiusKm,
+}: DashboardMapCardProps) {
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
   const markerRef = useRef<maplibregl.Marker | null>(null);
+  const reportMarkersRef = useRef<maplibregl.Marker[]>([]);
   const mountedRef = useRef(false);
+  const [isMapReady, setIsMapReady] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<NearbyReportPin | null>(
+    null,
+  );
+
+  const reportGroups = useMemo(() => groupNearbyReports(reports), [reports]);
 
   // Keep coordinates updated in ref to access inside stable callbacks without stale closures
   const coordsRef = useRef<{
@@ -387,6 +463,7 @@ function DashboardMapCard({ userLocation }: DashboardMapCardProps) {
       console.log("[DashboardMap] Map ready callback");
 
       mapInstanceRef.current = mapInstance;
+      setIsMapReady(true);
 
       const updateMarker = () => {
         if (!mountedRef.current) {
@@ -409,6 +486,38 @@ function DashboardMapCard({ userLocation }: DashboardMapCardProps) {
     },
     [createUserMarker],
   );
+
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !isMapReady) return;
+
+    reportMarkersRef.current.forEach((marker) => {
+      marker.remove();
+    });
+    const markers = createReportMarkers(
+      reports,
+      map,
+      setSelectedReport,
+      reportGroups,
+    );
+    reportMarkersRef.current = markers;
+
+    return () => {
+      markers.forEach((marker) => {
+        marker.remove();
+      });
+      reportMarkersRef.current = [];
+    };
+  }, [isMapReady, reportGroups, reports]);
+
+  useEffect(() => {
+    if (
+      selectedReport &&
+      !reports.some((report) => report.id === selectedReport.id)
+    ) {
+      setSelectedReport(null);
+    }
+  }, [reports, selectedReport]);
 
   // Sync GPS updates to marker position without re-creating the map
   useEffect(() => {
@@ -445,6 +554,11 @@ function DashboardMapCard({ userLocation }: DashboardMapCardProps) {
         markerRef.current = null;
       }
 
+      reportMarkersRef.current.forEach((marker) => {
+        marker.remove();
+      });
+      reportMarkersRef.current = [];
+
       mapInstanceRef.current = null;
     };
   }, []);
@@ -469,7 +583,15 @@ function DashboardMapCard({ userLocation }: DashboardMapCardProps) {
       customFireData={localFirePoints}
       onMapReady={handleMapReady}
     >
-      {(context) => <DashboardMapContent context={context} />}
+      {(context) => (
+        <DashboardMapContent
+          context={context}
+          reports={reports}
+          reportRadiusKm={reportRadiusKm}
+          selectedReport={selectedReport}
+          onClearSelectedReport={() => setSelectedReport(null)}
+        />
+      )}
     </BaseEnvironmentMap>
   );
 }
@@ -480,6 +602,8 @@ export default memo(DashboardMapCard, (prevProps, nextProps) => {
     prevProps.userLocation.latitude === nextProps.userLocation.latitude &&
     prevProps.userLocation.longitude === nextProps.userLocation.longitude &&
     prevProps.userLocation.loading === nextProps.userLocation.loading &&
-    prevProps.userLocation.error === nextProps.userLocation.error
+    prevProps.userLocation.error === nextProps.userLocation.error &&
+    prevProps.reports === nextProps.reports &&
+    prevProps.reportRadiusKm === nextProps.reportRadiusKm
   );
 });

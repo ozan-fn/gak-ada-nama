@@ -22,9 +22,13 @@ type LocationParams =
 
 type RegionRiskProps = {
   location?: LocationParams;
+  reportCount?: number;
 };
 
-export default function RegionRisk({ location }: RegionRiskProps) {
+export default function RegionRisk({
+  location,
+  reportCount = 0,
+}: RegionRiskProps) {
   const userLocation = useUserLocation();
 
   const { weather, aqi, loading } = useEnvironmentData(location);
@@ -84,13 +88,18 @@ export default function RegionRisk({ location }: RegionRiskProps) {
   const rainRisk = Math.max(0, rainAnomaly) * 1.5;
   const aqiRisk = Math.max(0, aqiAnomaly) * 0.8;
   const humidityRisk = Math.abs(humidityAnomaly) * 0.5;
+  const safeReportCount = Number.isFinite(reportCount)
+    ? Math.max(0, Math.floor(reportCount))
+    : 0;
+
+  // Community evidence contributes up to 30 points, strengthening the
+  // assessment without overpowering live weather and air-quality signals.
+  const reportRisk = Math.min(30, safeReportCount * 5);
 
   const score = Math.min(
     100,
-    Math.round(tempRisk + rainRisk + aqiRisk + humidityRisk),
+    Math.round(tempRisk + rainRisk + aqiRisk + humidityRisk + reportRisk),
   );
-
-  const reportCount = 0;
 
   let level = "Rendah";
   let levelColor = "text-emerald-600";
@@ -111,22 +120,28 @@ export default function RegionRisk({ location }: RegionRiskProps) {
 
   // Faktor dominan penyumbang skor risiko
   const factors = [
-    { label: "suhu", risk: tempRisk, anomaly: tempAnomaly, unit: "°C" },
-    { label: "curah hujan", risk: rainRisk, anomaly: rainAnomaly, unit: "%" },
     {
-      label: "kualitas udara",
+      risk: tempRisk,
+      insight: `Suhu ${tempAnomaly > 0 ? "lebih tinggi" : "lebih rendah"} ${Math.abs(Math.round(tempAnomaly))}°C dari rata-rata wilayah.`,
+    },
+    {
+      risk: rainRisk,
+      insight: `Peluang hujan ${Math.round(rainAnomaly)}% di atas rata-rata wilayah.`,
+    },
+    {
       risk: aqiRisk,
-      anomaly: aqiAnomaly,
-      unit: " AQI",
+      insight: `Kualitas udara ${Math.round(aqiAnomaly)} AQI lebih buruk dari rata-rata wilayah.`,
+    },
+    {
+      risk: reportRisk,
+      insight: `${safeReportCount} laporan terdeteksi di sekitar lokasi pengguna.`,
     },
   ].sort((a, b) => b.risk - a.risk);
 
   const topFactor = factors[0];
   const factorInsight =
     topFactor.risk > 5
-      ? `Penyumbang utama: ${topFactor.label} ${
-          topFactor.anomaly > 0 ? "lebih tinggi" : "lebih rendah"
-        } ${Math.abs(Math.round(topFactor.anomaly))}${topFactor.unit} dari rata-rata wilayah.`
+      ? `Penyumbang utama: ${topFactor.insight}`
       : "Semua indikator berada dekat dengan rata-rata normal wilayah.";
 
   const conditions = [
@@ -188,8 +203,8 @@ export default function RegionRisk({ location }: RegionRiskProps) {
               <div className="flex flex-1 flex-col">
                 <span className="font-medium">Laporan Komunitas</span>
                 <span className="text-xs text-neutral-500">
-                  {reportCount > 0
-                    ? `${reportCount} laporan mendukung`
+                  {safeReportCount > 0
+                    ? `${safeReportCount} laporan mendukung`
                     : "Belum ada laporan"}
                 </span>
               </div>
@@ -206,6 +221,8 @@ export default function RegionRisk({ location }: RegionRiskProps) {
           ? "peningkatan risiko dibanding pola normal"
           : "kondisi dalam batas normal"}
         .
+        {safeReportCount > 0 &&
+          ` ${safeReportCount} laporan sekitar turut memperkuat penilaian.`}
       </p>
 
       {/* Insight bar — faktor dominan */}

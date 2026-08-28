@@ -1,20 +1,27 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState, useMemo } from "react";
 import { ArrowRight, Clock, Download, MapPin } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ChartAQITrend } from "#/components/ChartAQITrend";
 import DashboardMapCard from "#/components/DashboardMapCard";
 import MobileDashboard from "#/components/MobileDashboard";
-import { ChartAQITrend } from "#/components/ChartAQITrend";
-import RegionalExtreme from "#/components/RegionalExtreme";
 import PrecipitationOverview from "#/components/PrecipitationOverview";
+import RegionalExtreme from "#/components/RegionalExtreme";
 import RegionRisk from "#/components/RegionRisk";
-import WeatherInformation from "#/components/WeatherInformation";
-import { useUserLocation } from "#/hooks/useUserLocation";
-import { useEnvironmentData } from "#/hooks/useEnvironmentData";
-import { useEnvironmentAlerts } from "#/hooks/useEnvironmentAlerts";
-import { getIndonesianTimezone } from "#/lib/timezoneUtils";
+import type { NearbyReportPin } from "#/components/RiskMap";
 import { Skeleton } from "#/components/ui/skeleton";
+import WeatherInformation from "#/components/WeatherInformation";
+import { useEnvironmentAlerts } from "#/hooks/useEnvironmentAlerts";
+import { useEnvironmentData } from "#/hooks/useEnvironmentData";
+import { useUserLocation } from "#/hooks/useUserLocation";
+import { calculateDistanceKm } from "#/lib/distanceUtils";
+import { getReportMapPinsFn } from "#/lib/reports.functions";
+import { getIndonesianTimezone } from "#/lib/timezoneUtils";
+
+const NEARBY_REPORT_RADIUS_KM = 5;
 
 export const Route = createFileRoute("/_protected/dashboard/")({
+  loader: () => getReportMapPinsFn(),
+  staleTime: 30_000,
   component: Dashboard,
 });
 
@@ -42,6 +49,7 @@ function useLocalTime(longitude?: number | null) {
 }
 
 function Dashboard() {
+  const reportPins = Route.useLoaderData();
   const location = useUserLocation();
   const localTime = useLocalTime(location.longitude);
   const [isMobile, setIsMobile] = useState(false);
@@ -93,6 +101,25 @@ function Dashboard() {
 
   const envData = useEnvironmentData(location);
 
+  const nearbyReports = useMemo<NearbyReportPin[]>(() => {
+    const latitude = location.latitude;
+    const longitude = location.longitude;
+    if (latitude === null || longitude === null) return [];
+
+    return reportPins
+      .map((report) => ({
+        ...report,
+        distanceKm: calculateDistanceKm(
+          latitude,
+          longitude,
+          report.latitude,
+          report.longitude,
+        ),
+      }))
+      .filter((report) => report.distanceKm <= NEARBY_REPORT_RADIUS_KM)
+      .sort((reportA, reportB) => reportA.distanceKm - reportB.distanceKm);
+  }, [location.latitude, location.longitude, reportPins]);
+
   const alerts = useEnvironmentAlerts(envData);
   const primaryAlert = alerts[0];
 
@@ -109,6 +136,8 @@ function Dashboard() {
         stableLocation={stableLocation}
         locationParams={locationParams}
         envData={envData}
+        reports={nearbyReports}
+        reportRadiusKm={NEARBY_REPORT_RADIUS_KM}
       />
     );
   }
@@ -206,7 +235,11 @@ function Dashboard() {
 
           {/* Interactive Environment Map */}
           <div className="h-125 shrink-0 overflow-hidden rounded-lg bg-white shadow-sm">
-            <DashboardMapCard userLocation={stableLocation} />
+            <DashboardMapCard
+              userLocation={stableLocation}
+              reports={nearbyReports}
+              reportRadiusKm={NEARBY_REPORT_RADIUS_KM}
+            />
           </div>
 
           {/* Environmental Extremes & Air Quality Analytics */}
@@ -246,7 +279,10 @@ function Dashboard() {
 
           <div className="flex min-h-0 flex-1 flex-col gap-3">
             <div className="flex flex-1 items-stretch overflow-hidden rounded-lg bg-white shadow-sm">
-              <RegionRisk location={locationParams} />
+              <RegionRisk
+                location={locationParams}
+                reportCount={nearbyReports.length}
+              />
             </div>
 
             <div className="flex flex-1 items-stretch overflow-hidden rounded-lg bg-white shadow-sm">
