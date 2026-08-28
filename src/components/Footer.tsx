@@ -6,6 +6,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { InstagramIcon } from "./ui/instagram-icon";
 import { LinkedinIcon } from "./ui/linkedin-icon";
 import { Link } from "@tanstack/react-router";
+import FooterBg from "@/assets/images/sky-no-sky.png";
 
 type FooterLink = {
 	title: string;
@@ -20,16 +21,22 @@ type FooterLinkGroup = {
 export function Footer() {
 	return (
 		<footer
-			className="relative h-(--footer-height) w-full border-t border-neutral-800 bg-neutral-900 [--footer-height:380px]"
+			className="relative h-(--footer-height) w-full border-t border-border [--footer-height:380px]"
 			style={{ clipPath: "polygon(0% 0, 100% 0%, 100% 100%, 0 100%)" }}
 		>
-			<div className="fixed bottom-0 h-(--footer-height) w-full bg-neutral-900 z-20">
-				<div className="sticky top-[calc(100vh-var(--footer-height))] h-full overflow-y-auto">
-					<div className="relative mx-auto flex size-full max-w-6xl flex-col justify-between gap-5">
+			<div className="fixed bottom-0 h-(--footer-height) w-full z-20">
+				<div
+					className="sticky top-[calc(100vh-var(--footer-height))] h-full overflow-y-auto bg-cover bg-center bg-no-repeat"
+					style={{ backgroundImage: `url(${FooterBg})` }}
+				>
+					{/* Overlay untuk readability */}
+					<div className="absolute inset-0 " />
+
+					<div className="relative mx-auto flex size-full max-w-6xl flex-col justify-between gap-5 z-10">
 						<div className="grid grid-cols-1 gap-8 px-4 pt-12 md:grid-cols-2 lg:grid-cols-4">
 							<AnimatedContainer className="w-full space-y-4">
-								<h2 className="text-xl font-semibold text-white">Prita.</h2>
-								<p className="mt-8 text-gray-300 text-sm md:mt-0">
+								<h2 className="text-xl font-semibold text-foreground">Prita.</h2>
+								<p className="mt-8 text-muted-foreground text-sm md:mt-0">
 									Platform monitoring lingkungan berbasis AI untuk komunitas yang lebih aman.
 								</p>
 								<div className="flex gap-2">
@@ -38,7 +45,7 @@ export function Footer() {
 											key={link.title}
 											size="icon-sm"
 											variant="outline"
-											className="border-gray-700 text-gray-300 hover:text-white hover:bg-gray-800 hover:border-gray-600"
+											className="border-border text-muted-foreground hover:text-foreground"
 										>
 											<a href={link.href}>{link.icon}</a>
 										</Button>
@@ -52,12 +59,12 @@ export function Footer() {
 									key={group.label}
 								>
 									<div className="mb-10 md:mb-0">
-										<h3 className="text-sm font-semibold text-white">{group.label}</h3>
-										<ul className="mt-4 space-y-2 text-gray-300 text-sm md:text-xs lg:text-sm">
+										<h3 className="text-sm font-semibold text-foreground">{group.label}</h3>
+										<ul className="mt-4 space-y-2 text-muted-foreground text-sm md:text-xs lg:text-sm">
 										{group.links.map((link) => (
                       <li key={link.title}>
                         <Link
-                          className="inline-flex items-center hover:text-white transition-colors [&_svg]:me-1 [&_svg]:size-4"
+                          className="inline-flex items-center hover:text-foreground transition-colors [&_svg]:me-1 [&_svg]:size-4"
                           to={link.href}
                         >
                           {link.icon}
@@ -70,7 +77,7 @@ export function Footer() {
 								</AnimatedContainer>
 							))}
 						</div>
-						<div className="flex flex-col items-center justify-between gap-2 border-t border-neutral-800 p-4 text-gray-300 text-sm md:flex-row">
+						<div className="flex flex-col items-center justify-between gap-2 border-t border-border md:border-none p-4 text-foreground text-sm md:flex-row">
 							<p>
 								&copy; {new Date().getFullYear()} Prita All rights reserved.
 							</p>

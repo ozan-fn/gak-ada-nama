@@ -1,7 +1,12 @@
 import { useEffect, useRef } from 'react'
 import * as maplibregl from 'maplibre-gl'
 
-export function MapLibre() {
+interface MapLibreProps {
+  center?: [number, number];
+  zoom?: number;
+}
+
+export function MapLibre({ center = [106.8456, -6.2088], zoom = 12 }: MapLibreProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<maplibregl.Map | null>(null)
 
@@ -27,13 +32,13 @@ export function MapLibre() {
           },
         ],
       },
-      center: [106.8456, -6.2088],
-      zoom: 12,
+      center: center,
+      zoom: zoom,
       maxBounds: [[94.5, -11.5], [141.5, 6.5]],
     })
 
     return () => map.current?.remove()
-  }, [])
+  }, [center, zoom])
 
   return <div ref={mapContainer} className="w-full h-full min-h-100" />
 }

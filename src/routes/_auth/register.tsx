@@ -34,6 +34,22 @@ function Register() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const handleGoogleRegister = async () => {
+    setLoading(true)
+    setError('')
+
+    const { error } = await authClient.signIn.social({
+      provider: 'google',
+      callbackURL: '/dashboard',
+    })
+
+    if (error) {
+      setError(error.message || 'Google registration failed')
+      setLoading(false)
+      return
+    }
+  }
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -87,6 +103,7 @@ function Register() {
               variant="outline"
               className="w-full h-9 sm:h-10 gap-2 border-gray-300 hover:bg-gray-50 text-xs sm:text-sm"
               disabled={loading}
+              onClick={handleGoogleRegister}
             >
               <img src={googleIcon} alt="Google" className="w-4 h-4" />
               Daftar dengan Google
