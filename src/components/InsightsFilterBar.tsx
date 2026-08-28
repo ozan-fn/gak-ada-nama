@@ -14,7 +14,7 @@ export default function InsightsFilterBar({
   setSearchQuery,
 }: InsightsFilterBarProps) {
   return (
-    <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-1 overflow-x-auto rounded-lg border border-neutral-200 bg-white p-1 dark:border-neutral-800 dark:bg-neutral-900">
         {["Semua", "Tinggi", "Sedang", "Rendah"].map((filter) => (
           <button
@@ -43,6 +43,6 @@ export default function InsightsFilterBar({
           className="h-9 w-full rounded-lg border border-neutral-200 bg-white pl-9 pr-3 text-sm outline-none placeholder:text-neutral-400 focus:border-neutral-400 focus:ring-2 focus:ring-neutral-100 dark:border-neutral-800 dark:bg-neutral-900 dark:focus:border-neutral-700 dark:focus:ring-neutral-800"
         />
       </div>
-    </section>
+    </div>
   );
 }

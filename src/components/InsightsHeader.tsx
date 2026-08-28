@@ -10,7 +10,7 @@ export default function InsightsHeader({
   setScope,
 }: InsightsHeaderProps) {
   return (
-    <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex w-fit items-center gap-1 rounded-lg border border-neutral-200 bg-white p-1 dark:border-neutral-800 dark:bg-neutral-900">
         {(["Indonesia", "Sekitar Anda"] as const).map((item) => (
           <button
@@ -34,6 +34,6 @@ export default function InsightsHeader({
           ? "Seluruh wilayah Indonesia"
           : "Berdasarkan lokasi Anda"}
       </div>
-    </section>
+    </div>
   );
 }

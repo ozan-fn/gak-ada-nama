@@ -22,7 +22,7 @@ export default function InsightsPriorityTable({
   insights,
 }: InsightsPriorityTableProps) {
   return (
-    <section className="space-y-3">
+    <div className="space-y-3">
       <div>
         <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
           Prioritas risiko
@@ -115,6 +115,6 @@ export default function InsightsPriorityTable({
           </div>
         ))}
       </div>
-    </section>
+    </div>
   );
 }

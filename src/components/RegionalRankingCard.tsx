@@ -16,7 +16,7 @@ export default function RegionalRankingCard({
   data,
 }: RegionalRankingCardProps) {
   return (
-    <section className="space-y-3">
+    <div className="space-y-3">
       <div className="flex items-end justify-between">
         <div>
           <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
@@ -78,6 +78,6 @@ export default function RegionalRankingCard({
           </div>
         ))}
       </div>
-    </section>
+    </div>
   );
 }

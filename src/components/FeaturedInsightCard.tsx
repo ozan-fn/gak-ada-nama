@@ -28,7 +28,7 @@ export default function FeaturedInsightCard({
   insight,
 }: FeaturedInsightCardProps) {
   return (
-    <section className="space-y-3">
+    <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
@@ -144,6 +144,6 @@ export default function FeaturedInsightCard({
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

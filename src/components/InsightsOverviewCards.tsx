@@ -14,7 +14,7 @@ export default function InsightsOverviewCards({
   scope,
 }: InsightsOverviewCardsProps) {
   return (
-    <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <div className="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
         <div className="flex items-center justify-between">
           <span className="text-xs text-neutral-500">Total laporan</span>
@@ -75,6 +75,6 @@ export default function InsightsOverviewCards({
           dibandingkan 7 hari sebelumnya
         </p>
       </div>
-    </section>
+    </div>
   );
 }

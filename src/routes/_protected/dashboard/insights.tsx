@@ -162,37 +162,68 @@ function RouteComponent() {
   const featuredInsight = filteredInsights[0];
 
   return (
-    <main className="min-h-full bg-neutral-50/50 dark:bg-neutral-950">
-      <div className="mx-auto w-full max-w-7xl space-y-8 px-4 py-6 md:px-6 lg:px-8">
-        <section className="space-y-1">
-          <h1 className="text-xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
-            Insights
-          </h1>
+    <main className="min-h-screen">
+      <div className="flex flex-col gap-2 p-4 lg:flex-row lg:items-stretch">
+        {/* Left Section: Main Insights Content */}
+        <div className="flex w-full flex-col gap-3 rounded-xl bg-muted/50 p-2 lg:w-2/3 lg:self-stretch">
+          {/* Header Section */}
+          <div className="flex shrink-0 flex-col gap-2 rounded-lg bg-white p-4 shadow-xs">
+            <h1 className="text-xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
+              Insights
+            </h1>
 
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            Analisis kondisi lingkungan berdasarkan laporan masyarakat dan data
-            lingkungan.
-          </p>
-        </section>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+              Analisis kondisi lingkungan berdasarkan laporan masyarakat dan
+              data lingkungan.
+            </p>
 
-        <InsightsHeader scope={scope} setScope={setScope} />
+            <div className="mt-2">
+              <InsightsHeader scope={scope} setScope={setScope} />
+            </div>
+          </div>
 
-        <InsightsOverviewCards scope={scope} />
+          {/* Overview Cards */}
+          <div className="shrink-0 rounded-lg bg-white p-4 shadow-xs">
+            <InsightsOverviewCards scope={scope} />
+          </div>
 
-        <InsightsFilterBar
-          activeFilter={activeFilter}
-          setActiveFilter={setActiveFilter}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-        />
+          {/* Filter & Search Bar */}
+          <div className="shrink-0 rounded-lg bg-white p-4 shadow-xs">
+            <InsightsFilterBar
+              activeFilter={activeFilter}
+              setActiveFilter={setActiveFilter}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+            />
+          </div>
 
-        {scope === "Indonesia" && <RegionalRankingCard data={regionalRanking} />}
+          {/* Featured Insight */}
+          {featuredInsight && (
+            <div className="shrink-0 rounded-lg bg-white p-4 shadow-xs">
+              <FeaturedInsightCard insight={featuredInsight} />
+            </div>
+          )}
 
-        {featuredInsight && <FeaturedInsightCard insight={featuredInsight} />}
+          {/* Priority Table */}
+          <div className="min-h-0 flex-1 rounded-lg bg-white p-4 shadow-xs">
+            <InsightsPriorityTable insights={filteredInsights} />
+          </div>
+        </div>
 
-        <InsightsPriorityTable insights={filteredInsights} />
+        {/* Right Section: Regional Ranking & Latest Insights */}
+        <div className="flex w-full flex-col gap-3 rounded-xl bg-muted/50 p-2 lg:w-1/3 lg:self-stretch">
+          {/* Regional Ranking */}
+          {scope === "Indonesia" && (
+            <div className="shrink-0 rounded-lg bg-white p-4 shadow-xs">
+              <RegionalRankingCard data={regionalRanking} />
+            </div>
+          )}
 
-        <InsightsLatestCards insights={filteredInsights} />
+          {/* Latest Insights Cards */}
+          <div className="min-h-0 flex-1 rounded-lg bg-white p-4 shadow-xs">
+            <InsightsLatestCards insights={filteredInsights} />
+          </div>
+        </div>
       </div>
     </main>
   );
