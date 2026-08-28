@@ -120,7 +120,7 @@ export default function DashboardAppHeader() {
         }
       `}
     >
-      <div className="flex min-w-0 items-center gap-3 pr-4">
+      <div className="flex min-w-0 flex-1 items-center gap-2 pr-2 md:flex-initial md:gap-3 md:pr-4">
         <SidebarTrigger className="-ml-1 size-7 shrink-0 rounded-lg" />
 
         <div className="hidden h-5 w-px bg-border sm:block" />
@@ -129,6 +129,12 @@ export default function DashboardAppHeader() {
           <span className="truncate text-sm font-medium text-neutral-700 md:hidden dark:text-neutral-200">
             {pageTitle}
           </span>
+        )}
+
+        {isRiskMapRoute && (
+          <div className="flex-1 min-w-0 md:hidden">
+            <LocationSearchBar onLocationSelect={handleLocationSearch} />
+          </div>
         )}
       </div>
 

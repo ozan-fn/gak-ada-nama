@@ -1,4 +1,4 @@
-import { CloudRain, MapPin, Mountain, Thermometer, Wind } from "lucide-react";
+import { MapPin, Mountain, Thermometer, Wind, Droplets } from "lucide-react";
 import { useMemo } from "react";
 
 import { useDynamicBaseline } from "#/hooks/useDynamicBaseline";
@@ -35,36 +35,75 @@ export default function SelectedRisk({ selectedLocation }: SelectedRiskProps) {
       longitude: userLocation.longitude,
       city: userLocation.city,
     };
-  }, [selectedLocation, userLocation.latitude, userLocation.longitude, userLocation.city]);
+  }, [
+    selectedLocation,
+    userLocation.latitude,
+    userLocation.longitude,
+    userLocation.city,
+  ]);
 
   const { weather, aqi, loading } = useEnvironmentData(activeLocation);
 
-  const { baseline: dynamicBaseline, loading: baselineLoading } = useDynamicBaseline(activeLocation.latitude, activeLocation.longitude, activeLocation.city);
+  const { baseline: dynamicBaseline, loading: baselineLoading } =
+    useDynamicBaseline(
+      activeLocation.latitude,
+      activeLocation.longitude,
+      activeLocation.city,
+    );
 
-  if (loading || (!selectedLocation && userLocation.loading) || !weather || !aqi) {
+  if (
+    loading ||
+    (!selectedLocation && userLocation.loading) ||
+    !weather ||
+    !aqi
+  ) {
     return <SelectedRiskSkeleton />;
   }
 
-  const staticBaseline = getRegionalBaseline(activeLocation.city || "Jakarta, ID");
+  const staticBaseline = getRegionalBaseline(
+    activeLocation.city || "Jakarta, ID",
+  );
 
-  const normalTemp = dynamicBaseline && !baselineLoading ? dynamicBaseline.temp : staticBaseline.temp;
+  const normalTemp =
+    dynamicBaseline && !baselineLoading
+      ? dynamicBaseline.temp
+      : staticBaseline.temp;
 
-  const normalAqi = dynamicBaseline && !baselineLoading ? dynamicBaseline.aqi : staticBaseline.aqi;
+  const normalAqi =
+    dynamicBaseline && !baselineLoading
+      ? dynamicBaseline.aqi
+      : staticBaseline.aqi;
 
-  const normalHumidity = dynamicBaseline && !baselineLoading ? dynamicBaseline.humidity : staticBaseline.humidity;
+  const normalHumidity =
+    dynamicBaseline && !baselineLoading
+      ? dynamicBaseline.humidity
+      : staticBaseline.humidity;
 
-  const normalRainProbability = dynamicBaseline && !baselineLoading ? Math.min(95, Math.round(10 + dynamicBaseline.rainSum * 7)) : staticBaseline.rainProb;
+  const normalRainProbability =
+    dynamicBaseline && !baselineLoading
+      ? Math.min(95, Math.round(10 + dynamicBaseline.rainSum * 7))
+      : staticBaseline.rainProb;
 
   const temperature = Math.round(weather.current.temperature);
 
-  const rainProbability = Math.round(weather.daily.precipitationProbability[0] || 0);
+  const rainProbability = Math.round(
+    weather.daily.precipitationProbability[0] || 0,
+  );
 
   const aqiValue = aqi.aqi;
   const humidity = Math.round(weather.current.humidity);
 
   const elevation = weather.elevation ? Math.round(weather.elevation) : null;
 
-  const score = Math.min(100, Math.round(Math.abs(temperature - normalTemp) * 2 + Math.max(0, rainProbability - normalRainProbability) * 1.5 + Math.max(0, aqiValue - normalAqi) * 0.8 + Math.abs(humidity - normalHumidity) * 0.5));
+  const score = Math.min(
+    100,
+    Math.round(
+      Math.abs(temperature - normalTemp) * 2 +
+        Math.max(0, rainProbability - normalRainProbability) * 1.5 +
+        Math.max(0, aqiValue - normalAqi) * 0.8 +
+        Math.abs(humidity - normalHumidity) * 0.5,
+    ),
+  );
 
   const level = score >= 70 ? "Tinggi" : score >= 30 ? "Sedang" : "Rendah";
 
@@ -89,20 +128,23 @@ export default function SelectedRisk({ selectedLocation }: SelectedRiskProps) {
 
   const conditions = [
     {
-      icon: CloudRain,
-      label: "Hujan",
-      value: `${rainProbability}%`,
-    },
-    {
       icon: Thermometer,
       label: "Suhu",
       value: `${temperature}°C`,
+      color: "text-orange-500",
+    },
+    {
+      icon: Droplets,
+      label: "Humiditas",
+      value: `${humidity}%`,
+      color: "text-blue-500",
     },
     {
       icon: Wind,
       label: "Udara",
       value: `${aqiValue}`,
       suffix: "AQI",
+      color: "text-teal-500",
     },
     ...(elevation !== null
       ? [
@@ -111,6 +153,7 @@ export default function SelectedRisk({ selectedLocation }: SelectedRiskProps) {
             label: "Ketinggian",
             value: `${elevation}`,
             suffix: "mdpl",
+            color: "text-emerald-500",
           },
         ]
       : []),
@@ -126,14 +169,20 @@ export default function SelectedRisk({ selectedLocation }: SelectedRiskProps) {
           </div>
 
           <div className="min-w-0">
-            <p className="text-[10px] font-medium text-neutral-400">Kondisi lingkungan</p>
+            <p className="text-[10px] font-medium text-neutral-400">
+              Kondisi lingkungan
+            </p>
 
             <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
-              <h3 className="truncate text-[13px] font-semibold text-neutral-900">{activeLocation.city || "Wilayah Anda"}</h3>
+              <h3 className="truncate text-[13px] font-semibold text-neutral-900">
+                {activeLocation.city || "Wilayah Anda"}
+              </h3>
 
               <span className="size-1 shrink-0 rounded-full bg-neutral-300" />
 
-              <span className="shrink-0 text-[10px] text-neutral-400">Saat ini</span>
+              <span className="shrink-0 text-[10px] text-neutral-400">
+                Saat ini
+              </span>
             </div>
           </div>
         </div>
@@ -144,10 +193,14 @@ export default function SelectedRisk({ selectedLocation }: SelectedRiskProps) {
         <div className="rounded-xl bg-neutral-50 px-3.5 py-3">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-[10px] font-medium text-neutral-400">Skor kondisi</p>
+              <p className="text-[10px] font-medium text-neutral-400">
+                Skor kondisi
+              </p>
 
               <div className="mt-1 flex items-baseline">
-                <span className="font-mono text-[28px] font-semibold leading-none tracking-tight text-neutral-900">{score}</span>
+                <span className="font-mono text-[28px] font-semibold leading-none tracking-tight text-neutral-900">
+                  {score}
+                </span>
 
                 <span className="ml-1 text-[11px] text-neutral-400">/ 100</span>
               </div>
@@ -155,7 +208,9 @@ export default function SelectedRisk({ selectedLocation }: SelectedRiskProps) {
 
             <div className="w-24 shrink-0">
               <div className="flex justify-end">
-                <span className={`text-[10px] font-medium ${levelStyles.text}`}>{level}</span>
+                <span className={`text-[10px] font-medium ${levelStyles.text}`}>
+                  {level}
+                </span>
               </div>
 
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-neutral-200">
@@ -169,34 +224,49 @@ export default function SelectedRisk({ selectedLocation }: SelectedRiskProps) {
             </div>
           </div>
 
-          <p className="mt-2.5 max-w-125 text-[10px] leading-relaxed text-neutral-500">Skor menunjukkan seberapa jauh kondisi cuaca dan kualitas udara saat ini dari pola normal wilayah.</p>
+          <p className="mt-2.5 max-w-125 text-[10px] leading-relaxed text-neutral-500">
+            Skor menunjukkan seberapa jauh kondisi cuaca dan kualitas udara saat
+            ini dari pola normal wilayah.
+          </p>
         </div>
       </div>
 
       {/* Environmental metrics */}
       <div className="border-t border-neutral-100 px-4 py-1">
-        <div className={`grid ${conditions.length === 4 ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-3"} divide-x divide-neutral-100`}>
-          {conditions.map(({ icon: Icon, label, value, suffix }, index) => (
-            <div
-              key={label}
-              className={`
+        <div
+          className={`grid ${conditions.length === 4 ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-3"} divide-x divide-neutral-100`}
+        >
+          {conditions.map(
+            ({ icon: Icon, label, value, suffix, color }, index) => (
+              <div
+                key={label}
+                className={`
                         min-w-0 px-2.5 py-3
                         ${conditions.length === 4 && index < 2 ? "border-b border-neutral-100 sm:border-b-0" : ""}
                     `}
-            >
-              <div className="flex items-center gap-1.5">
-                <Icon className="size-3 shrink-0 text-sky-500" />
+              >
+                <div className="flex items-center gap-1.5">
+                  <Icon className={`size-3 shrink-0 ${color}`} />
 
-                <span className="text-[9px] font-semibold text-neutral-500">{label}</span>
+                  <span className="text-[9px] font-semibold text-neutral-500">
+                    {label}
+                  </span>
+                </div>
+
+                <div className="mt-2.5 flex items-baseline gap-1">
+                  <span className="text-[14px] font-semibold leading-none text-neutral-900">
+                    {value}
+                  </span>
+
+                  {suffix && (
+                    <span className="text-[9px] font-medium text-neutral-400">
+                      {suffix}
+                    </span>
+                  )}
+                </div>
               </div>
-
-              <div className="mt-2.5 flex items-baseline gap-1">
-                <span className="text-[14px] font-semibold leading-none text-neutral-900">{value}</span>
-
-                {suffix && <span className="text-[9px] font-medium text-neutral-400">{suffix}</span>}
-              </div>
-            </div>
-          ))}
+            ),
+          )}
         </div>
       </div>
     </section>
