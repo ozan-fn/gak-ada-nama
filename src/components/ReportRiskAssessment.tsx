@@ -234,6 +234,11 @@ export default function ReportRiskAssessment({
 						bukan konfirmasi saksi manusia.
 					</p>
 				)}
+				{isAutomatic && report.locationAttribution && (
+					<p className="mt-2 text-[9px] leading-relaxed text-neutral-400">
+						Nama lokasi berdasarkan {report.locationAttribution}
+					</p>
+				)}
 			</section>
 
 			<section className="rounded-lg bg-white p-4 shadow-sm">

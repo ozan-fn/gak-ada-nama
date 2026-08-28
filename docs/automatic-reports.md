@@ -14,6 +14,8 @@ AUTOMATIC_REPORT_CRON_SECRET=
 AUTOMATIC_REPORT_SYSTEM_EMAIL=monitor@prita.system
 AUTOMATIC_REPORT_MAX_GRID_CELLS=12
 AUTOMATIC_REPORT_ENABLE_TEST_REGIONS=false
+AUTOMATIC_REPORT_REVERSE_GEOCODING_ENABLED=true
+AUTOMATIC_REPORT_REVERSE_GEOCODING_URL=https://nominatim.openstreetmap.org
 GROQ_AUTOMATIC_REPORT_MODEL=
 ```
 
@@ -35,7 +37,7 @@ AUTOMATIC_REPORT_ENABLE_TEST_REGIONS=true
 AUTOMATIC_REPORT_MAX_GRID_CELLS=12
 ```
 
-Kemudian jalankan endpoint dengan `regionId` bernilai `kalimantan-test`.
+Kemudian jalankan endpoint dengan `regionId` bernilai `kalimantan`.
 Wilayah ini memakai radius 400 km untuk FIRMS dan grid 50 km untuk anomali
 regional. Flag sebaiknya tetap `false` pada production.
 
@@ -102,7 +104,7 @@ Kemudian ganti body menjadi:
 
 ```powershell
 $body = @{
-  regionId = "kalimantan-test"
+  regionId = "kalimantan"
 } | ConvertTo-Json
 ```
 
@@ -117,6 +119,23 @@ provider berhasil diperiksa tetapi tidak ada kondisi yang melewati threshold.
 Error API, data stale, atau masalah provider akan muncul pada `providerErrors`.
 
 ## Menambahkan wilayah
+
+Konfigurasi bawaan mencakup beberapa wilayah representatif di Indonesia:
+
+- Jawa: `purwokerto`, `jakarta`, `bandung`, `yogyakarta`, `semarang`, dan
+  `surabaya`.
+- Sumatra: `medan` dan `palembang`.
+- Kalimantan: `pontianak` dan `samarinda`.
+- Sulawesi: `makassar`.
+- Bali dan Nusa Tenggara: `denpasar` dan `kupang`.
+- Papua: `jayapura`.
+- Cakupan `kalimantan` beradius besar hanya aktif jika
+  `AUTOMATIC_REPORT_ENABLE_TEST_REGIONS=true`.
+
+Untuk test lokal, sebaiknya panggil satu `regionId` terlebih dahulu. Body kosong
+akan memindai seluruh wilayah aktif; dengan batas 12 grid per wilayah, satu run
+nasional dapat memeriksa sampai 168 grid dan memerlukan lebih banyak request
+Open-Meteo serta AQICN.
 
 Wilayah baru ditambahkan ke `AUTOMATIC_REPORT_REGIONS` pada
 `src/config/automatic-report-regions.ts`. Mengirim `regionId` pada endpoint tidak
@@ -161,7 +180,8 @@ Contoh wilayah yang hanya aktif untuk test lokal:
 Aturan konfigurasi:
 
 - `id` wajib unik dan hanya menggunakan huruf kecil, angka, serta tanda hubung.
-- `name` menjadi nama lokasi yang tampil pada laporan otomatis.
+- `name` adalah nama cakupan pemantauan dan fallback detector, bukan nama lokasi
+  akhir laporan.
 - `center` adalah pusat wilayah, bukan koordinat laporan yang dibuat AI.
 - `radiusKm` menentukan batas hotspot dan centroid grid yang diterima.
 - `gridSizeKm` menentukan resolusi anomali regional. Grid 5 km memiliki radius
@@ -184,6 +204,28 @@ Jika ID belum terdaftar atau wilayah tersebut tidak aktif, endpoint mengembalika
 
 Sebelum mengaktifkan wilayah production, periksa titik pusat dan radius agar tidak
 mencakup negara, laut, atau provinsi lain yang tidak dimaksud.
+
+## Nama lokasi laporan
+
+Nama lokasi akhir ditentukan dari koordinat kandidat setelah kandidat melewati
+threshold dan pemeriksaan deduplikasi. Dengan begitu, `center` hanya menjadi
+patokan wilayah pemantauan: hotspot FIRMS dapat bernama sesuai desa/kecamatan di
+titik hotspot, sedangkan anomali regional dapat bernama sesuai area centroid grid.
+
+Worker melakukan reverse geocoding server-side dan menyusun nama dari area lokal,
+kecamatan/kota, kabupaten, serta provinsi yang tersedia. Jika provider tidak dapat
+diakses, worker memakai nama kota Indonesia terdekat sebagai fallback, misalnya
+`Sekitar Palangka Raya, Kalimantan Tengah`. Koordinat tidak pernah dipindahkan oleh
+reverse geocoder maupun AI.
+
+Pada endpoint publik Nominatim, request hanya dilakukan untuk kandidat laporan
+yang sudah valid, dijalankan serial sekitar 3,75 request per menit, dan hasilnya
+disimpan pada `Report.sourceMetadata`. Untuk volume production yang besar, arahkan
+`AUTOMATIC_REPORT_REVERSE_GEOCODING_URL` ke instance sendiri atau provider yang
+sesuai. Set `AUTOMATIC_REPORT_REVERSE_GEOCODING_ENABLED=false` untuk menonaktifkan
+provider eksternal dan selalu memakai fallback lokal. Penggunaan endpoint publik
+harus mengikuti [Nominatim Usage Policy](https://operations.osmfoundation.org/policies/nominatim/)
+dan hasil OpenStreetMap tetap menampilkan atribusi provider.
 
 ## Deployment database
 

@@ -754,14 +754,33 @@ export type ReportMapPin = {
 	sourceConfidence: number | null;
 	accuracyRadiusMeters: number | null;
 	coordinateSource: string | null;
+	locationProvider: string | null;
+	locationAttribution: string | null;
 	riskAssessment: ReportAssessmentSummary | null;
 };
 
-function coordinateSourceFromMetadata(value: Prisma.JsonValue | null) {
-	if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-	return typeof value.coordinateSource === "string"
-		? value.coordinateSource
-		: null;
+function reportMapMetadata(value: Prisma.JsonValue | null) {
+	if (!value || typeof value !== "object" || Array.isArray(value)) {
+		return {
+			coordinateSource: null,
+			locationProvider: null,
+			locationAttribution: null,
+		};
+	}
+	return {
+		coordinateSource:
+			typeof value.coordinateSource === "string"
+				? value.coordinateSource
+				: null,
+		locationProvider:
+			typeof value.locationProvider === "string"
+				? value.locationProvider
+				: null,
+		locationAttribution:
+			typeof value.locationAttribution === "string"
+				? value.locationAttribution
+				: null,
+	};
 }
 
 export async function getReportMapPins(): Promise<ReportMapPin[]> {
@@ -817,6 +836,7 @@ export async function getReportMapPins(): Promise<ReportMapPin[]> {
 		}
 
 		const assessment = report.riskAssessment;
+		const metadata = reportMapMetadata(report.sourceMetadata);
 
 		return [
 			{
@@ -830,7 +850,9 @@ export async function getReportMapPins(): Promise<ReportMapPin[]> {
 				source: report.source,
 				sourceConfidence: report.sourceConfidence,
 				accuracyRadiusMeters: report.accuracyRadiusMeters,
-				coordinateSource: coordinateSourceFromMetadata(report.sourceMetadata),
+				coordinateSource: metadata.coordinateSource,
+				locationProvider: metadata.locationProvider,
+				locationAttribution: metadata.locationAttribution,
 				riskAssessment: assessment
 					? {
 							status: storedAssessmentStatusToView(assessment.status),

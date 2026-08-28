@@ -30,6 +30,10 @@ import {
 	createReportCore,
 	refreshAutomaticReportAssessment,
 } from "#/lib/reports.server";
+import {
+	type ResolvedLocation,
+	resolveAutomaticReportLocation,
+} from "#/lib/reverse-geocoding.server";
 
 const PROVIDER_TIMEOUT_MS = 5_000;
 const DEFAULT_MAX_GRID_CELLS_PER_RUN = 12;
@@ -287,6 +291,7 @@ function enrichFireCandidates(
 function sourceMetadata(
 	candidate: AutomaticReportCandidate,
 	narrative: { model: string | null; usedFallback: boolean },
+	location?: ResolvedLocation,
 ): Prisma.InputJsonObject {
 	const providers =
 		candidate.detectorId === "fire-hotspot"
@@ -314,6 +319,32 @@ function sourceMetadata(
 		narrativeFallback: narrative.usedFallback,
 		verificationBasis:
 			"Threshold data lingkungan terpenuhi; belum dikonfirmasi saksi manusia.",
+		...(location
+			? {
+					locationProvider: location.provider,
+					...(location.attribution
+						? { locationAttribution: location.attribution }
+						: {}),
+				}
+			: {}),
+	};
+}
+
+function candidateWithLocationName(
+	candidate: AutomaticReportCandidate,
+	locationName: string,
+): AutomaticReportCandidate {
+	return {
+		...candidate,
+		regionName: locationName,
+		fallbackTitle: candidate.fallbackTitle.replace(
+			candidate.regionName,
+			locationName,
+		),
+		fallbackDescription: candidate.fallbackDescription.replace(
+			candidate.regionName,
+			locationName,
+		),
 	};
 }
 
@@ -415,10 +446,17 @@ async function persistCandidate(
 			!existing.riskAssessment ||
 			Date.now() - existing.riskAssessment.updatedAt.getTime() >
 				6 * 60 * 60 * 1_000;
+		const shouldImproveLocationName =
+			existing.locationName === candidate.regionName ||
+			existing.locationName.includes("Area ");
+		const resolvedLocation = shouldImproveLocationName
+			? await resolveAutomaticReportLocation(candidate.coordinates)
+			: undefined;
 		await prisma.report.update({
 			where: { id: existing.id },
 			data: {
 				status: "VERIFIED",
+				locationName: resolvedLocation?.name ?? existing.locationName,
 				urgency: severityIncreased ? candidate.urgency : existing.urgency,
 				sourceConfidence: Math.max(
 					previousConfidence,
@@ -426,13 +464,17 @@ async function persistCandidate(
 				),
 				sourceMetadata: {
 					...existingMetadata,
-					...sourceMetadata(candidate, {
-						model:
-							typeof existingMetadata.narrativeModel === "string"
-								? String(existingMetadata.narrativeModel)
-								: null,
-						usedFallback: existingMetadata.narrativeFallback === true,
-					}),
+					...sourceMetadata(
+						candidate,
+						{
+							model:
+								typeof existingMetadata.narrativeModel === "string"
+									? String(existingMetadata.narrativeModel)
+									: null,
+							usedFallback: existingMetadata.narrativeFallback === true,
+						},
+						resolvedLocation,
+					),
 					firstObservedAt,
 					observedAt: firstObservedAt,
 				},
@@ -457,7 +499,14 @@ async function persistCandidate(
 		deduplicationKey = `${baseDeduplicationKey}:restart:${candidate.observedAt.getTime()}`;
 	}
 
-	const narrative = await generateAutomaticReportNarrative(candidate);
+	const resolvedLocation = await resolveAutomaticReportLocation(
+		candidate.coordinates,
+	);
+	const locatedCandidate = candidateWithLocationName(
+		candidate,
+		resolvedLocation.name,
+	);
+	const narrative = await generateAutomaticReportNarrative(locatedCandidate);
 	try {
 		await createReportCore({
 			input: {
@@ -465,10 +514,7 @@ async function persistCandidate(
 				description: narrative.description,
 				category: candidate.category,
 				urgency: candidate.urgency,
-				locationName:
-					candidate.coordinateSource === "MONITORING_GRID_CENTROID"
-						? `${candidate.regionName} · Area ${candidate.spatialKey}`
-						: candidate.regionName,
+				locationName: resolvedLocation.name,
 				latitude: candidate.coordinates.latitude,
 				longitude: candidate.coordinates.longitude,
 				images: [],
@@ -476,7 +522,7 @@ async function persistCandidate(
 			actorUserId: systemUserId,
 			source: AUTOMATIC_REPORT_SOURCE,
 			sourceConfidence: candidate.sourceConfidence,
-			sourceMetadata: sourceMetadata(candidate, narrative),
+			sourceMetadata: sourceMetadata(candidate, narrative, resolvedLocation),
 			status: "VERIFIED",
 			deduplicationKey,
 			observedAt: candidate.observedAt,

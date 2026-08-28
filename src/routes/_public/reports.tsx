@@ -76,6 +76,12 @@ const statuses = [
 	{ id: "rejected", label: "Ditolak" },
 ];
 
+function metadataString(value: unknown, key: string) {
+	if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+	const entry = (value as Record<string, unknown>)[key];
+	return typeof entry === "string" ? entry : null;
+}
+
 function ReportsPage() {
 	const databaseReports = Route.useLoaderData();
 	const [selectedCategory, setSelectedCategory] = useState("all");
@@ -120,6 +126,10 @@ function ReportsPage() {
 					image: report.images[0] ?? null,
 					automatic: report.source === "ENVIRONMENT_MONITOR",
 					sourceConfidence: report.sourceConfidence,
+					locationAttribution: metadataString(
+						report.sourceMetadata,
+						"locationAttribution",
+					),
 				};
 			}),
 		[databaseReports],
@@ -417,10 +427,18 @@ function ReportsPage() {
 												</div>
 											</div>
 											{report.automatic && report.status === "verified" && (
-												<p className="mt-3 text-[10px] leading-relaxed text-emerald-700">
-													Threshold sensor terpenuhi; belum dikonfirmasi saksi
-													manusia.
-												</p>
+												<div className="mt-3 space-y-1 text-[10px] leading-relaxed">
+													<p className="text-emerald-700">
+														Threshold sensor terpenuhi; belum dikonfirmasi saksi
+														manusia.
+													</p>
+													{report.locationAttribution && (
+														<p className="text-zinc-400">
+															Nama lokasi berdasarkan{" "}
+															{report.locationAttribution}
+														</p>
+													)}
+												</div>
 											)}
 										</CardContent>
 										<CardFooter>
