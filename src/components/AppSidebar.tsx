@@ -116,9 +116,10 @@ export function AppSidebar() {
               <SidebarMenu>
                 {group.items.map((item) => {
                   const Icon = item.icon;
-                  const isActive = item.to === "/dashboard"
-                    ? location.pathname === item.to
-                    : location.pathname.startsWith(item.to);
+                  const isActive =
+                    item.to === "/dashboard"
+                      ? location.pathname === item.to
+                      : location.pathname.startsWith(item.to);
                   return (
                     <SidebarMenuItem key={item.label}>
                       <Link

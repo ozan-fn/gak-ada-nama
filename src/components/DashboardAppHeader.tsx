@@ -47,6 +47,7 @@ export default function DashboardAppHeader() {
     pathname === "/dashboard" || pathname === "/dashboard/risk-map";
 
   const isRiskMapRoute = pathname === "/dashboard/risk-map";
+
   const isReportRoute = pathname === "/dashboard/report";
 
   const getPageTitle = () => {
@@ -67,7 +68,8 @@ export default function DashboardAppHeader() {
 
   const pageTitle = getPageTitle();
 
-  const showBreadcrumb = !isRiskMapRoute && !isReportRoute && pathname !== "/dashboard";
+  const showBreadcrumb =
+    !isRiskMapRoute && !isReportRoute && pathname !== "/dashboard";
 
   const getInitials = (name?: string) => {
     if (!name) return "U";
@@ -114,48 +116,64 @@ export default function DashboardAppHeader() {
         grid h-14 shrink-0
         grid-cols-[auto_1fr_auto]
         items-center
-        bg-white/80 px-4
+        bg-background/95
+        px-4
         backdrop-blur-md
         transition-[width,height]
         ease-linear
         group-has-data-[collapsible=icon]/sidebar-wrapper:h-12
-        dark:bg-neutral-900/80
         isolate
-        ${
-          isNoBorderRoute
-            ? "border-b-0"
-            : "border-b border-neutral-200/60 dark:border-neutral-800/60"
-        }
+        ${isNoBorderRoute ? "border-b-0" : "border-b border-border"}
       `}
     >
+      {/* Left Section */}
       <div className="flex min-w-0 flex-1 items-center gap-2 pr-2 md:flex-initial md:gap-3 md:pr-4">
-        <SidebarTrigger className="-ml-1 size-7 shrink-0 rounded-lg" />
+        {/* Sidebar Trigger */}
+        <SidebarTrigger
+          className="
+            -ml-1
+            size-7
+            shrink-0
+            rounded-lg
+            text-muted-foreground
+            transition-colors
+            hover:bg-sidebar-accent
+            hover:text-sidebar-accent-foreground
+            focus-visible:ring-2
+            focus-visible:ring-ring
+          "
+        />
 
+        {/* Divider */}
         <div className="hidden h-5 w-px bg-border sm:block" />
 
+        {/* Mobile Page Title */}
         {showBreadcrumb ? (
-          <span className="truncate text-sm font-medium text-neutral-700 md:hidden dark:text-neutral-200">
+          <span className="truncate text-sm font-medium text-foreground md:hidden">
             {pageTitle}
           </span>
         ) : !isRiskMapRoute && !isReportRoute ? (
-          <span className="truncate text-sm font-medium text-neutral-700 md:hidden dark:text-neutral-200">
+          <span className="truncate text-sm font-medium text-foreground md:hidden">
             {pageTitle}
           </span>
         ) : null}
 
+        {/* Mobile Risk Map Search */}
         {isRiskMapRoute && (
-          <div className="flex-1 min-w-0 md:hidden">
+          <div className="min-w-0 flex-1 md:hidden">
             <LocationSearchBar onLocationSelect={handleLocationSearch} />
           </div>
         )}
 
+        {/* Mobile Report Search */}
         {isReportRoute && (
-          <div className="flex-1 min-w-0 md:hidden">
+          <div className="min-w-0 flex-1 md:hidden">
             <EcoLensLocationSearch />
           </div>
         )}
       </div>
 
+      {/* Center Section */}
       <div
         className="
           pointer-events-none
@@ -171,31 +189,33 @@ export default function DashboardAppHeader() {
         <div
           className={`
             pointer-events-auto
-            ${isRiskMapRoute || isReportRoute ? "w-[320px] lg:w-105 xl:w-125" : "w-auto"}
+            ${
+              isRiskMapRoute || isReportRoute
+                ? "w-[320px] lg:w-105 xl:w-125"
+                : "w-auto"
+            }
           `}
         >
           {isRiskMapRoute ? (
             <LocationSearchBar onLocationSelect={handleLocationSearch} />
           ) : isReportRoute ? (
             <EcoLensLocationSearch />
-          ) : showBreadcrumb ? (
-            <span className="whitespace-nowrap text-sm font-medium text-neutral-700 dark:text-neutral-200">
-              {pageTitle}
-            </span>
           ) : (
-            <span className="whitespace-nowrap text-sm font-medium text-neutral-700 dark:text-neutral-200">
+            <span className="whitespace-nowrap text-sm font-medium text-foreground">
               {pageTitle}
             </span>
           )}
         </div>
       </div>
 
+      {/* Right Section */}
       <div className="ml-4 flex items-center justify-end gap-2">
         <AQIIndicator />
 
         <NotificationBar />
 
-        <div className="mx-1 h-5 w-px bg-neutral-200 dark:bg-neutral-700" />
+        {/* Divider */}
+        <div className="mx-1 h-5 w-px bg-border" />
 
         {/* User Dropdown */}
         <DropdownMenu>
@@ -203,15 +223,13 @@ export default function DashboardAppHeader() {
             className="
               flex items-center gap-2
               rounded-lg
-              bg-neutral-100/60
+              bg-muted/60
               px-1.5 py-1
               outline-none
               transition-colors
-              hover:bg-neutral-200/80
+              hover:bg-muted
               focus-visible:ring-2
-              focus-visible:ring-emerald-500/50
-              dark:bg-neutral-800/60
-              dark:hover:bg-neutral-700/80
+              focus-visible:ring-ring
             "
           >
             <Avatar className="size-7 rounded-lg">
@@ -235,11 +253,21 @@ export default function DashboardAppHeader() {
             </Avatar>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="end" sideOffset={8} className="w-56">
+          {/* Dropdown */}
+          <DropdownMenuContent
+            align="end"
+            sideOffset={8}
+            className="
+              w-56
+              border-border
+              bg-popover
+              text-popover-foreground
+            "
+          >
             <DropdownMenuGroup>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col gap-0.5">
-                  <p className="truncate text-xs font-medium leading-none">
+                  <p className="truncate text-xs font-medium leading-none text-foreground">
                     {user?.name ?? "User"}
                   </p>
 
@@ -250,27 +278,52 @@ export default function DashboardAppHeader() {
               </DropdownMenuLabel>
             </DropdownMenuGroup>
 
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="bg-border" />
 
+            {/* Profile */}
             <DropdownMenuItem
-              onClick={() => navigate({ to: "/dashboard/settings" })}
+              onClick={() =>
+                navigate({
+                  to: "/dashboard/settings",
+                })
+              }
+              className="
+                text-foreground
+                hover:bg-accent
+                hover:text-accent-foreground
+              "
             >
-              <User className="mr-2 size-4" />
+              <User className="mr-2 size-4 text-muted-foreground" />
               Profil
             </DropdownMenuItem>
 
+            {/* Settings */}
             <DropdownMenuItem
-              onClick={() => navigate({ to: "/dashboard/settings" })}
+              onClick={() =>
+                navigate({
+                  to: "/dashboard/settings",
+                })
+              }
+              className="
+                text-foreground
+                hover:bg-accent
+                hover:text-accent-foreground
+              "
             >
-              <Settings className="mr-2 size-4" />
+              <Settings className="mr-2 size-4 text-muted-foreground" />
               Pengaturan
             </DropdownMenuItem>
 
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="bg-border" />
 
+            {/* Logout */}
             <DropdownMenuItem
               variant="destructive"
               onClick={() => setShowLogoutConfirm(true)}
+              className="
+                text-destructive
+                hover:bg-destructive/10
+              "
             >
               <LogOut className="mr-2 size-4" />
               Keluar
@@ -283,29 +336,47 @@ export default function DashboardAppHeader() {
           open={showLogoutConfirm}
           onOpenChange={setShowLogoutConfirm}
         >
-          <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogContent
+            className="
+              border-border
+              bg-background
+              text-foreground
+              sm:max-w-md
+            "
+          >
             <AlertDialogHeader>
-              <AlertDialogTitle>Keluar dari akun?</AlertDialogTitle>
+              <AlertDialogTitle className="text-foreground">
+                Keluar dari akun?
+              </AlertDialogTitle>
 
-              <AlertDialogDescription className="leading-relaxed">
+              <AlertDialogDescription className="leading-relaxed text-muted-foreground">
                 Anda akan keluar dari sesi ini dan perlu login kembali untuk
                 mengakses dashboard.
               </AlertDialogDescription>
             </AlertDialogHeader>
 
             <AlertDialogFooter>
-              <AlertDialogCancel disabled={loggingOut}>Batal</AlertDialogCancel>
+              <AlertDialogCancel
+                disabled={loggingOut}
+                className="
+                  border-border
+                  bg-background
+                  text-foreground
+                  hover:bg-accent
+                  hover:text-accent-foreground
+                "
+              >
+                Batal
+              </AlertDialogCancel>
 
               <AlertDialogAction
                 onClick={handleLogout}
                 disabled={loggingOut}
                 className="
-                  bg-red-600
-                  text-white
-                  hover:bg-red-700
-                  focus:ring-red-600
-                  dark:bg-red-500
-                  dark:hover:bg-red-600
+                  bg-destructive
+                  text-destructive-foreground
+                  hover:bg-destructive/90
+                  focus:ring-destructive
                 "
               >
                 {loggingOut ? "Keluar..." : "Keluar"}

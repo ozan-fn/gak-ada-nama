@@ -103,27 +103,27 @@ function WarningsMapControls({ context }: { context: MapContext }) {
     <>
       {/* Top Left Legend */}
       <div className="absolute left-3 top-3 z-10 flex flex-col gap-2">
-        <div className="flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white/90 shadow-sm backdrop-blur-sm">
+        <div className="flex flex-col overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white/90 dark:bg-neutral-800/90 shadow-sm backdrop-blur-sm">
           <button
             type="button"
             onClick={() => setShowLegend((prev) => !prev)}
-            className="flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-neutral-50"
+            className="flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700"
           >
-            <h4 className="text-xs font-bold text-neutral-800">Map Legend</h4>
+            <h4 className="text-xs font-bold text-neutral-800 dark:text-neutral-100">Map Legend</h4>
             {showLegend ? (
-              <ChevronDown className="h-3 w-3 text-neutral-600" />
+              <ChevronDown className="h-3 w-3 text-neutral-600 dark:text-neutral-400" />
             ) : (
-              <ChevronUp className="h-3 w-3 text-neutral-600" />
+              <ChevronUp className="h-3 w-3 text-neutral-600 dark:text-neutral-400" />
             )}
           </button>
 
           {showLegend && (
-            <div className="border-t border-neutral-100 px-3 pb-3 pt-2">
-              <p className="mb-2 text-[10px] font-semibold text-neutral-700">
+            <div className="border-t border-neutral-100 dark:border-neutral-700 px-3 pb-3 pt-2">
+              <p className="mb-2 text-[10px] font-semibold text-neutral-700 dark:text-neutral-400">
                 Warning Severity
               </p>
 
-              <div className="flex flex-col gap-1 text-[10px] text-neutral-600">
+              <div className="flex flex-col gap-1 text-[10px] text-neutral-600 dark:text-neutral-400">
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 shrink-0 rounded-full border border-white bg-[#ef4444] shadow-sm" />
                   <span>Risiko Tinggi</span>
@@ -144,8 +144,8 @@ function WarningsMapControls({ context }: { context: MapContext }) {
                   <span>Lokasi Anda</span>
                 </div>
 
-                <div className="mt-2 border-t border-neutral-100 pt-2">
-                  <p className="mb-1.5 text-[10px] font-semibold text-neutral-700">
+                <div className="mt-2 border-t border-neutral-100 dark:border-neutral-700 pt-2">
+                  <p className="mb-1.5 text-[10px] font-semibold text-neutral-700 dark:text-neutral-400">
                     Laporan Sekitar
                   </p>
                   <div className="flex items-center gap-2">
@@ -164,12 +164,12 @@ function WarningsMapControls({ context }: { context: MapContext }) {
               </div>
 
               {showFireLayer && (
-                <div className="mt-3 border-t border-neutral-100 pt-2">
-                  <p className="mb-2 text-[10px] font-semibold text-neutral-700">
+                <div className="mt-3 border-t border-neutral-100 dark:border-neutral-700 pt-2">
+                  <p className="mb-2 text-[10px] font-semibold text-neutral-700 dark:text-neutral-400">
                     Fire Hotspots (5d)
                   </p>
 
-                  <div className="flex flex-col gap-1 text-[10px] text-neutral-600">
+                  <div className="flex flex-col gap-1 text-[10px] text-neutral-600 dark:text-neutral-400">
                     <div className="flex items-center gap-2">
                       <span className="h-2 w-2 shrink-0 rounded-full border border-white bg-[#fbbf24] shadow-sm" />
                       <span>Medium (50-65%)</span>
@@ -186,7 +186,7 @@ function WarningsMapControls({ context }: { context: MapContext }) {
                     </div>
                   </div>
 
-                  <p className="mt-2 text-[9px] italic text-neutral-500">
+                  <p className="mt-2 text-[9px] italic text-neutral-500 dark:text-neutral-400">
                     NASA FIRMS VIIRS
                   </p>
                 </div>
@@ -202,44 +202,44 @@ function WarningsMapControls({ context }: { context: MapContext }) {
           <button
             type="button"
             onClick={() => setShowLayers(!showLayers)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 bg-white shadow-sm transition-colors hover:bg-neutral-50"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-sm transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700"
             aria-label="Layers"
           >
-            <Layers className="h-4 w-4 text-neutral-700" />
+            <Layers className="h-4 w-4 text-neutral-700 dark:text-neutral-400" />
           </button>
 
           {showLayers && (
-            <div className="absolute right-full top-0 z-20 mr-2 w-52 rounded-lg border border-neutral-200 bg-white p-3 shadow-lg">
-              <p className="mb-3 text-xs font-semibold text-neutral-700">
+            <div className="absolute right-full top-0 z-20 mr-2 w-52 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-3 shadow-lg">
+              <p className="mb-3 text-xs font-semibold text-neutral-700 dark:text-neutral-400">
                 Map Layers
               </p>
 
-              <label className="mb-2 flex items-center gap-2 text-sm text-neutral-700">
+              <label className="mb-2 flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-400">
                 <input
                   type="checkbox"
                   checked
                   disabled
-                  className="h-4 w-4 rounded border-neutral-300"
+                  className="h-4 w-4 rounded border-neutral-300 dark:border-neutral-600"
                 />
                 <span>AQI Heatmap</span>
               </label>
 
-              <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700">
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700 dark:text-neutral-400">
                 <input
                   type="checkbox"
                   checked={showRainRadar}
                   onChange={(event) => setShowRainRadar(event.target.checked)}
-                  className="h-4 w-4 cursor-pointer rounded border-neutral-300"
+                  className="h-4 w-4 cursor-pointer rounded border-neutral-300 dark:border-neutral-600"
                 />
                 <span>Rain Radar</span>
               </label>
 
-              <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-neutral-700">
+              <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-neutral-700 dark:text-neutral-400">
                 <input
                   type="checkbox"
                   checked={showFireLayer}
                   onChange={(event) => setShowFireLayer(event.target.checked)}
-                  className="h-4 w-4 cursor-pointer rounded border-neutral-300"
+                  className="h-4 w-4 cursor-pointer rounded border-neutral-300 dark:border-neutral-600"
                 />
                 <span>Fire Hotspots</span>
               </label>
@@ -249,23 +249,23 @@ function WarningsMapControls({ context }: { context: MapContext }) {
       </div>
 
       {/* Zoom Controls */}
-      <div className="absolute bottom-3 right-3 z-10 flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">
+      <div className="absolute bottom-3 right-3 z-10 flex flex-col overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-sm">
         <button
           type="button"
           onClick={() => handleZoom(-1)}
-          className="flex h-9 w-9 items-center justify-center border-b border-neutral-200 transition-colors hover:bg-neutral-50"
+          className="flex h-9 w-9 items-center justify-center border-b border-neutral-200 dark:border-neutral-700 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700"
           aria-label="Zoom out"
         >
-          <Minus className="h-4 w-4 text-neutral-700" />
+          <Minus className="h-4 w-4 text-neutral-700 dark:text-neutral-400" />
         </button>
 
         <button
           type="button"
           onClick={() => handleZoom(1)}
-          className="flex h-9 w-9 items-center justify-center transition-colors hover:bg-neutral-50"
+          className="flex h-9 w-9 items-center justify-center transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700"
           aria-label="Zoom in"
         >
-          <Plus className="h-4 w-4 text-neutral-700" />
+          <Plus className="h-4 w-4 text-neutral-700 dark:text-neutral-400" />
         </button>
       </div>
     </>

@@ -33,9 +33,12 @@ export function EcoLensWorkspace() {
   const analyzeEcoLensFn = useServerFn(analyzeEcoLens);
   const createReport = useServerFn(createReportFn);
   const refreshReportAssessment = useServerFn(refreshReportAssessmentFn);
+
   const camera = useEcoLensCamera();
   const gps = useEcoLensLocation();
+
   const { location, setLocation, coordinates } = useEcoLensLocationContext();
+
   const mountedRef = useRef(false);
   const latestAnalysisRequest = useRef(0);
   const submitLockRef = useRef(false);
@@ -54,7 +57,11 @@ export function EcoLensWorkspace() {
   const [submissionResult, setSubmissionResult] =
     useState<CreateReportResult | null>(null);
 
-  // Kamera memang hanya dimulai sekali saat workspace pertama kali dipasang.
+  // =========================================================
+  // Camera startup
+  // =========================================================
+
+  // Kamera hanya dimulai sekali ketika workspace pertama kali dipasang.
   // biome-ignore lint/correctness/useExhaustiveDependencies: startup mount-only mencegah permintaan izin kamera berulang.
   useEffect(() => {
     mountedRef.current = true;
@@ -66,15 +73,25 @@ export function EcoLensWorkspace() {
     };
   }, []);
 
+  // =========================================================
+  // Location
+  // =========================================================
+
   useEffect(() => {
     if (!gps.suggestedLocation) return;
+
     if (!location.trim()) {
       setLocation(gps.suggestedLocation);
     }
   }, [gps.suggestedLocation, location, setLocation]);
 
+  // =========================================================
+  // Draft
+  // =========================================================
+
   const clearDraft = () => {
     latestAnalysisRequest.current += 1;
+
     setCapturedImage(null);
     setAnalysis(null);
     setAnalysisError(null);
@@ -84,13 +101,20 @@ export function EcoLensWorkspace() {
     setCaptureError(null);
     setReviewOpen(false);
     setSubmissionResult(null);
+
     activeResultReportIdRef.current = null;
   };
+
+  // =========================================================
+  // Camera
+  // =========================================================
 
   const handleStartCamera = async () => {
     clearDraft();
     setStage("requesting-camera");
+
     const result = await camera.startCamera();
+
     if (!mountedRef.current) return;
 
     if (result.success) {
@@ -100,9 +124,15 @@ export function EcoLensWorkspace() {
     }
   };
 
+  // =========================================================
+  // AI Analysis
+  // =========================================================
+
   const runAnalysis = async (imageDataUrl: string) => {
     const requestId = latestAnalysisRequest.current + 1;
+
     latestAnalysisRequest.current = requestId;
+
     setAnalysisError(null);
     setReviewOpen(false);
     setStage("analyzing");
@@ -115,7 +145,9 @@ export function EcoLensWorkspace() {
         },
       });
 
-      if (latestAnalysisRequest.current !== requestId) return;
+      if (latestAnalysisRequest.current !== requestId) {
+        return;
+      }
 
       if (result.success) {
         setAnalysis(result.analysis);
@@ -128,16 +160,20 @@ export function EcoLensWorkspace() {
           details: result.details,
           rawResult: result,
         });
+
         setAnalysis(null);
         setAnalysisError(result.message);
       }
     } catch (error) {
-      if (latestAnalysisRequest.current !== requestId) return;
+      if (latestAnalysisRequest.current !== requestId) {
+        return;
+      }
 
       console.error(
         "[EcoLens] Terjadi kesalahan saat memproses analisis:",
         error,
       );
+
       setAnalysis(null);
       setAnalysisError(
         "Analisis tidak dapat dijalankan saat ini. Kamu tetap dapat melengkapi draf secara manual.",
@@ -150,17 +186,26 @@ export function EcoLensWorkspace() {
     }
   };
 
+  // =========================================================
+  // Capture
+  // =========================================================
+
   const handleCapture = () => {
     try {
       setCaptureError(null);
+
       const imageDataUrl = camera.captureFrame();
+
       camera.stopCamera();
+
       setCapturedImage(imageDataUrl);
       setStage("captured");
+
       void runAnalysis(imageDataUrl);
     } catch (error) {
       const isOversized =
         error instanceof Error && error.message === "IMAGE_TOO_LARGE";
+
       setCaptureError(
         isOversized
           ? "Foto terlalu besar untuk diproses. Coba arahkan kamera kembali dan ambil ulang."
@@ -169,57 +214,93 @@ export function EcoLensWorkspace() {
     }
   };
 
+  // =========================================================
+  // Upload
+  // =========================================================
+
   const handleUploadImage = async (file: File) => {
     try {
       setCaptureError(null);
+
       camera.stopCamera();
       setStage("captured");
+
       const imageDataUrl = await processUploadedImage(file);
+
       if (!mountedRef.current) return;
+
       setCapturedImage(imageDataUrl);
+
       void runAnalysis(imageDataUrl);
     } catch (error) {
       if (!mountedRef.current) return;
+
       const message =
         error instanceof Error
           ? error.message
           : "Gagal memproses gambar yang diunggah.";
+
       setCaptureError(message);
       setStage("error");
     }
   };
 
+  // =========================================================
+  // Retake
+  // =========================================================
+
   const handleRetake = async () => {
     clearDraft();
+
     setStage("requesting-camera");
+
     const result = await camera.startCamera();
+
     if (!mountedRef.current) return;
+
     setStage(result.success ? "live" : "error");
   };
 
+  // =========================================================
+  // Retry Analysis
+  // =========================================================
+
   const handleRetryAnalysis = () => {
-    if (capturedImage) void runAnalysis(capturedImage);
+    if (capturedImage) {
+      void runAnalysis(capturedImage);
+    }
   };
+
+  // =========================================================
+  // Submit Report
+  // =========================================================
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
     if (submitLockRef.current) return;
 
     const nextErrors: EcoLensFormErrors = {};
+
     if (!location.trim()) {
       nextErrors.location = "Lokasi kejadian wajib diisi.";
     }
+
     if (!description.trim()) {
       nextErrors.description = "Deskripsi laporan wajib diisi.";
     }
 
     setFormErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
 
     submitLockRef.current = true;
     setIsSubmitting(true);
     setSubmissionResult(null);
     activeResultReportIdRef.current = null;
+
     try {
       const result = await createReport({
         data: {
@@ -227,10 +308,15 @@ export function EcoLensWorkspace() {
           description: description.trim(),
           category,
           urgency: analysis?.urgency || "Sedang",
+
           locationName: location.trim(),
+
           latitude: coordinates?.latitude ?? gps.coordinates?.latitude,
+
           longitude: coordinates?.longitude ?? gps.coordinates?.longitude,
+
           images: capturedImage ? [capturedImage] : [],
+
           ecolensAnalysis: analysis
             ? {
                 category: analysis.category,
@@ -243,43 +329,67 @@ export function EcoLensWorkspace() {
       });
 
       if (!mountedRef.current) return;
+
       activeResultReportIdRef.current = result.report.id;
+
       setSubmissionResult(result);
       setReviewOpen(false);
       setStage("demo-success");
     } catch (error) {
       if (!mountedRef.current) return;
+
       const message =
         error instanceof Error && error.message.includes("Unauthorized")
           ? "Silakan login terlebih dahulu untuk mengirim laporan."
           : "Gagal menyimpan laporan. Silakan coba beberapa saat lagi.";
-      setFormErrors({ description: message });
+
+      setFormErrors({
+        description: message,
+      });
     } finally {
       submitLockRef.current = false;
+
       if (mountedRef.current) {
         setIsSubmitting(false);
       }
     }
   };
 
+  // =========================================================
+  // Assessment
+  // =========================================================
+
   const handleRefreshAssessment = useCallback(
     async (reportId: string) => {
-      const result = await refreshReportAssessment({ data: { reportId } });
+      const result = await refreshReportAssessment({
+        data: { reportId },
+      });
+
       if (mountedRef.current && activeResultReportIdRef.current === reportId) {
         setSubmissionResult(result);
       }
+
       return result;
     },
     [refreshReportAssessment],
   );
+
+  // =========================================================
+  // Create Another
+  // =========================================================
 
   const handleCreateAnother = () => {
     clearDraft();
     void handleStartCamera();
   };
 
+  // =========================================================
+  // Description
+  // =========================================================
+
   const handleDescriptionChange = (value: string) => {
     setDescription(value);
+
     if (formErrors.description && value.trim()) {
       setFormErrors((currentErrors) => ({
         ...currentErrors,
@@ -289,19 +399,43 @@ export function EcoLensWorkspace() {
   };
 
   return (
-    <main className="relative flex h-[calc(100dvh-3.5rem)] min-h-0 flex-col overflow-hidden bg-neutral-100">
-      <EcoLensCameraViewport
-        stage={stage}
-        videoRef={camera.videoRef}
-        capturedImage={capturedImage}
-        cameraError={camera.error || captureError}
-        isCameraReady={camera.isReady}
-        onStartCamera={() => void handleStartCamera()}
-        onCapture={handleCapture}
-        onUploadImage={(file) => void handleUploadImage(file)}
-        onOpenReview={() => setReviewOpen(true)}
-        onVideoReady={camera.markVideoReady}
-      />
+    <main
+      className="
+        relative flex h-[calc(100dvh-3.5rem)]
+        min-h-0 flex-col overflow-hidden
+        bg-neutral-100
+        transition-colors
+        dark:bg-neutral-950
+      "
+    >
+      {/* =====================================================
+          Camera Workspace
+          ===================================================== */}
+
+      <div
+        className="
+          relative min-h-0 flex-1
+          bg-neutral-100
+          dark:bg-neutral-950
+        "
+      >
+        <EcoLensCameraViewport
+          stage={stage}
+          videoRef={camera.videoRef}
+          capturedImage={capturedImage}
+          cameraError={camera.error || captureError}
+          isCameraReady={camera.isReady}
+          onStartCamera={() => void handleStartCamera()}
+          onCapture={handleCapture}
+          onUploadImage={(file) => void handleUploadImage(file)}
+          onOpenReview={() => setReviewOpen(true)}
+          onVideoReady={camera.markVideoReady}
+        />
+      </div>
+
+      {/* =====================================================
+          Review Drawer
+          ===================================================== */}
 
       <EcoLensReviewDrawer
         open={reviewOpen && stage === "review"}
@@ -318,6 +452,10 @@ export function EcoLensWorkspace() {
         onRetake={() => void handleRetake()}
         onSubmit={handleSubmit}
       />
+
+      {/* =====================================================
+          Success Dialog
+          ===================================================== */}
 
       <EcoLensSuccessDialog
         open={stage === "demo-success"}

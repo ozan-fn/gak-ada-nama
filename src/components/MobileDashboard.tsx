@@ -544,7 +544,7 @@ export default function MobileDashboard({
    * ============================================================ */
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-neutral-100">
+    <div className="relative h-full w-full overflow-hidden bg-neutral-100 dark:bg-neutral-900">
       <BaseEnvironmentMap
         /**
          * These values are intentionally stable.
@@ -586,7 +586,7 @@ export default function MobileDashboard({
                 }}
                 className="absolute left-3 top-3 z-10 flex flex-col gap-2"
               >
-                <div className="inline-flex items-center gap-2 rounded-lg border border-amber-200/80 bg-white/95 px-3 py-2 text-xs font-semibold text-neutral-700 shadow-sm backdrop-blur-md">
+                <div className="inline-flex items-center gap-2 rounded-lg border border-amber-200/80 bg-white/95 dark:bg-neutral-800/95 px-3 py-2 text-xs font-semibold text-neutral-700 dark:text-neutral-400 shadow-sm backdrop-blur-md">
                   <MapPin className="size-3.5 text-amber-600" />
                   <span>
                     {reports.length} laporan · {reportRadiusKm} km
@@ -594,32 +594,32 @@ export default function MobileDashboard({
                 </div>
 
                 {(showRainRadar || showFireLayer) && (
-                  <div className="flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white/90 shadow-sm backdrop-blur-sm">
+                  <div className="flex flex-col overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white/90 dark:bg-neutral-800/90 shadow-sm backdrop-blur-sm">
                     <button
                       type="button"
                       onClick={() => setShowLegend((previous) => !previous)}
-                      className="flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-neutral-50"
+                      className="flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700"
                     >
-                      <h4 className="text-xs font-bold text-neutral-800">
+                      <h4 className="text-xs font-bold text-neutral-800 dark:text-neutral-100">
                         Map Legend
                       </h4>
 
                       {showLegend ? (
-                        <ChevronDown className="h-3 w-3 text-neutral-600" />
+                        <ChevronDown className="h-3 w-3 text-neutral-600 dark:text-neutral-400" />
                       ) : (
-                        <ChevronUp className="h-3 w-3 text-neutral-600" />
+                        <ChevronUp className="h-3 w-3 text-neutral-600 dark:text-neutral-400" />
                       )}
                     </button>
 
                     {showLegend && (
                       <div className="px-3 pb-3">
                         {showFireLayer && (
-                          <div className="border-t border-neutral-100 pt-2">
-                            <p className="mb-2 text-[10px] font-semibold text-neutral-700">
+                          <div className="border-t border-neutral-100 dark:border-neutral-700 pt-2">
+                            <p className="mb-2 text-[10px] font-semibold text-neutral-700 dark:text-neutral-400">
                               Fire Hotspots (5d)
                             </p>
 
-                            <div className="flex flex-col gap-1 text-[10px] text-neutral-600">
+                            <div className="flex flex-col gap-1 text-[10px] text-neutral-600 dark:text-neutral-400">
                               <div className="flex items-center gap-2">
                                 <span className="h-2 w-2 shrink-0 rounded-full border border-white bg-[#fbbf24] shadow-sm" />
                                 <span>Medium (50-65%)</span>
@@ -636,7 +636,7 @@ export default function MobileDashboard({
                               </div>
                             </div>
 
-                            <p className="mt-2 text-[9px] italic text-neutral-500">
+                            <p className="mt-2 text-[9px] italic text-neutral-500 dark:text-neutral-400">
                               NASA FIRMS VIIRS
                             </p>
                           </div>
@@ -656,9 +656,9 @@ export default function MobileDashboard({
                   style={{
                     opacity: controlsOpacity,
                   }}
-                  className="absolute bottom-24 left-3 z-10 max-w-xs rounded-lg border border-neutral-200 bg-white/95 p-3 shadow-md backdrop-blur-sm"
+                  className="absolute bottom-24 left-3 z-10 max-w-xs rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white/95 dark:bg-neutral-800/95 p-3 shadow-md backdrop-blur-sm"
                 >
-                  <h3 className="mb-2 text-xs font-semibold text-neutral-800">
+                  <h3 className="mb-2 text-xs font-semibold text-neutral-800 dark:text-neutral-100">
                     Dangers Nearby
                   </h3>
 
@@ -676,7 +676,7 @@ export default function MobileDashboard({
                           ) : alert.type === "rain" ? (
                             <CloudRain className="h-4 w-4 text-blue-500" />
                           ) : alert.type === "wind" ? (
-                            <Wind className="h-4 w-4 text-gray-600" />
+                            <Wind className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                           ) : alert.type === "humidity" ? (
                             <Droplet className="h-4 w-4 text-cyan-500" />
                           ) : (
@@ -684,7 +684,7 @@ export default function MobileDashboard({
                           )}
                         </span>
 
-                        <span className="flex-1 text-neutral-700">
+                        <span className="flex-1 text-neutral-700 dark:text-neutral-400">
                           {alert.message}
                         </span>
                       </div>
@@ -711,7 +711,9 @@ export default function MobileDashboard({
                     overflow-hidden
                     rounded-xl
                     border border-neutral-200/80
+                    dark:border-neutral-700
                     bg-white/95
+                    dark:bg-neutral-800/95
                     shadow-[0_8px_30px_rgba(0,0,0,0.1)]
                     backdrop-blur-md
                   "
@@ -721,22 +723,22 @@ export default function MobileDashboard({
                     <div className="flex items-start gap-3">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="truncate text-[10px] font-medium text-sky-600">
+                          <span className="truncate text-[10px] font-medium text-sky-600 dark:text-sky-400">
                             {selectedReport.category}
                           </span>
 
-                          <span className="size-1 shrink-0 rounded-full bg-neutral-300" />
+                          <span className="size-1 shrink-0 rounded-full bg-neutral-300 dark:bg-neutral-700" />
 
                           <span className="shrink-0 text-[10px] text-neutral-400">
                             {selectedReport.distanceKm.toFixed(1)} km
                           </span>
                         </div>
 
-                        <h3 className="mt-1.5 truncate text-[13px] font-semibold leading-snug text-neutral-900">
+                        <h3 className="mt-1.5 truncate text-[13px] font-semibold leading-snug text-neutral-900 dark:text-neutral-100">
                           {selectedReport.title}
                         </h3>
 
-                        <div className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[11px] text-neutral-500">
+                        <div className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[11px] text-neutral-500 dark:text-neutral-400">
                           <MapPin className="size-3 shrink-0 text-neutral-400" />
                           <span className="truncate">
                             {selectedReport.locationName}
@@ -753,12 +755,16 @@ export default function MobileDashboard({
                           items-center justify-center
                           rounded-md
                           text-neutral-400
+                          dark:text-neutral-400
                           transition-colors
                           hover:bg-neutral-100
+                          dark:hover:bg-neutral-700
                           hover:text-neutral-700
+                          dark:hover:text-neutral-100
                           focus:outline-none
                           focus:ring-2
                           focus:ring-neutral-200
+                          dark:focus:ring-neutral-700
                         "
                         aria-label="Tutup detail laporan"
                       >
@@ -780,17 +786,22 @@ export default function MobileDashboard({
                         items-center justify-between
                         rounded-md
                         border border-sky-100
+                        dark:border-sky-400/30
                         bg-sky-50/70
+                        dark:bg-sky-400/10
                         px-3 py-2
                         text-[11px]
                         font-medium
                         text-sky-700
+                        dark:text-sky-400
                         transition-colors
                         hover:border-sky-200
                         hover:bg-sky-50
+                        dark:hover:bg-sky-400/20
                         focus:outline-none
                         focus:ring-2
                         focus:ring-sky-100
+                        dark:focus:ring-sky-400/30
                       "
                     >
                       <span>Lihat di peta risiko</span>
@@ -808,25 +819,25 @@ export default function MobileDashboard({
                 style={{
                   opacity: controlsOpacity,
                 }}
-                className="absolute right-3 top-3 z-10 flex flex-col rounded-lg border border-neutral-200 bg-white shadow-sm"
+                className="absolute right-3 top-3 z-10 flex flex-col rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-sm"
               >
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => setShowLayers(!showLayers)}
-                    className="flex h-9 w-9 items-center justify-center rounded-t-lg border-b border-neutral-200 transition-colors hover:bg-neutral-50"
+                    className="flex h-9 w-9 items-center justify-center rounded-t-lg border-b border-neutral-200 dark:border-neutral-700 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700"
                     aria-label="Layers"
                   >
-                    <Layers className="h-4 w-4 text-neutral-700" />
+                    <Layers className="h-4 w-4 text-neutral-700 dark:text-neutral-400" />
                   </button>
 
                   {showLayers && (
-                    <div className="absolute right-full top-0 z-20 mr-2 w-52 rounded-lg border border-neutral-200 bg-white p-3 shadow-lg">
-                      <p className="mb-3 text-xs font-semibold text-neutral-700">
+                    <div className="absolute right-full top-0 z-20 mr-2 w-52 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-3 shadow-lg">
+                      <p className="mb-3 text-xs font-semibold text-neutral-700 dark:text-neutral-400">
                         Map Layers
                       </p>
 
-                      <label className="mb-2 flex items-center gap-2 text-sm text-neutral-700">
+                      <label className="mb-2 flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-400">
                         <input
                           type="checkbox"
                           checked
@@ -837,7 +848,7 @@ export default function MobileDashboard({
                         <span>AQI Heatmap</span>
                       </label>
 
-                      <label className="mb-2 flex cursor-pointer items-center gap-2 text-sm text-neutral-700">
+                      <label className="mb-2 flex cursor-pointer items-center gap-2 text-sm text-neutral-700 dark:text-neutral-400">
                         <input
                           type="checkbox"
                           checked={showRainRadar}
@@ -850,7 +861,7 @@ export default function MobileDashboard({
                         <span>Rain Radar</span>
                       </label>
 
-                      <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-neutral-700">
+                      <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-neutral-700 dark:text-neutral-400">
                         <input
                           type="checkbox"
                           checked={showFireLayer}
@@ -870,11 +881,11 @@ export default function MobileDashboard({
                   type="button"
                   onClick={() => locate(true)}
                   disabled={isLocating}
-                  className="flex h-9 w-9 items-center justify-center rounded-b-lg transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-9 w-9 items-center justify-center rounded-b-lg transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
                   aria-label="Locate me"
                 >
                   <Navigation
-                    className={`h-4 w-4 text-neutral-700 ${
+                    className={`h-4 w-4 text-neutral-700 dark:text-neutral-400 ${
                       isLocating ? "animate-pulse" : ""
                     }`}
                   />
@@ -889,24 +900,24 @@ export default function MobileDashboard({
                 style={{
                   opacity: controlsOpacity,
                 }}
-                className="absolute bottom-24 right-3 z-10 flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm"
+                className="absolute bottom-24 right-3 z-10 flex flex-col overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-sm"
               >
                 <button
                   type="button"
                   onClick={() => handleZoom(-1)}
-                  className="flex h-9 w-9 items-center justify-center border-b border-neutral-200 transition-colors hover:bg-neutral-50"
+                  className="flex h-9 w-9 items-center justify-center border-b border-neutral-200 dark:border-neutral-700 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700"
                   aria-label="Zoom out"
                 >
-                  <Minus className="h-4 w-4 text-neutral-700" />
+                  <Minus className="h-4 w-4 text-neutral-700 dark:text-neutral-400" />
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleZoom(1)}
-                  className="flex h-9 w-9 items-center justify-center transition-colors hover:bg-neutral-50"
+                  className="flex h-9 w-9 items-center justify-center transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700"
                   aria-label="Zoom in"
                 >
-                  <Plus className="h-4 w-4 text-neutral-700" />
+                  <Plus className="h-4 w-4 text-neutral-700 dark:text-neutral-400" />
                 </button>
               </motion.div>
             </>
@@ -935,7 +946,7 @@ export default function MobileDashboard({
         }}
         className="absolute inset-x-0 bottom-0 z-10 max-h-[82vh] overflow-hidden"
       >
-        <div className="rounded-t-4xl bg-white shadow-sm">
+        <div className="rounded-t-4xl bg-white dark:bg-neutral-800 shadow-sm">
           {/* Handle */}
 
           <button
@@ -944,11 +955,11 @@ export default function MobileDashboard({
             onClick={toggleSheet}
             className="relative flex w-full cursor-grab touch-none flex-col items-center gap-3 py-3 active:cursor-grabbing"
           >
-            <div className="h-1 w-10 rounded-full bg-neutral-300" />
+            <div className="h-1 w-10 rounded-full bg-neutral-300 dark:bg-neutral-700" />
 
             <div className="flex w-full items-center justify-center gap-2">
-              <div className="flex items-center gap-1.5 text-xs font-medium text-neutral-600">
-                <MapPin className="size-3.5 text-neutral-500" strokeWidth={2} />
+              <div className="flex items-center gap-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-400">
+                <MapPin className="size-3.5 text-neutral-500 dark:text-neutral-400" strokeWidth={2} />
 
                 <span>{location.city}</span>
               </div>
@@ -959,7 +970,7 @@ export default function MobileDashboard({
                   <Skeleton className="h-3 w-16 rounded-md" />
                 </div>
               ) : (
-                <div className="flex items-center gap-1.5 text-xs font-medium text-neutral-600">
+                <div className="flex items-center gap-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-400">
                   <span className="font-semibold">
                     {Math.round(envData.weather.current.temperature)}°
                   </span>
@@ -984,36 +995,36 @@ export default function MobileDashboard({
             style={{
               opacity: contentOpacity,
             }}
-            className="max-h-[calc(82vh-80px)] overflow-y-auto bg-neutral-50 px-4"
+            className="max-h-[calc(82vh-80px)] overflow-y-auto bg-neutral-50 dark:bg-neutral-900 px-4"
           >
             <div className="space-y-3 pb-4 pt-2">
               {/* Weather */}
 
-              <div className="rounded-2xl bg-white p-4 shadow-sm">
+              <div className="rounded-2xl bg-white dark:bg-neutral-800 p-4 shadow-sm">
                 <WeatherInformation location={locationParams} />
               </div>
 
               {/* Regional Extreme */}
 
-              <div className="rounded-2xl bg-white p-4 shadow-sm">
+              <div className="rounded-2xl bg-white dark:bg-neutral-800 p-4 shadow-sm">
                 <RegionalExtreme location={locationParams} />
               </div>
 
               {/* Precipitation */}
 
-              <div className="rounded-2xl bg-white p-4 shadow-sm">
+              <div className="rounded-2xl bg-white dark:bg-neutral-800 p-4 shadow-sm">
                 <PrecipitationOverview location={locationParams} />
               </div>
 
               {/* AQI */}
 
-              <div className="rounded-2xl bg-white p-4 shadow-sm">
+              <div className="rounded-2xl bg-white dark:bg-neutral-800 p-4 shadow-sm">
                 <ChartAQITrend location={locationParams} />
               </div>
 
               {/* Region Risk */}
 
-              <div className="rounded-2xl bg-white p-4 shadow-sm">
+              <div className="rounded-2xl bg-white dark:bg-neutral-800 p-4 shadow-sm">
                 <RegionRisk
                   location={locationParams}
                   reportCount={reports.length}

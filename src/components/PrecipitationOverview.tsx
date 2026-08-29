@@ -60,15 +60,15 @@ export default function PrecipitationOverview({
     precipitationData[0];
 
   return (
-    <div className="flex min-h-70 w-full flex-col p-2 md:p-4">
+    <div className="flex min-h-70 w-full flex-col bg-white p-2 dark:bg-neutral-800 md:p-4">
       {/* Header */}
       <div className="flex shrink-0 items-start justify-between">
         <div>
-          <h2 className="text-base font-semibold text-neutral-900">
+          <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
             Intensitas Hujan
           </h2>
 
-          <p className="mt-1 text-xs leading-relaxed text-neutral-500">
+          <p className="mt-1 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
             Pembaruan estimasi curah hujan setiap jam
           </p>
         </div>
@@ -76,16 +76,18 @@ export default function PrecipitationOverview({
 
       {/* Summary */}
       <div className="mt-1 shrink-0">
-        <p className="text-[11px] font-medium text-neutral-400">
+        <p className="text-[11px] font-medium text-neutral-400 dark:text-neutral-500">
           Total Curah Hujan
         </p>
 
         <div className="flex items-baseline gap-1.5">
-          <p className="text-2xl font-bold text-neutral-900">
+          <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
             {totalRainToday} mm
           </p>
 
-          <span className="text-[11px] text-neutral-400">hari ini</span>
+          <span className="text-[11px] text-neutral-400 dark:text-neutral-500">
+            hari ini
+          </span>
         </div>
       </div>
 
@@ -102,6 +104,7 @@ export default function PrecipitationOverview({
               bottom: 0,
             }}
           >
+            {/* X Axis */}
             <XAxis
               dataKey="time"
               ticks={dynamicTicks}
@@ -109,24 +112,37 @@ export default function PrecipitationOverview({
               tickLine={false}
               tick={{
                 fontSize: 11,
-                fill: "#a3a3a3",
+                fill: "currentColor",
               }}
+              className="text-neutral-400 dark:text-neutral-500"
               dy={8}
             />
 
+            {/* Precipitation */}
             <Bar dataKey="mm" radius={[3, 3, 0, 0]}>
               {precipitationData.map(
-                (entry: { time: string; mm: number; actualMm: number }) => (
+                ({
+                  time,
+                  mm,
+                  actualMm,
+                }: {
+                  time: string;
+                  mm: number;
+                  actualMm: number;
+                }) => (
                   <Cell
-                    key={entry.time}
-                    fill={
-                      entry.actualMm <= 0 ? "#e5e5e5" : "hsl(199, 89%, 48%)"
+                    key={time}
+                    className={
+                      actualMm <= 0
+                        ? "fill-neutral-200 dark:fill-neutral-700"
+                        : "fill-sky-500 dark:fill-sky-400"
                     }
                   />
                 ),
               )}
             </Bar>
 
+            {/* Current Time */}
             <ReferenceLine
               x={nowPoint.time}
               stroke="#ef4444"

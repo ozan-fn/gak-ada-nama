@@ -1,4 +1,5 @@
-import { User, Lock, Bell } from "lucide-react";
+import { useEffect, useState } from "react";
+import { User, Lock, Bell, Palette } from "lucide-react";
 import { cn } from "#/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -6,10 +7,11 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 const navItems = [
   { key: "profile" as const, label: "Profil", icon: User },
   { key: "security" as const, label: "Keamanan", icon: Lock },
-  { key: "notification" as const, label: "Notifikasi", icon: Bell }
+  { key: "notification" as const, label: "Notifikasi", icon: Bell },
+  { key: "appearance" as const, label: "Tampilan", icon: Palette }
 ];
 
-type SettingsTab = "profile" | "security" | "notification";
+type SettingsTab = "profile" | "security" | "notification" | "appearance";
 
 interface SettingsNavProps {
   user: { name?: string | null; email: string };
@@ -22,6 +24,22 @@ export default function SettingsNav({
   activeTab,
   onTabChange,
 }: SettingsNavProps) {
+  const [, forceUpdate] = useState({});
+
+  useEffect(() => {
+    // Watch for theme changes and force re-render
+    const observer = new MutationObserver(() => {
+      forceUpdate({});
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   const getInitials = (name?: string | null) => {
     if (!name) return "U";
     return name
@@ -33,19 +51,19 @@ export default function SettingsNav({
   };
 
   return (
-    <aside className="md:w-56 md:shrink-0">
-      <div className="rounded-lg border border-neutral-200 bg-white p-3">
-        <div className="mb-3 flex items-center gap-2.5 border-b border-border pb-3">
-          <Avatar className="h-9 w-9">
-            <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+    <aside className="flex min-h-0 flex-1 shrink-0 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg bg-white p-3 shadow-sm dark:bg-neutral-800">
+        <div className="mb-3 flex items-center gap-2.5 border-b border-neutral-200 pb-3 dark:border-neutral-700">
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="bg-sky-500 text-xs font-semibold text-white dark:bg-sky-600">
               {getInitials(user.name)}
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium">
+            <p className="truncate text-xs font-semibold text-neutral-900 dark:text-neutral-100">
               {user.name || "Pengguna"}
             </p>
-            <p className="truncate text-xs text-muted-foreground">
+            <p className="truncate text-[11px] text-neutral-500 dark:text-neutral-400">
               {user.email}
             </p>
           </div>
@@ -60,12 +78,14 @@ export default function SettingsNav({
                 key={item.key}
                 variant={isActive ? "secondary" : "ghost"}
                 className={cn(
-                  "justify-start gap-2 h-9 text-xs px-2.5",
-                  isActive ? "font-medium" : "font-normal text-muted-foreground"
+                  "h-8 justify-start gap-2 px-2.5 text-xs",
+                  isActive
+                    ? "font-semibold text-neutral-900 dark:bg-neutral-700 dark:text-neutral-100"
+                    : "font-normal text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
                 )}
                 onClick={() => onTabChange(item.key)}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className="h-3.5 w-3.5" />
                 {item.label}
               </Button>
             );

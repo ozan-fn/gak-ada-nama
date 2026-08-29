@@ -173,7 +173,6 @@ function RouteComponent() {
           location={location}
           stableLocation={stableLocation}
           reports={nearbyReports}
-          radiusKm={REPORT_RADIUS_KM}
           selectedLocation={selectedLocation}
           onLocationSelect={handleLocationSelect}
           onReportSelect={setSelectedReport}
@@ -223,20 +222,20 @@ function RouteComponent() {
     <main className="min-h-[calc(100vh-3.5rem)]">
       <div className="flex flex-col gap-2 p-4 lg:flex-row lg:items-stretch">
         {/* Left */}
-        <div className="flex w-full flex-col gap-3 rounded-xl bg-muted/50 p-2 lg:w-2/3 lg:self-stretch">
+        <div className="flex w-full flex-col gap-3 rounded-xl bg-muted/50 p-2 dark:bg-muted/30 lg:w-2/3 lg:self-stretch">
           {/* Header */}
-          <div className="flex shrink-0 flex-col gap-2 rounded-lg bg-white p-2.5 shadow-xs sm:flex-row sm:items-center sm:justify-between sm:px-2.5 sm:py-2">
-            <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-600 sm:text-sm">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600">
+          <div className="flex shrink-0 flex-col gap-2 rounded-lg bg-white p-2.5 shadow-xs dark:bg-neutral-800 sm:flex-row sm:items-center sm:justify-between sm:px-2.5 sm:py-2">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400 sm:text-sm">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 dark:bg-red-900/30 dark:text-red-400">
                 <span>Peta Risiko</span>
               </div>
 
-              <span className="text-xs font-medium text-neutral-800">
+              <span className="text-xs font-medium text-neutral-800 dark:text-neutral-100">
                 Visualisasi risiko lingkungan per wilayah
               </span>
 
               {selectedLocation && (
-                <span className="rounded-full border border-red-100 bg-white px-2 py-1 text-[11px] font-semibold text-red-600">
+                <span className="rounded-full border border-red-100 bg-white px-2 py-1 text-[11px] font-semibold text-red-600 dark:border-red-900/30 dark:bg-red-950/30 dark:text-red-400">
                   {nearbyReports.length} laporan dalam {REPORT_RADIUS_KM} km
                 </span>
               )}
@@ -248,7 +247,7 @@ function RouteComponent() {
                 <Skeleton className="h-8 w-32 rounded-lg" />
               ) : (
                 <div
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50/80 px-2.5 py-1.5 text-xs font-medium text-neutral-700"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50/80 px-2.5 py-1.5 text-xs font-medium text-neutral-700 dark:border-neutral-700 dark:bg-neutral-700/40 dark:text-neutral-300"
                   title={
                     selectedLocation
                       ? "Lokasi Terpilih"
@@ -257,7 +256,7 @@ function RouteComponent() {
                         : "Lokasi Anda Saat Ini"
                   }
                 >
-                  <MapPin className="h-3.5 w-3.5 text-neutral-600" />
+                  <MapPin className="h-3.5 w-3.5 text-neutral-600 dark:text-neutral-400" />
                   <span>{selectedLocation?.city || location.city}</span>
                 </div>
               )}
@@ -265,10 +264,9 @@ function RouteComponent() {
           </div>
 
           {/* Map */}
-          <div className="h-[calc(100vh-9.5rem)] overflow-hidden rounded-lg bg-white shadow-sm">
+          <div className="h-[calc(100vh-9.5rem)] overflow-hidden rounded-lg bg-white shadow-sm dark:bg-neutral-800">
             <RiskMap
               reports={nearbyReports}
-              radiusKm={REPORT_RADIUS_KM}
               onLocationSelect={handleLocationSelect}
               flyToLocation={selectedLocation}
             />
@@ -276,7 +274,7 @@ function RouteComponent() {
         </div>
 
         {/* Right */}
-        <div className="flex w-full flex-col gap-3 rounded-xl bg-muted/50 p-2 lg:h-[calc(100vh-4.5rem)] lg:w-1/3">
+        <div className="flex w-full flex-col gap-3 rounded-xl bg-muted/50 p-2 dark:bg-muted/30 lg:h-[calc(100vh-4.5rem)] lg:w-1/3">
           <RiskInformationHeader
             loading={location.loading}
             localTime={localTime}

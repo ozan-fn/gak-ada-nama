@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, redirect, useLocation } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "#/components/AppSidebar";
 import { getSession } from "@/lib/auth.functions";
@@ -19,6 +20,18 @@ export const Route = createFileRoute("/_protected")({
 function ProtectedLayout() {
   const { pathname } = useLocation();
   const isReportRoute = pathname === "/dashboard/report";
+
+  // Apply theme immediately on mount to prevent flash
+  useEffect(() => {
+    const theme = localStorage.getItem("theme");
+    const isDark = theme === "dark";
+    
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, []);
 
   const content = (
     <SidebarProvider>

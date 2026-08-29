@@ -414,7 +414,7 @@ function RiskMapContent({
   return (
     <>
       {/* Report Counter Badge - follows user location */}
-      <div className="absolute left-3 top-3 z-10 inline-flex items-center gap-2 rounded-lg border border-amber-200/80 bg-white/95 px-3 py-2 text-xs font-semibold text-neutral-700 shadow-sm backdrop-blur-md">
+      <div className="absolute left-3 top-3 z-10 inline-flex items-center gap-2 rounded-lg border border-amber-200/80 bg-white/95 dark:bg-neutral-800/95 px-3 py-2 text-xs font-semibold text-neutral-700 dark:text-neutral-400 shadow-sm backdrop-blur-md">
         <MapPin className="size-3.5 text-amber-600" />
 
         <span>
@@ -423,68 +423,68 @@ function RiskMapContent({
       </div>
 
       {/* Top Right Controls */}
-      <div className="absolute right-3 top-3 z-10 flex flex-col rounded-lg border border-neutral-200 bg-white shadow-sm">
+      <div className="absolute right-3 top-3 z-10 flex flex-col rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-sm">
         <div className="relative">
           <button
             type="button"
             onClick={() => setShowLayers(!showLayers)}
-            className="flex h-9 w-9 items-center justify-center rounded-t-lg border-b border-neutral-200 transition-colors hover:bg-neutral-50"
+            className="flex h-9 w-9 items-center justify-center rounded-t-lg border-b border-neutral-200 dark:border-neutral-700 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700"
             aria-label="Layers"
           >
-            <Layers className="h-4 w-4 text-neutral-700" />
+            <Layers className="h-4 w-4 text-neutral-700 dark:text-neutral-400" />
           </button>
 
           {showLayers && (
-            <div className="absolute right-full top-0 z-20 mr-2 w-52 rounded-lg border border-neutral-200 bg-white p-3 shadow-lg">
-              <p className="mb-3 text-xs font-semibold text-neutral-700">
+            <div className="absolute right-full top-0 z-20 mr-2 w-52 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-3 shadow-lg">
+              <p className="mb-3 text-xs font-semibold text-neutral-700 dark:text-neutral-400">
                 Map Layers
               </p>
 
-              <label className="mb-2 flex items-center gap-2 text-sm text-neutral-700">
+              <label className="mb-2 flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-400">
                 <input
                   type="checkbox"
                   checked
                   disabled
-                  className="h-4 w-4 rounded border-neutral-300"
+                  className="h-4 w-4 rounded border-neutral-300 dark:border-neutral-600"
                 />
 
                 <span>AQI Heatmap</span>
               </label>
 
-              <label className="mb-2 flex cursor-pointer items-center gap-2 text-sm text-neutral-700">
+              <label className="mb-2 flex cursor-pointer items-center gap-2 text-sm text-neutral-700 dark:text-neutral-400">
                 <input
                   type="checkbox"
                   checked={showRainRadar}
                   onChange={(event) => setShowRainRadar(event.target.checked)}
-                  className="h-4 w-4 cursor-pointer rounded border-neutral-300"
+                  className="h-4 w-4 cursor-pointer rounded border-neutral-300 dark:border-neutral-600"
                 />
 
                 <span>Rain Radar</span>
               </label>
 
-              <label className="mb-2 flex cursor-pointer items-center gap-2 text-sm text-neutral-700">
+              <label className="mb-2 flex cursor-pointer items-center gap-2 text-sm text-neutral-700 dark:text-neutral-400">
                 <input
                   type="checkbox"
                   checked={showFireLayer}
                   onChange={(event) => setShowFireLayer(event.target.checked)}
-                  className="h-4 w-4 cursor-pointer rounded border-neutral-300"
+                  className="h-4 w-4 cursor-pointer rounded border-neutral-300 dark:border-neutral-600"
                 />
 
                 <span>Fire Hotspots</span>
               </label>
 
-              <label className="mb-3 flex cursor-pointer items-center gap-2 border-b border-neutral-100 pb-3 text-sm text-neutral-700">
+              <label className="mb-3 flex cursor-pointer items-center gap-2 border-b border-neutral-100 dark:border-neutral-700 pb-3 text-sm text-neutral-700 dark:text-neutral-400">
                 <input
                   type="checkbox"
                   checked={showMarkers}
                   onChange={(event) => setShowMarkers(event.target.checked)}
-                  className="h-4 w-4 cursor-pointer rounded border-neutral-300"
+                  className="h-4 w-4 cursor-pointer rounded border-neutral-300 dark:border-neutral-600"
                 />
 
                 <span>Show Stations</span>
               </label>
 
-              <p className="mb-2 text-xs font-semibold text-neutral-700">
+              <p className="mb-2 text-xs font-semibold text-neutral-700 dark:text-neutral-400">
                 Filter AQI Stations
               </p>
 
@@ -493,7 +493,7 @@ function RiskMapContent({
                 onChange={(event) =>
                   setAqiFilter(event.target.value as MapContext["aqiFilter"])
                 }
-                className="w-full rounded border border-neutral-300 bg-white p-1 text-sm text-neutral-700 focus:border-blue-500 focus:outline-none"
+                className="w-full rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 p-1 text-sm text-neutral-700 dark:text-neutral-300 focus:border-blue-500 focus:outline-none"
               >
                 <option value="all">All Stations</option>
                 <option value="good">Good (0-50)</option>
@@ -508,12 +508,12 @@ function RiskMapContent({
         <button
           type="button"
           onClick={resetView}
-          className="flex h-9 w-9 items-center justify-center border-b border-neutral-200 transition-colors hover:bg-neutral-50"
+          className="flex h-9 w-9 items-center justify-center border-b border-neutral-200 dark:border-neutral-700 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700"
           aria-label="Reset arah"
           title="Reset arah"
         >
           <Compass
-            className="h-4 w-4 text-neutral-700"
+            className="h-4 w-4 text-neutral-700 dark:text-neutral-400"
             style={{
               transform: `rotate(${-bearing}deg)`,
             }}
@@ -523,55 +523,55 @@ function RiskMapContent({
         <button
           type="button"
           onClick={goToUserLocation}
-          className="flex h-9 w-9 items-center justify-center rounded-b-lg transition-colors hover:bg-neutral-50"
+          className="flex h-9 w-9 items-center justify-center rounded-b-lg transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700"
           aria-label="Ke lokasi saya"
           title="Ke lokasi saya"
         >
-          <Navigation className="h-4 w-4 text-neutral-700" />
+          <Navigation className="h-4 w-4 text-neutral-700 dark:text-neutral-400" />
         </button>
       </div>
 
       {/* Zoom Controls */}
-      <div className="absolute bottom-3 right-3 z-10 flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">
+      <div className="absolute bottom-3 right-3 z-10 flex flex-col overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-sm">
         <button
           type="button"
           onClick={() => handleZoom(-1)}
-          className="flex h-9 w-9 items-center justify-center border-b border-neutral-200 transition-colors hover:bg-neutral-50"
+          className="flex h-9 w-9 items-center justify-center border-b border-neutral-200 dark:border-neutral-700 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700"
           aria-label="Zoom out"
         >
-          <Minus className="h-4 w-4 text-neutral-700" />
+          <Minus className="h-4 w-4 text-neutral-700 dark:text-neutral-400" />
         </button>
 
         <button
           type="button"
           onClick={() => handleZoom(1)}
-          className="flex h-9 w-9 items-center justify-center transition-colors hover:bg-neutral-50"
+          className="flex h-9 w-9 items-center justify-center transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700"
           aria-label="Zoom in"
         >
-          <Plus className="h-4 w-4 text-neutral-700" />
+          <Plus className="h-4 w-4 text-neutral-700 dark:text-neutral-400" />
         </button>
       </div>
 
       {/* Map Legend */}
-      <div className="absolute bottom-3 left-3 z-10 flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white/90 shadow-sm backdrop-blur-sm">
+      <div className="absolute bottom-3 left-3 z-10 flex flex-col overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white/90 dark:bg-neutral-800/90 shadow-sm backdrop-blur-sm">
         <button
           type="button"
           onClick={() => setShowLegend((previous) => !previous)}
-          className="flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-neutral-50"
+          className="flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700"
         >
-          <h4 className="text-xs font-bold text-neutral-800">Map Legend</h4>
+          <h4 className="text-xs font-bold text-neutral-800 dark:text-neutral-100">Map Legend</h4>
 
           {showLegend ? (
-            <ChevronDown className="h-3 w-3 text-neutral-600" />
+            <ChevronDown className="h-3 w-3 text-neutral-600 dark:text-neutral-400" />
           ) : (
-            <ChevronUp className="h-3 w-3 text-neutral-600" />
+            <ChevronUp className="h-3 w-3 text-neutral-600 dark:text-neutral-400" />
           )}
         </button>
 
         {showLegend && (
           <div className="px-3 pb-3">
-            <div className="border-t border-neutral-100 pt-2">
-              <div className="mb-3 space-y-1.5 border-b border-neutral-100 pb-3 text-[10px] text-neutral-600">
+            <div className="border-t border-neutral-100 dark:border-neutral-700 pt-2">
+              <div className="mb-3 space-y-1.5 border-b border-neutral-100 dark:border-neutral-700 pb-3 text-[10px] text-neutral-600 dark:text-neutral-400">
                 <div className="flex items-center gap-2">
                   <span className="size-3 rounded-full border-2 border-white bg-amber-400 shadow-sm" />
                   <span>Laporan masyarakat</span>
@@ -585,11 +585,11 @@ function RiskMapContent({
                   <span>Area ketidakpastian</span>
                 </div>
               </div>
-              <p className="mb-2 text-[10px] font-semibold text-neutral-700">
+              <p className="mb-2 text-[10px] font-semibold text-neutral-700 dark:text-neutral-400">
                 AQI Quality
               </p>
 
-              <div className="flex flex-col gap-1 text-[10px] text-neutral-600">
+              <div className="flex flex-col gap-1 text-[10px] text-neutral-600 dark:text-neutral-400">
                 <div className="flex items-center gap-2">
                   <span className="h-3 w-3 shrink-0 rounded-full bg-[#00e400] opacity-80" />
                   <span>Good (0-50)</span>
@@ -623,12 +623,12 @@ function RiskMapContent({
             </div>
 
             {showFireLayer && (
-              <div className="mt-3 border-t border-neutral-100 pt-3">
-                <p className="mb-2 text-[10px] font-semibold text-neutral-700">
+              <div className="mt-3 border-t border-neutral-100 dark:border-neutral-700 pt-3">
+                <p className="mb-2 text-[10px] font-semibold text-neutral-700 dark:text-neutral-400">
                   Fire Hotspots (5d)
                 </p>
 
-                <div className="flex flex-col gap-1 text-[10px] text-neutral-600">
+                <div className="flex flex-col gap-1 text-[10px] text-neutral-600 dark:text-neutral-400">
                   <div className="flex items-center gap-2">
                     <span className="h-2 w-2 shrink-0 rounded-full border border-white bg-[#fbbf24] shadow-sm" />
                     <span>Medium (50-65%)</span>
@@ -645,7 +645,7 @@ function RiskMapContent({
                   </div>
                 </div>
 
-                <p className="mt-2 text-[9px] italic text-neutral-500">
+                <p className="mt-2 text-[9px] italic text-neutral-500 dark:text-neutral-400">
                   NASA FIRMS VIIRS
                 </p>
               </div>
@@ -657,7 +657,7 @@ function RiskMapContent({
       {/* AI Recommendation Modal */}
       {showAIPanel && alerts.length > 0 && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="mx-4 max-w-md rounded-lg bg-white p-4 shadow-xl">
+          <div className="mx-4 max-w-md rounded-lg bg-white dark:bg-neutral-800 p-4 shadow-xl">
             {(() => {
               const dangersData = alerts.map((alert, index) => {
                 const estimatedDistance = (index + 1) * 1000;
@@ -699,7 +699,7 @@ function RiskMapContent({
                         )}
                       </span>
 
-                      <h3 className="text-lg font-semibold">
+                      <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
                         AI Recommendation
                       </h3>
                     </div>
@@ -707,7 +707,7 @@ function RiskMapContent({
                     <button
                       type="button"
                       onClick={() => setShowAIPanel(false)}
-                      className="text-gray-400 hover:text-gray-600"
+                      className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
                       aria-label="Close"
                     >
                       ✕
@@ -727,13 +727,13 @@ function RiskMapContent({
 
                   {recommendation.reasons.length > 0 && (
                     <div className="mb-3">
-                      <h4 className="mb-2 text-sm font-semibold text-gray-700">
+                      <h4 className="mb-2 text-sm font-semibold text-neutral-700 dark:text-neutral-300">
                         Detected Hazards:
                       </h4>
 
                       <ul className="space-y-1">
                         {recommendation.reasons.map((reason) => (
-                          <li key={reason} className="text-sm text-gray-600">
+                          <li key={reason} className="text-sm text-neutral-600 dark:text-neutral-400">
                             • {reason}
                           </li>
                         ))}
@@ -743,13 +743,13 @@ function RiskMapContent({
 
                   {recommendation.alternativeActions.length > 0 && (
                     <div className="mb-3">
-                      <h4 className="mb-2 text-sm font-semibold text-gray-700">
+                      <h4 className="mb-2 text-sm font-semibold text-neutral-700 dark:text-neutral-300">
                         Recommended Actions:
                       </h4>
 
                       <ul className="space-y-1">
                         {recommendation.alternativeActions.map((action) => (
-                          <li key={action} className="text-sm text-gray-600">
+                          <li key={action} className="text-sm text-neutral-600 dark:text-neutral-400">
                             ✓ {action}
                           </li>
                         ))}
@@ -758,8 +758,8 @@ function RiskMapContent({
                   )}
 
                   {recommendation.bestTime && (
-                    <div className="rounded-lg bg-blue-50 p-2">
-                      <p className="text-sm text-blue-800">
+                    <div className="rounded-lg bg-blue-50 dark:bg-blue-900/30 p-2">
+                      <p className="text-sm text-blue-800 dark:text-blue-300">
                         <strong>Best time to go:</strong>{" "}
                         {recommendation.bestTime}
                       </p>

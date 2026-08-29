@@ -928,7 +928,7 @@ export default function MobileRiskMap({
                 }}
                 className="absolute left-3 top-3 z-10 flex flex-col gap-2"
               >
-                <div className="inline-flex items-center gap-2 rounded-lg border border-amber-200/80 bg-white/95 px-3 py-2 text-xs font-semibold text-neutral-700 shadow-sm backdrop-blur-md">
+                <div className="inline-flex items-center gap-2 rounded-lg border border-amber-200/80 bg-white/95 dark:bg-neutral-800/95 px-3 py-2 text-xs font-semibold text-neutral-700 dark:text-neutral-400 shadow-sm backdrop-blur-md">
                   <MapPin className="size-3.5 text-amber-600" />
 
                   <span>
@@ -944,69 +944,69 @@ export default function MobileRiskMap({
                 style={{
                   opacity: controlsOpacity,
                 }}
-                className="absolute right-3 top-3 z-10 flex flex-col rounded-lg border border-neutral-200 bg-white shadow-sm"
+                className="absolute right-3 top-3 z-10 flex flex-col rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-sm"
               >
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => setShowLayers(!showLayers)}
-                    className="flex h-9 w-9 items-center justify-center rounded-t-lg border-b border-neutral-200 transition-colors hover:bg-neutral-50"
+                    className="flex h-9 w-9 items-center justify-center rounded-t-lg border-b border-neutral-200 dark:border-neutral-700 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700"
                     aria-label="Layers"
                   >
-                    <Layers className="h-4 w-4 text-neutral-700" />
+                    <Layers className="h-4 w-4 text-neutral-700 dark:text-neutral-400" />
                   </button>
 
                   {showLayers && (
-                    <div className="absolute right-full top-0 z-20 mr-2 w-52 rounded-lg border border-neutral-200 bg-white p-3 shadow-lg">
-                      <p className="mb-3 text-xs font-semibold text-neutral-700">
+                    <div className="absolute right-full top-0 z-20 mr-2 w-52 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-3 shadow-lg">
+                      <p className="mb-3 text-xs font-semibold text-neutral-700 dark:text-neutral-400">
                         Map Layers
                       </p>
 
-                      <label className="mb-2 flex items-center gap-2 text-sm text-neutral-700">
+                      <label className="mb-2 flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-400">
                         <input
                           type="checkbox"
                           checked
                           disabled
-                          className="h-4 w-4 rounded border-neutral-300"
+                          className="h-4 w-4 rounded border-neutral-300 dark:border-neutral-600"
                         />
 
                         <span>AQI Heatmap</span>
                       </label>
 
-                      <label className="mb-2 flex cursor-pointer items-center gap-2 text-sm text-neutral-700">
+                      <label className="mb-2 flex cursor-pointer items-center gap-2 text-sm text-neutral-700 dark:text-neutral-400">
                         <input
                           type="checkbox"
                           checked={showRainRadar}
                           onChange={(e) => setShowRainRadar(e.target.checked)}
-                          className="h-4 w-4 cursor-pointer rounded border-neutral-300"
+                          className="h-4 w-4 cursor-pointer rounded border-neutral-300 dark:border-neutral-600"
                         />
 
                         <span>Rain Radar</span>
                       </label>
 
-                      <label className="mb-2 flex cursor-pointer items-center gap-2 text-sm text-neutral-700">
+                      <label className="mb-2 flex cursor-pointer items-center gap-2 text-sm text-neutral-700 dark:text-neutral-400">
                         <input
                           type="checkbox"
                           checked={showFireLayer}
                           onChange={(e) => setShowFireLayer(e.target.checked)}
-                          className="h-4 w-4 cursor-pointer rounded border-neutral-300"
+                          className="h-4 w-4 cursor-pointer rounded border-neutral-300 dark:border-neutral-600"
                         />
 
                         <span>Fire Hotspots</span>
                       </label>
 
-                      <label className="mb-3 flex cursor-pointer items-center gap-2 border-b border-neutral-100 pb-3 text-sm text-neutral-700">
+                      <label className="mb-3 flex cursor-pointer items-center gap-2 border-b border-neutral-100 dark:border-neutral-700 pb-3 text-sm text-neutral-700 dark:text-neutral-400">
                         <input
                           type="checkbox"
                           checked={showMarkers}
                           onChange={(e) => setShowMarkers(e.target.checked)}
-                          className="h-4 w-4 cursor-pointer rounded border-neutral-300"
+                          className="h-4 w-4 cursor-pointer rounded border-neutral-300 dark:border-neutral-600"
                         />
 
                         <span>Show Stations</span>
                       </label>
 
-                      <p className="mb-2 text-xs font-semibold text-neutral-700">
+                      <p className="mb-2 text-xs font-semibold text-neutral-700 dark:text-neutral-400">
                         Filter AQI Stations
                       </p>
 
@@ -1017,7 +1017,7 @@ export default function MobileRiskMap({
                             e.target.value as MapContext["aqiFilter"],
                           )
                         }
-                        className="w-full rounded border border-neutral-300 bg-white p-1 text-sm text-neutral-700 focus:border-blue-500 focus:outline-none"
+                        className="w-full rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 p-1 text-sm text-neutral-700 dark:text-neutral-300 focus:border-blue-500 focus:outline-none"
                       >
                         <option value="all">All Stations</option>
 
@@ -1037,12 +1037,12 @@ export default function MobileRiskMap({
                 <button
                   type="button"
                   onClick={resetView}
-                  className="flex h-9 w-9 items-center justify-center border-b border-neutral-200 transition-colors hover:bg-neutral-50"
+                  className="flex h-9 w-9 items-center justify-center border-b border-neutral-200 dark:border-neutral-700 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700"
                   aria-label="Reset arah"
                   title="Reset arah"
                 >
                   <Compass
-                    className="h-4 w-4 text-neutral-700"
+                    className="h-4 w-4 text-neutral-700 dark:text-neutral-400"
                     style={{
                       transform: `rotate(${-bearing}deg)`,
                     }}
@@ -1053,11 +1053,11 @@ export default function MobileRiskMap({
                 <button
                   type="button"
                   onClick={goToUserLocation}
-                  className="flex h-9 w-9 items-center justify-center rounded-b-lg transition-colors hover:bg-neutral-50"
+                  className="flex h-9 w-9 items-center justify-center rounded-b-lg transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700"
                   aria-label="Ke lokasi saya"
                   title="Ke lokasi saya"
                 >
-                  <Navigation className="h-4 w-4 text-neutral-700" />
+                  <Navigation className="h-4 w-4 text-neutral-700 dark:text-neutral-400" />
                 </button>
               </motion.div>
 
@@ -1068,24 +1068,24 @@ export default function MobileRiskMap({
                 style={{
                   opacity: controlsOpacity,
                 }}
-                className="absolute bottom-24 right-3 z-10 flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm"
+                className="absolute bottom-24 right-3 z-10 flex flex-col overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 shadow-sm"
               >
                 <button
                   type="button"
                   onClick={() => handleZoom(-1)}
-                  className="flex h-9 w-9 items-center justify-center border-b border-neutral-200 transition-colors hover:bg-neutral-50"
+                  className="flex h-9 w-9 items-center justify-center border-b border-neutral-200 dark:border-neutral-700 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700"
                   aria-label="Zoom out"
                 >
-                  <Minus className="h-4 w-4 text-neutral-700" />
+                  <Minus className="h-4 w-4 text-neutral-700 dark:text-neutral-400" />
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleZoom(1)}
-                  className="flex h-9 w-9 items-center justify-center transition-colors hover:bg-neutral-50"
+                  className="flex h-9 w-9 items-center justify-center transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700"
                   aria-label="Zoom in"
                 >
-                  <Plus className="h-4 w-4 text-neutral-700" />
+                  <Plus className="h-4 w-4 text-neutral-700 dark:text-neutral-400" />
                 </button>
               </motion.div>
 
@@ -1096,14 +1096,14 @@ export default function MobileRiskMap({
                 style={{
                   opacity: controlsOpacity,
                 }}
-                className="absolute bottom-24 left-3 z-10 flex flex-col rounded-lg border border-neutral-200 bg-white/90 p-3 shadow-sm backdrop-blur-sm"
+                className="absolute bottom-24 left-3 z-10 flex flex-col rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white/90 dark:bg-neutral-800/90 p-3 shadow-sm backdrop-blur-sm"
               >
-                <h4 className="mb-2 text-xs font-bold text-neutral-800">
+                <h4 className="mb-2 text-xs font-bold text-neutral-800 dark:text-neutral-100">
                   Map Legend
                 </h4>
 
-                <div className="border-t border-neutral-100 pt-2">
-                  <div className="mb-3 space-y-1.5 border-b border-neutral-100 pb-3 text-[10px] text-neutral-600">
+                <div className="border-t border-neutral-100 dark:border-neutral-700 pt-2">
+                  <div className="mb-3 space-y-1.5 border-b border-neutral-100 dark:border-neutral-700 pb-3 text-[10px] text-neutral-600 dark:text-neutral-400">
                     <div className="flex items-center gap-2">
                       <span className="size-3 rounded-full border-2 border-white bg-amber-400 shadow-sm" />
                       <span>Laporan masyarakat</span>
@@ -1118,11 +1118,11 @@ export default function MobileRiskMap({
                     </div>
                   </div>
 
-                  <p className="mb-2 text-[10px] font-semibold text-neutral-700">
+                  <p className="mb-2 text-[10px] font-semibold text-neutral-700 dark:text-neutral-400">
                     AQI Quality
                   </p>
 
-                  <div className="flex flex-col gap-1 text-[10px] text-neutral-600">
+                  <div className="flex flex-col gap-1 text-[10px] text-neutral-600 dark:text-neutral-400">
                     <div className="flex items-center gap-2">
                       <span className="h-3 w-3 rounded-full bg-[#00e400] opacity-80" />
                       Good (0-50)
@@ -1191,7 +1191,7 @@ export default function MobileRiskMap({
         }}
         className="absolute inset-x-0 bottom-0 z-10 max-h-[82vh] overflow-hidden"
       >
-        <div className="rounded-t-4xl bg-white shadow-sm">
+        <div className="rounded-t-4xl bg-white dark:bg-neutral-900 shadow-sm">
           {/* Handle */}
           <button
             type="button"
@@ -1199,21 +1199,21 @@ export default function MobileRiskMap({
             onClick={toggleSheet}
             className="relative flex w-full cursor-grab touch-none flex-col items-center gap-3 py-3 active:cursor-grabbing"
           >
-            <div className="h-1 w-10 rounded-full bg-neutral-300" />
+            <div className="h-1 w-10 rounded-full bg-neutral-300 dark:bg-neutral-700" />
 
             {/* Location */}
             <div className="flex w-full items-center justify-center gap-2">
-              <div className="flex items-center gap-1.5 text-xs font-medium text-neutral-600">
-                <MapPin className="size-3.5 text-neutral-500" strokeWidth={2} />
+              <div className="flex items-center gap-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-400">
+                <MapPin className="size-3.5 text-neutral-500 dark:text-neutral-400" strokeWidth={2} />
 
                 <span>{selectedLocation?.city || location.city}</span>
               </div>
 
               {selectedLocation && reports.length > 0 && (
                 <>
-                  <span className="text-neutral-400">•</span>
+                  <span className="text-neutral-400 dark:text-neutral-600">•</span>
 
-                  <span className="text-xs font-semibold text-red-600">
+                  <span className="text-xs font-semibold text-red-600 dark:text-red-400">
                     {reports.length} laporan
                   </span>
                 </>
@@ -1225,7 +1225,7 @@ export default function MobileRiskMap({
             style={{
               opacity: contentOpacity,
             }}
-            className="max-h-[calc(82vh-80px)] overflow-y-auto bg-neutral-50 px-4"
+            className="max-h-[calc(82vh-80px)] overflow-y-auto bg-neutral-50 dark:bg-neutral-950 px-4"
           >
             <div className="space-y-3 pb-4 pt-2">{renderSheetContent()}</div>
           </motion.div>
