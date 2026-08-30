@@ -175,36 +175,26 @@ export default function InsightDetail({ insight, rank }: InsightDetailProps) {
             dark:shadow-none
           "
         >
-          {/* Decorative background */}
-          <div
-            className="
-              pointer-events-none
-              absolute
-              -right-24
-              -top-28
-              size-64
-              rounded-full
-              bg-sky-100/80
-              opacity-80
-              dark:bg-sky-950/20
-            "
-            aria-hidden="true"
-          />
-
-          <div
-            className="
-              pointer-events-none
-              absolute
-              right-8
-              top-8
-              size-28
-              rounded-full
-              border-16
-              border-sky-100
-              dark:border-sky-900/20
-            "
-            aria-hidden="true"
-          />
+          {/* Hero thumbnail from supporting reports */}
+          {allImages.length > 0 && (
+            <img
+              src={allImages[0]}
+              alt={insight.title}
+              loading="lazy"
+              className="
+                pointer-events-none
+                absolute
+                right-0
+                top-0
+                h-full
+                w-48
+                object-cover
+                opacity-20
+                dark:opacity-10
+                lg:w-64
+              "
+            />
+          )}
 
           <div className="relative p-5 sm:p-6 lg:p-7">
             {/* Meta */}
