@@ -9,8 +9,10 @@ import {
   Users,
   Clock3,
 } from "lucide-react";
+import { getActivitiesFn, type ActivityGroup, type ActivityEvent } from "#/lib/activity.functions.server";
 
 export const Route = createFileRoute("/_protected/dashboard/activity")({
+  loader: () => getActivitiesFn(),
   component: RouteComponent,
 });
 
@@ -21,19 +23,6 @@ type EventType =
   | "risk-new"
   | "risk-resolved"
   | "community";
-
-type ActivityEvent = {
-  id: number;
-  type: EventType;
-  time: string;
-  title: string;
-  description: string;
-};
-
-type ActivityGroup = {
-  day: string;
-  events: ActivityEvent[];
-};
 
 const eventConfig: Record<
   EventType,
@@ -99,68 +88,17 @@ const eventConfig: Record<
   },
 };
 
-const groups: ActivityGroup[] = [
-  {
-    day: "Hari ini",
-    events: [
-      {
-        id: 1,
-        type: "verified",
-        time: "14:32",
-        title: "Laporan terverifikasi",
-        description:
-          '"Genangan di Jalan Sudirman" telah diverifikasi oleh sistem komunitas.',
-      },
-      {
-        id: 2,
-        type: "risk-new",
-        time: "13:48",
-        title: "Peringatan baru di sekitar",
-        description: "Risiko genangan terdeteksi 850 m dari lokasi kamu.",
-      },
-      {
-        id: 3,
-        type: "updated",
-        time: "12:20",
-        title: "Laporan diperbarui",
-        description: "2 laporan serupa ditemukan dan digabungkan.",
-      },
-    ],
-  },
-  {
-    day: "Kemarin",
-    events: [
-      {
-        id: 4,
-        type: "risk-resolved",
-        time: "18:42",
-        title: "Peringatan selesai",
-        description:
-          "Risiko kualitas udara di sekitar lokasi kamu telah berakhir.",
-      },
-      {
-        id: 5,
-        type: "community",
-        time: "16:20",
-        title: "Laporanmu membantu memicu peringatan",
-        description:
-          '"Sampah menumpuk di area pasar" dijadikan salah satu dasar peringatan risiko sedang.',
-      },
-      {
-        id: 6,
-        type: "rejected",
-        time: "09:05",
-        title: "Laporan ditolak",
-        description:
-          '"Titik api kecil di lahan kosong" belum memiliki bukti yang cukup.',
-      },
-    ],
-  },
-];
+function formatTime(date: Date): string {
+  return new Date(date).toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 function RouteComponent() {
+  const groups = Route.useLoaderData();
   const totalActivities = groups.reduce(
-    (total, group) => total + group.events.length,
+    (total: number, group: { events: unknown[] }) => total + group.events.length,
     0,
   );
 
@@ -207,7 +145,7 @@ function RouteComponent() {
               ACTIVITY GROUPS
           ====================================================== */}
           <div className="flex flex-col gap-3">
-            {groups.map((group) => (
+            {groups.map((group: ActivityGroup) => (
               <section key={group.day}>
                 {/* Day label */}
                 <div className="mb-2 flex items-center gap-2 px-1">
@@ -225,7 +163,7 @@ function RouteComponent() {
                 {/* Activity card */}
                 <div className="overflow-hidden rounded-lg border border-neutral-200/60 bg-white/90 shadow-sm backdrop-blur-sm dark:border-neutral-700/60 dark:bg-neutral-800/80">
                   <div className="divide-y divide-neutral-200/60 dark:divide-neutral-700/60">
-                    {group.events.map((event, index) => {
+                    {group.events.map((event: ActivityEvent, index: number) => {
                       const config = eventConfig[event.type];
                       const Icon = config.icon;
 
@@ -239,7 +177,7 @@ function RouteComponent() {
                           {/* Timeline */}
                           <div className="relative flex w-9 shrink-0 justify-center">
                             {!isLast && (
-                              <div className="absolute left-1/2 top-9 bottom-[-1rem] w-px -translate-x-1/2 bg-neutral-200 dark:bg-neutral-700" />
+                              <div className="absolute left-1/2 top-9 -bottom-4 w-px -translate-x-1/2 bg-neutral-200 dark:bg-neutral-700" />
                             )}
 
                             <div
@@ -271,7 +209,7 @@ function RouteComponent() {
                               </div>
 
                               <time className="shrink-0 text-xs font-medium text-neutral-400 dark:text-neutral-500">
-                                {event.time}
+                                {formatTime(event.time)}
                               </time>
                             </div>
                           </div>

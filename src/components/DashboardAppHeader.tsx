@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from "@tanstack/react-router";
+import { useLocation, useNavigate, useMatches } from "@tanstack/react-router";
 import { useState } from "react";
 import { LogOut, Settings, User } from "lucide-react";
 
@@ -37,6 +37,7 @@ export default function DashboardAppHeader() {
   const { data: session } = useSession();
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const matches = useMatches();
 
   const user = session?.user;
 
@@ -51,6 +52,16 @@ export default function DashboardAppHeader() {
   const isReportRoute = pathname === "/dashboard/report";
 
   const getPageTitle = () => {
+    // ponytail: check insight detail route
+    const insightMatch = matches.find(
+      (m) => m.routeId === "/_protected/dashboard/insight/$insightId"
+    );
+    if (insightMatch && insightMatch.loaderData) {
+      const insight = insightMatch.loaderData as { title?: string };
+      const title = insight.title || "Detail Insight";
+      return title.length > 50 ? title.slice(0, 47) + "..." : title;
+    }
+
     const routes: Record<string, string> = {
       "/dashboard": "Beranda",
       "/dashboard/warnings": "Peringatan",

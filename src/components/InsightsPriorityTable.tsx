@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, MapPin } from "lucide-react";
+import { ArrowDown, ArrowUp, MapPin, Minus } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 
 export type InsightItem = {
@@ -18,6 +18,17 @@ export type InsightItem = {
 type InsightsPriorityTableProps = {
 	insights: InsightItem[];
 };
+
+function cleanLocationName(name: string): string {
+	// ponytail: strip "Koordinat X.XX" prefix if exists
+	const coordMatch = name.match(/^Koordinat\s+-?[\d.]+/i);
+	if (coordMatch)
+		return (
+			name.replace(coordMatch[0], "").replace(/^[,\s]+/, "").trim() ||
+			"Lokasi tidak diketahui"
+		);
+	return name.split(",")[0]?.trim() ?? name;
+}
 
 export default function InsightsPriorityTable({
 	insights,
@@ -46,15 +57,13 @@ export default function InsightsPriorityTable({
 					<span className="text-right">Score</span>
 				</div>
 
-				{insights.map((insight, index) => (
-					<button
-						key={insight.id}
-						type="button"
-						onClick={() =>
-							navigate({ to: "/dashboard/insights/$insightId", params: { insightId: insight.id } })
-						}
-						className="grid w-full gap-3 border-b border-neutral-100 px-4 py-4 text-left last:border-b-0 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-800/50 md:grid-cols-[48px_1fr_100px_90px_80px_80px] md:items-center"
-					>
+			{insights.map((insight, index) => (
+				<button
+					key={insight.id}
+					type="button"
+					onClick={() => navigate({ to: "/dashboard/insight/$insightId", params: { insightId: insight.id }, search: { rank: index + 1 } })}
+					className="grid w-full gap-3 border-b border-neutral-100 px-4 py-4 text-left last:border-b-0 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-800/50 md:grid-cols-[48px_1fr_100px_90px_80px_80px] md:items-center"
+				>
 						<div className="text-sm font-semibold text-neutral-400">
 							{index + 1}
 						</div>
@@ -66,7 +75,7 @@ export default function InsightsPriorityTable({
 
 							<div className="mt-1 flex items-center gap-1 text-[11px] text-neutral-400">
 								<MapPin className="size-3" />
-								{insight.locationName}
+								{cleanLocationName(insight.locationName)}
 							</div>
 						</div>
 
@@ -108,7 +117,7 @@ export default function InsightsPriorityTable({
 
 							{insight.trend === "stable" && (
 								<>
-									<span className="text-neutral-400">→</span>
+									<Minus className="size-3.5 text-neutral-400" />
 									<span className="text-neutral-500">Stabil</span>
 								</>
 							)}

@@ -92,8 +92,8 @@ export default function PrecipitationOverview({
       </div>
 
       {/* Chart */}
-      <div className="mt-1 h-35 w-full min-w-0 shrink-0">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="mt-1 h-36 w-full min-w-0 shrink-0">
+        <ResponsiveContainer width="100%" height="100%" minHeight={144}>
           <BarChart
             data={precipitationData}
             barSize={18}
@@ -123,7 +123,6 @@ export default function PrecipitationOverview({
               {precipitationData.map(
                 ({
                   time,
-                  mm,
                   actualMm,
                 }: {
                   time: string;

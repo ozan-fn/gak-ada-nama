@@ -34,16 +34,14 @@ export default function InsightsLatestCards({
 				</p>
 			</div>
 
-			<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-				{insights.slice(0, 6).map((insight) => (
-					<button
-						key={insight.id}
-						type="button"
-						onClick={() =>
-							navigate({ to: "/dashboard/insights/$insightId", params: { insightId: insight.id } })
-						}
-						className="group flex flex-col rounded-lg border border-neutral-200 bg-white p-4 text-left transition-all hover:border-sky-300 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-900/50 dark:hover:border-sky-600"
-					>
+		<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+			{insights.slice(0, 6).map((insight, index) => (
+				<button
+					key={insight.id}
+					type="button"
+					onClick={() => navigate({ to: "/dashboard/insight/$insightId", params: { insightId: insight.id }, search: { rank: index + 1 } })}
+					className="group flex flex-col rounded-lg border border-neutral-200 bg-white p-4 text-left transition-all hover:border-sky-300 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-900/50 dark:hover:border-sky-600"
+				>
 						{/* Header */}
 						<div className="flex items-center justify-between">
 							<span className="flex items-center gap-1.5 text-[11px] text-neutral-400 dark:text-neutral-500">

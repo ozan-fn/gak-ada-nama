@@ -18,23 +18,19 @@ function RouteComponent() {
   const { insights, stats } = Route.useLoaderData();
   const [scope, setScope] = useState<"Indonesia" | "Sekitar Anda">("Indonesia");
   const [activeFilter, setActiveFilter] = useState("Semua");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
 
   const filteredInsights = useMemo(() => {
     return insights.filter((insight) => {
       const matchesFilter =
         activeFilter === "Semua" || insight.impact === activeFilter;
 
-      const matchesSearch =
-        insight.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        insight.locationName
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase()) ||
-        insight.category.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesLocation =
+        !locationFilter || insight.locationName === locationFilter;
 
-      return matchesFilter && matchesSearch;
+      return matchesFilter && matchesLocation;
     });
-  }, [activeFilter, searchQuery, insights]);
+  }, [activeFilter, locationFilter, insights]);
 
   const featuredInsight = filteredInsights[0];
 
@@ -75,8 +71,8 @@ function RouteComponent() {
               <InsightsFilterBar
                 activeFilter={activeFilter}
                 setActiveFilter={setActiveFilter}
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
+                locationFilter={locationFilter}
+                setLocationFilter={setLocationFilter}
               />
             </div>
 

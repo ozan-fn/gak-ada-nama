@@ -468,13 +468,11 @@ function MyReportsPage() {
 
   return (
     <main className="min-h-screen bg-neutral-50/60 dark:bg-neutral-950">
-      <div className="flex gap-2 p-4 lg:items-stretch">
-        {/* =====================================================
-            LEFT COLUMN
-        ====================================================== */}
-        <div className="flex w-full flex-col gap-3 rounded-xl bg-muted/50 p-2 dark:bg-muted/30 lg:w-2/3">
+      <div className="flex flex-col gap-2 p-3 sm:p-4 lg:flex-row lg:items-stretch">
+        {/* LEFT COLUMN */}
+        <div className="flex w-full min-w-0 flex-col gap-3 rounded-xl bg-muted/50 p-2 dark:bg-muted/30 lg:w-2/3">
           {/* Filter & Search */}
-          <section className="rounded-lg border border-neutral-200/60 bg-white/90 shadow-sm backdrop-blur-sm dark:border-neutral-700/60 dark:bg-neutral-800/80">
+          <section className="rounded-lg border border-neutral-200/70 bg-white/95 shadow-sm backdrop-blur-sm dark:border-neutral-700/60 dark:bg-neutral-800/80">
             <div className="flex flex-col gap-3 p-3.5 sm:px-4 sm:py-3.5">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex min-w-0 items-center gap-2.5">
@@ -526,10 +524,10 @@ function MyReportsPage() {
           </section>
 
           {/* Reports */}
-          <section className="overflow-hidden rounded-lg border border-neutral-200/60 bg-white/90 shadow-sm backdrop-blur-sm dark:border-neutral-700/60 dark:bg-neutral-800/80">
+          <section className="overflow-hidden rounded-lg border border-neutral-200/70 bg-white/95 shadow-sm backdrop-blur-sm dark:border-neutral-700/60 dark:bg-neutral-800/80">
             {filteredReports.length > 0 ? (
               <>
-                <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-2.5 dark:border-neutral-700/60">
+                <div className="flex items-center justify-between gap-3 border-b border-neutral-100 px-4 py-2.5 dark:border-neutral-700/60">
                   <p className="text-[11px] font-medium text-neutral-400 dark:text-neutral-500">
                     Menampilkan {filteredReports.length} laporan
                   </p>
@@ -576,6 +574,7 @@ function MyReportsPage() {
                         key={report.id}
                         className="group transition-colors hover:bg-neutral-50/70 dark:hover:bg-neutral-700/30"
                       >
+                        {/* Report row */}
                         <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center">
                           <div
                             className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${categoryData.className}`}
@@ -584,14 +583,16 @@ function MyReportsPage() {
                           </div>
 
                           <div className="min-w-0 flex-1">
-                            <h2 className="min-w-0 truncate text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                            <h2 className="truncate text-sm font-semibold text-neutral-900 dark:text-neutral-100">
                               {report.title}
                             </h2>
 
                             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-neutral-500 dark:text-neutral-400">
                               <span className="inline-flex items-center gap-1">
                                 <MapPin className="size-3" />
-                                {report.location}
+                                <span className="truncate">
+                                  {report.location}
+                                </span>
                               </span>
 
                               <span className="inline-flex items-center gap-1">
@@ -608,7 +609,7 @@ function MyReportsPage() {
                             </div>
                           </div>
 
-                          <div className="flex shrink-0 items-center justify-between gap-3 sm:justify-end">
+                          <div className="flex w-full shrink-0 items-center justify-between gap-3 sm:w-auto sm:justify-end">
                             <div className="text-left sm:text-right">
                               <div
                                 className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${status.className}`}
@@ -649,14 +650,16 @@ function MyReportsPage() {
                           </div>
                         </div>
 
+                        {/* Expanded assessment */}
                         {isExpanded && (
                           <section
                             id={assessmentRegionId}
                             aria-labelledby={assessmentControlId}
                             aria-live="polite"
-                            className="border-t border-neutral-100 bg-sky-50/40 px-4 py-3.5 dark:border-neutral-700/60 dark:bg-sky-950/10"
+                            className="border-t border-sky-100 bg-sky-50/50 px-3 py-3.5 sm:px-4 dark:border-neutral-700/60 dark:bg-sky-950/10"
                           >
-                            <div className="rounded-lg border border-sky-100 bg-white p-3.5 dark:border-sky-900/50 dark:bg-neutral-900">
+                            <div className="rounded-lg border border-sky-100 bg-white p-3.5 shadow-[0_1px_3px_rgba(15,23,42,0.03)] sm:p-4 dark:border-sky-900/50 dark:bg-neutral-900 dark:shadow-none">
+                              {/* Assessment header */}
                               <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div className="flex min-w-0 items-center gap-2.5">
                                   <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600 dark:bg-sky-950/50 dark:text-sky-400">
@@ -667,12 +670,12 @@ function MyReportsPage() {
                                   </div>
 
                                   <div className="min-w-0">
-                                    <p className="text-[11px] font-semibold text-neutral-900 dark:text-neutral-100">
+                                    <p className="text-xs font-semibold text-neutral-900 dark:text-neutral-100">
                                       Analisis risiko
                                     </p>
 
                                     {assessment && (
-                                      <p className="text-[9px] text-neutral-400 dark:text-neutral-500">
+                                      <p className="mt-0.5 text-[10px] text-neutral-400 dark:text-neutral-500">
                                         {assessment.nearbyReportCount} laporan
                                         aktif di sekitar
                                       </p>
@@ -682,30 +685,36 @@ function MyReportsPage() {
 
                                 {assessmentMeta && (
                                   <span
-                                    className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-semibold ring-1 ring-inset ${assessmentMeta.className}`}
+                                    className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold ring-1 ring-inset ${assessmentMeta.className}`}
                                   >
                                     {assessmentMeta.label}
                                   </span>
                                 )}
                               </div>
 
+                              {/* Refresh state */}
                               {isRefreshing && (
-                                <div className="mt-3 flex items-center gap-2 rounded-lg bg-sky-50 px-3 py-2 text-[10px] font-medium text-sky-700 dark:bg-sky-950/40 dark:text-sky-400">
+                                <div className="mt-3 flex items-center gap-2 rounded-lg border border-sky-100 bg-sky-50 px-3 py-2.5 text-[11px] font-medium text-sky-700 dark:border-sky-900/40 dark:bg-sky-950/40 dark:text-sky-400">
                                   <RefreshCw
-                                    className="size-3 animate-spin"
+                                    className="size-3.5 animate-spin"
                                     aria-hidden="true"
                                   />
-                                  Memperbarui analisis dari kondisi terbaru...
+
+                                  <span>
+                                    Memperbarui analisis dari kondisi terbaru...
+                                  </span>
                                 </div>
                               )}
 
+                              {/* Assessment result */}
                               {assessment?.score !== null &&
                               assessment?.score !== undefined &&
                               assessment.summary &&
                               riskTone ? (
-                                <div className="mt-3 grid gap-3 sm:grid-cols-[7rem_1fr]">
-                                  <div className="rounded-lg border border-neutral-100 bg-neutral-50 px-3 py-3 dark:border-neutral-800 dark:bg-neutral-950">
-                                    <p className="text-[9px] font-medium text-neutral-400 dark:text-neutral-500">
+                                <div className="mt-3 grid gap-3 sm:grid-cols-[7.5rem_minmax(0,1fr)]">
+                                  {/* Score */}
+                                  <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-3 dark:border-neutral-800 dark:bg-neutral-950">
+                                    <p className="text-[10px] font-medium text-neutral-400 dark:text-neutral-500">
                                       Skor risiko
                                     </p>
 
@@ -714,21 +723,22 @@ function MyReportsPage() {
                                     >
                                       {normalizeScore(assessment.score)}
 
-                                      <span className="ml-0.5 text-[9px] font-medium text-neutral-400 dark:text-neutral-500">
+                                      <span className="ml-0.5 text-[10px] font-medium text-neutral-400 dark:text-neutral-500">
                                         /100
                                       </span>
                                     </p>
 
                                     <span
-                                      className={`mt-2 inline-flex rounded-full px-1.5 py-0.5 text-[9px] font-semibold ring-1 ring-inset ${riskTone.className}`}
+                                      className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ring-inset ${riskTone.className}`}
                                     >
                                       {riskTone.label}
                                     </span>
                                   </div>
 
+                                  {/* Summary */}
                                   <div className="min-w-0">
-                                    <div className="flex items-center justify-between gap-3">
-                                      <p className="text-[9px] font-medium text-neutral-400 dark:text-neutral-500">
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                      <p className="text-[10px] font-medium text-neutral-400 dark:text-neutral-500">
                                         Ringkasan
                                       </p>
 
@@ -750,26 +760,29 @@ function MyReportsPage() {
                                       </Button>
                                     </div>
 
-                                    <p className="mt-1 text-[11px] leading-5 text-neutral-600 dark:text-neutral-400">
+                                    <p className="mt-1.5 text-xs leading-5 text-neutral-600 dark:text-neutral-400">
                                       {assessment.summary}
                                     </p>
 
                                     {assessment.status === "PARTIAL" && (
-                                      <p className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-medium text-amber-700 dark:text-amber-400">
+                                      <p className="mt-2 inline-flex items-start gap-1.5 text-[10px] font-medium leading-4 text-amber-700 dark:text-amber-400">
                                         <AlertTriangle
-                                          className="size-3"
+                                          className="mt-0.5 size-3 shrink-0"
                                           aria-hidden="true"
                                         />
-                                        Sebagian sumber lingkungan belum
-                                        tersedia.
+
+                                        <span>
+                                          Sebagian sumber lingkungan belum
+                                          tersedia.
+                                        </span>
                                       </p>
                                     )}
                                   </div>
                                 </div>
                               ) : (
                                 !isRefreshing && (
-                                  <div className="mt-3 rounded-lg bg-neutral-50 px-3 py-2.5 dark:bg-neutral-950">
-                                    <p className="text-[11px] leading-5 text-neutral-500 dark:text-neutral-400">
+                                  <div className="mt-3 rounded-lg border border-neutral-100 bg-neutral-50 px-3 py-2.5 dark:border-neutral-800 dark:bg-neutral-950">
+                                    <p className="text-xs leading-5 text-neutral-500 dark:text-neutral-400">
                                       {assessment?.status === "FAILED"
                                         ? "Analisis risiko belum berhasil dibuat. Laporan Anda tetap tersimpan dan dapat dianalisis kembali."
                                         : assessment?.status === "PENDING"
@@ -780,15 +793,17 @@ function MyReportsPage() {
                                 )
                               )}
 
+                              {/* Error */}
                               {assessmentError && (
                                 <p
-                                  className="mt-2 text-[10px] font-medium text-rose-600 dark:text-rose-400"
+                                  className="mt-2 text-[10px] font-medium leading-4 text-rose-600 dark:text-rose-400"
                                   role="alert"
                                 >
                                   {assessmentError}
                                 </p>
                               )}
 
+                              {/* Retry */}
                               {assessment?.status === "FAILED" && (
                                 <Button
                                   type="button"
@@ -851,10 +866,8 @@ function MyReportsPage() {
           </section>
         </div>
 
-        {/* =====================================================
-            RIGHT COLUMN
-        ====================================================== */}
-        <aside className="flex w-full flex-col gap-3 lg:w-1/3">
+        {/* RIGHT COLUMN */}
+        <aside className="flex w-full min-w-0 flex-col gap-3 lg:w-1/3">
           {/* CTA */}
           <section className="relative overflow-hidden rounded-lg border border-sky-100 bg-linear-to-br from-sky-50 via-white to-white p-4 shadow-sm dark:border-sky-900/50 dark:from-sky-950/50 dark:via-neutral-800 dark:to-neutral-800">
             <div className="pointer-events-none absolute -right-10 -top-10 size-28 rounded-full bg-sky-200/40 blur-2xl dark:bg-sky-500/10" />
@@ -884,7 +897,7 @@ function MyReportsPage() {
           </section>
 
           {/* Statistics */}
-          <section className="overflow-hidden rounded-lg border border-neutral-200/60 bg-white/90 shadow-sm backdrop-blur-sm dark:border-neutral-700/60 dark:bg-neutral-800/80">
+          <section className="overflow-hidden rounded-lg border border-neutral-200/70 bg-white/95 shadow-sm backdrop-blur-sm dark:border-neutral-700/60 dark:bg-neutral-800/80">
             <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-3 dark:border-neutral-700/60">
               <div>
                 <h3 className="text-xs font-semibold text-neutral-900 dark:text-neutral-100">

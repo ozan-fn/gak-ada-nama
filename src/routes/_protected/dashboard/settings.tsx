@@ -261,7 +261,7 @@ function Settings() {
                         className="h-9 bg-neutral-50 text-sm text-neutral-500 dark:bg-neutral-950 dark:text-neutral-400"
                       />
 
-                      <p className="text-[11px] text-neutral-400">
+                      <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
                         Email digunakan untuk autentikasi dan tidak dapat
                         diubah.
                       </p>
@@ -291,7 +291,7 @@ function Settings() {
                         required
                       />
 
-                      <p className="text-[11px] text-neutral-400">
+                      <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
                         Nama ini akan ditampilkan pada profil dan aktivitas
                         kamu.
                       </p>
@@ -315,7 +315,7 @@ function Settings() {
 
                   {/* Footer */}
                   <div className="flex items-center justify-between border-t border-neutral-100 bg-neutral-50/50 px-5 py-3 dark:border-neutral-800 dark:bg-neutral-950/40">
-                    <p className="hidden text-[11px] text-neutral-400 sm:block">
+                    <p className="hidden text-[11px] text-neutral-500 dark:text-neutral-400 sm:block">
                       Perubahan akan diterapkan pada akun kamu.
                     </p>
 
@@ -426,7 +426,7 @@ function Settings() {
                         />
                       </div>
 
-                      <p className="text-[11px] text-neutral-400">
+                      <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
                         Gunakan password yang kuat dan sulit ditebak.
                       </p>
                     </div>
@@ -571,7 +571,7 @@ function Settings() {
                             Ambang batas AQI
                           </Label>
 
-                          <p className="mt-1 text-[11px] leading-relaxed text-neutral-400">
+                          <p className="mt-1 text-[11px] leading-relaxed text-neutral-500 dark:text-neutral-400">
                             Peringatan AQI dan stasiun terdekat akan dikirim
                             ketika nilai mencapai atau melebihi angka ini.
                           </p>
@@ -592,7 +592,7 @@ function Settings() {
                             className="h-9 w-24 text-center text-sm dark:bg-neutral-950 dark:text-neutral-100"
                           />
 
-                          <span className="text-xs text-neutral-400">AQI</span>
+                          <span className="text-xs text-neutral-500 dark:text-neutral-400">AQI</span>
                         </div>
                       </div>
                     </div>
@@ -605,7 +605,7 @@ function Settings() {
                           Pengaturan berhasil disimpan.
                         </div>
                       ) : (
-                        <p className="hidden text-[11px] text-neutral-400 sm:block">
+                        <p className="hidden text-[11px] text-neutral-500 dark:text-neutral-400 sm:block">
                           Perubahan preferensi notifikasi kamu.
                         </p>
                       )}
@@ -675,7 +675,7 @@ function Settings() {
                             Mode gelap
                           </Label>
 
-                          <p className="mt-1 text-[11px] leading-relaxed text-neutral-400">
+                          <p className="mt-1 text-[11px] leading-relaxed text-neutral-500 dark:text-neutral-400">
                             Gunakan tampilan gelap untuk mengurangi cahaya pada
                             lingkungan dengan pencahayaan rendah.
                           </p>
@@ -694,7 +694,7 @@ function Settings() {
                 {/* Current Theme */}
                 <div className="border-t border-neutral-100 px-5 py-3 dark:border-neutral-800">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] text-neutral-400">
+                    <span className="text-[11px] text-neutral-500 dark:text-neutral-400">
                       Tema saat ini
                     </span>
 
@@ -762,7 +762,7 @@ function NotificationSetting({
             {title}
           </Label>
 
-          <p className="mt-0.5 text-[11px] leading-relaxed text-neutral-400">
+          <p className="mt-0.5 text-[11px] leading-relaxed text-neutral-500 dark:text-neutral-400">
             {description}
           </p>
         </div>
