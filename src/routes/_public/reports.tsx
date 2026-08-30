@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import {
@@ -442,7 +442,17 @@ function ReportsPage() {
                       )}
                     </CardContent>
                     <CardFooter>
-                      <Button variant="outline" size="sm" className="w-full">
+                      <Button
+                        render={
+                          <Link
+                            to="/dashboard/report-detail/$reportId"
+                            params={{ reportId: report.id }}
+                          />
+                        }
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                      >
                         Lihat Detail
                       </Button>
                     </CardFooter>
