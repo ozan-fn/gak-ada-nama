@@ -25,6 +25,8 @@ export interface MapContext {
 	setShowRainRadar: (show: boolean) => void;
 	showFireLayer: boolean;
 	setShowFireLayer: (show: boolean) => void;
+	showElevation: boolean;
+	setShowElevation: (show: boolean) => void;
 	firePoints: ReturnType<typeof useFireData>["points"];
 	fireLoading: boolean;
 	aqiFilter: "all" | "good" | "moderate" | "unhealthy" | "hazardous";
@@ -92,6 +94,7 @@ export function BaseEnvironmentMap({
 	const [showLayers, setShowLayers] = useState(false);
 	const [showRainRadar, setShowRainRadar] = useState(false);
 	const [showFireLayer, setShowFireLayer] = useState(false);
+	const [showElevation, setShowElevation] = useState(false);
 	const [aqiFilter, setAqiFilter] = useState<
 		"all" | "good" | "moderate" | "unhealthy" | "hazardous"
 	>("all");
@@ -824,6 +827,114 @@ export function BaseEnvironmentMap({
 		map.current.zoomTo(map.current.getZoom() + delta);
 	};
 
+	// Add elevation hillshade layer (AWS Open Data terrarium DEM tiles)
+	useEffect(() => {
+		if (!map.current || !mapLoaded) return;
+
+		const mapInstance = map.current;
+
+		const removeElevation = () => {
+			if (mapInstance.getLayer("terrain-relief")) {
+				mapInstance.removeLayer("terrain-relief");
+			}
+			if (mapInstance.getLayer("terrain-hillshade")) {
+				mapInstance.removeLayer("terrain-hillshade");
+			}
+			if (mapInstance.getSource("terrain-dem")) {
+				mapInstance.removeSource("terrain-dem");
+			}
+			mapInstance.setPaintProperty("osm", "raster-opacity", 1);
+		};
+
+		if (!showElevation) {
+			if (
+				mapInstance.getLayer("terrain-relief") ||
+				mapInstance.getLayer("terrain-hillshade") ||
+				mapInstance.getSource("terrain-dem")
+			) {
+				removeElevation();
+			}
+			return;
+		}
+
+		const addElevation = () => {
+			if (!mapInstance.isStyleLoaded() || mapInstance.getSource("terrain-dem")) {
+				return;
+			}
+
+			mapInstance.addSource("terrain-dem", {
+				type: "raster-dem",
+				tiles: [
+					"https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
+				],
+				tileSize: 256,
+				maxzoom: 15,
+				encoding: "terrarium",
+				attribution: "Terrain tiles by Mapzen, hosted on AWS Open Data",
+			});
+
+			// Hypsometric tint: vegetation green -> tan -> mountain white.
+			// Elevation <= 0 (ocean) maps to transparent so the sea stays visible.
+			mapInstance.addLayer(
+				{
+					id: "terrain-relief",
+					type: "color-relief",
+					source: "terrain-dem",
+					paint: {
+						"color-relief-color": [
+							"interpolate",
+							["linear"],
+							["elevation"],
+							-10,
+							"rgba(0, 0, 0, 0)",
+							0,
+							"rgba(0, 0, 0, 0)",
+							1,
+							"rgb(122, 184, 98)",
+							150,
+							"rgb(196, 207, 94)",
+							400,
+							"rgb(214, 186, 84)",
+							800,
+							"rgb(205, 153, 79)",
+							1500,
+							"rgb(180, 120, 70)",
+							2500,
+							"rgb(150, 95, 55)",
+							4000,
+							"rgb(190, 185, 175)",
+							5000,
+							"rgb(255, 255, 255)",
+						],
+					},
+				},
+				"osm",
+			);
+
+			// Subtle hillshade on top of the tint for relief depth
+			mapInstance.addLayer(
+				{
+					id: "terrain-hillshade",
+					type: "hillshade",
+					source: "terrain-dem",
+					paint: {
+						"hillshade-exaggeration": 0.25,
+						"hillshade-shadow-color": "#3b4a4f",
+					},
+				},
+				"osm",
+			);
+
+			mapInstance.setPaintProperty("osm", "raster-opacity", 0.55);
+		};
+
+		if (mapInstance.isStyleLoaded()) {
+			addElevation();
+		} else {
+			mapInstance.once("styledata", addElevation);
+		}
+	}, [mapLoaded, showElevation]);
+
 	const mapContext: MapContext = {
 		map,
 		userLocation,
@@ -840,6 +951,8 @@ export function BaseEnvironmentMap({
 		setShowRainRadar,
 		showFireLayer,
 		setShowFireLayer,
+		showElevation,
+		setShowElevation,
 		firePoints,
 		fireLoading,
 		aqiFilter,

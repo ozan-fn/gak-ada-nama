@@ -146,10 +146,11 @@ function Dashboard() {
     <main className="min-h-screen">
       <div className="flex flex-col gap-2 p-4 lg:flex-row lg:items-stretch">
         {/* Left Section: Map & Key Environmental Trends */}
-        <div className="flex w-full flex-col gap-3 rounded-xl bg-muted/50 p-2 lg:w-2/3 lg:self-stretch">
+        <div className="flex w-full flex-col gap-3 rounded-xl bg-muted/50 p-2 dark:bg-muted/30 lg:w-2/3 lg:self-stretch">
           {/* Live Alert Header */}
-          <div className="flex shrink-0 flex-col gap-2 rounded-lg bg-white p-2.5 shadow-xs sm:flex-row sm:items-center sm:justify-between sm:px-2.5 sm:py-2">
-            <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-600 sm:text-sm">
+          <div className="flex shrink-0 flex-col gap-2 rounded-lg bg-white p-2.5 shadow-xs dark:bg-neutral-800 sm:flex-row sm:items-center sm:justify-between sm:px-2.5 sm:py-2">
+            {/* Alert Information */}
+            <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400 sm:text-sm">
               {envData.loading ? (
                 <>
                   <Skeleton className="h-6 w-16 rounded-full" />
@@ -158,8 +159,15 @@ function Dashboard() {
                 </>
               ) : primaryAlert ? (
                 <>
+                  {/* Severity */}
                   <div
-                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${severityColors[primaryAlert.severity]}`}
+                    className={`
+                      inline-flex items-center gap-1.5
+                      rounded-full
+                      px-2.5 py-1
+                      text-xs font-medium
+                      ${severityColors[primaryAlert.severity]}
+                    `}
                   >
                     <span>
                       {primaryAlert.severity === "danger"
@@ -170,14 +178,25 @@ function Dashboard() {
                     </span>
                   </div>
 
-                  <span className="text-xs font-medium text-neutral-800">
+                  {/* Alert Message */}
+                  <span className="text-xs font-medium text-neutral-800 dark:text-neutral-100">
                     {primaryAlert.message}
                   </span>
 
+                  {/* Action */}
                   {primaryAlert.actionLink ? (
                     <Link
                       to={primaryAlert.actionLink}
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-sky-600 hover:text-sky-700 hover:underline"
+                      className="
+                        inline-flex items-center gap-1
+                        text-xs font-semibold
+                        text-sky-600
+                        transition-colors
+                        hover:text-sky-700
+                        hover:underline
+                        dark:text-sky-400
+                        dark:hover:text-sky-300
+                      "
                     >
                       <span>{primaryAlert.actionText}</span>
                       <ArrowRight className="h-2.5 w-2.5" />
@@ -185,7 +204,16 @@ function Dashboard() {
                   ) : (
                     <button
                       type="button"
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-sky-600 hover:text-sky-700 hover:underline"
+                      className="
+                        inline-flex items-center gap-1
+                        text-xs font-semibold
+                        text-sky-600
+                        transition-colors
+                        hover:text-sky-700
+                        hover:underline
+                        dark:text-sky-400
+                        dark:hover:text-sky-300
+                      "
                     >
                       <span>{primaryAlert.actionText}</span>
                       <ArrowRight className="h-2.5 w-2.5" />
@@ -194,11 +222,24 @@ function Dashboard() {
                 </>
               ) : (
                 <>
-                  <div className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
+                  {/* Safe Status */}
+                  <div
+                    className="
+                      inline-flex items-center gap-1.5
+                      rounded-full
+                      bg-emerald-50
+                      px-2.5 py-1
+                      text-xs font-medium
+                      text-emerald-700
+                      dark:bg-emerald-900/30
+                      dark:text-emerald-400
+                    "
+                  >
                     <span>Aman</span>
                   </div>
 
-                  <span className="text-xs font-medium text-neutral-800">
+                  {/* Safe Message */}
+                  <span className="text-xs font-medium text-neutral-800 dark:text-neutral-100">
                     Tidak ada peringatan cuaca saat ini
                   </span>
                 </>
@@ -207,34 +248,69 @@ function Dashboard() {
 
             {/* Location Indicator & Data Export */}
             <div className="flex shrink-0 items-center gap-2">
+              {/* Location */}
               {location.loading ? (
                 <Skeleton className="h-8 w-32 rounded-lg" />
               ) : (
                 <div
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50/80 px-2.5 py-1.5 text-xs font-medium text-neutral-700"
+                  className="
+                    inline-flex items-center gap-1.5
+                    rounded-lg
+                    border
+                    border-neutral-200
+                    bg-neutral-50/80
+                    px-2.5 py-1.5
+                    text-xs font-medium
+                    text-neutral-700
+                    transition-colors
+                    dark:border-neutral-700
+                    dark:bg-neutral-700/40
+                    dark:text-neutral-300
+                  "
                   title={
                     location.error
                       ? `Fallback: ${location.error}`
                       : "Lokasi Anda Saat Ini"
                   }
                 >
-                  <MapPin className="h-3.5 w-3.5 text-neutral-600" />
+                  <MapPin className="h-3.5 w-3.5 text-neutral-600 dark:text-neutral-400" />
+
                   <span>{location.city}</span>
                 </div>
               )}
 
+              {/* Export */}
               <button
                 type="button"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-sky-400/30 bg-sky-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm shadow-sky-500/20 transition-all duration-200 hover:bg-sky-400 hover:shadow-sky-500/30"
+                className="
+                  inline-flex items-center gap-1.5
+                  rounded-lg
+                  border
+                  border-sky-400/30
+                  bg-sky-500
+                  px-3 py-1.5
+                  text-xs font-semibold
+                  text-white
+                  shadow-sm
+                  shadow-sky-500/20
+                  transition-all
+                  duration-200
+                  hover:bg-sky-400
+                  hover:shadow-sky-500/30
+                  dark:border-sky-500/30
+                  dark:bg-sky-600
+                  dark:hover:bg-sky-500
+                "
               >
                 <Download className="h-3.5 w-3.5" />
+
                 <span>Ekspor</span>
               </button>
             </div>
           </div>
 
           {/* Interactive Environment Map */}
-          <div className="h-125 shrink-0 overflow-hidden rounded-lg bg-white shadow-sm">
+          <div className="h-125 shrink-0 overflow-hidden rounded-lg bg-white shadow-sm dark:bg-neutral-800">
             <DashboardMapCard
               userLocation={stableLocation}
               reports={nearbyReports}
@@ -244,18 +320,18 @@ function Dashboard() {
 
           {/* Environmental Extremes & Air Quality Analytics */}
           <div className="flex min-h-0 flex-1 flex-col gap-3 sm:flex-row">
-            <div className="flex w-full items-stretch justify-center overflow-hidden rounded-lg bg-white shadow-sm sm:w-[37.5%]">
+            <div className="flex w-full items-stretch justify-center overflow-hidden rounded-lg bg-white shadow-sm dark:bg-neutral-800 sm:w-[37.5%]">
               <RegionalExtreme location={locationParams} />
             </div>
 
-            <div className="flex w-full items-stretch overflow-hidden rounded-lg bg-white shadow-sm sm:w-[62.5%]">
+            <div className="flex w-full items-stretch overflow-hidden rounded-lg bg-white shadow-sm dark:bg-neutral-800 sm:w-[62.5%]">
               <ChartAQITrend location={locationParams} />
             </div>
           </div>
         </div>
 
         {/* Right Section: Regional Risk & Weather Analytics */}
-        <div className="flex w-full flex-col gap-3 rounded-xl bg-muted/50 p-2 lg:w-1/3 lg:self-stretch">
+        <div className="flex w-full flex-col gap-3 rounded-xl bg-muted/50 p-2 dark:bg-muted/30 lg:w-1/3 lg:self-stretch">
           {/* Detail Overview Header & Timezone Clock */}
           <div className="flex shrink-0 items-center justify-between px-1 py-1.5">
             <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
@@ -278,18 +354,18 @@ function Dashboard() {
           </div>
 
           <div className="flex min-h-0 flex-1 flex-col gap-3">
-            <div className="flex flex-1 items-stretch overflow-hidden rounded-lg bg-white shadow-sm">
+            <div className="flex flex-1 items-stretch overflow-hidden rounded-lg bg-white shadow-sm dark:bg-neutral-800">
               <RegionRisk
                 location={locationParams}
                 reportCount={nearbyReports.length}
               />
             </div>
 
-            <div className="flex flex-1 items-stretch overflow-hidden rounded-lg bg-white shadow-sm">
+            <div className="flex flex-1 items-stretch overflow-hidden rounded-lg bg-white shadow-sm dark:bg-neutral-800">
               <WeatherInformation location={locationParams} />
             </div>
 
-            <div className="flex flex-1 items-stretch overflow-hidden rounded-lg bg-white shadow-sm">
+            <div className="flex flex-1 items-stretch overflow-hidden rounded-lg bg-white shadow-sm dark:bg-neutral-800">
               <PrecipitationOverview location={locationParams} />
             </div>
           </div>

@@ -7,9 +7,16 @@ import {
   AlertTriangle,
   ShieldCheck,
   Users,
+  Clock3,
 } from "lucide-react";
+import {
+  type ActivityEvent,
+  type ActivityGroup,
+  getActivitiesFn,
+} from "#/lib/activity.functions";
 
 export const Route = createFileRoute("/_protected/dashboard/activity")({
+  loader: () => getActivitiesFn(),
   component: RouteComponent,
 });
 
@@ -21,180 +28,217 @@ type EventType =
   | "risk-resolved"
   | "community";
 
-type ActivityEvent = {
-  id: number;
-  type: EventType;
-  time: string;
-  title: string;
-  description: string;
-};
-
-type ActivityGroup = {
-  day: string;
-  events: ActivityEvent[];
-};
-
 const eventConfig: Record<
   EventType,
-  { icon: typeof CheckCircle2; className: string }
+  {
+    icon: typeof CheckCircle2;
+    iconClassName: string;
+    badgeClassName: string;
+    label: string;
+  }
 > = {
   verified: {
     icon: CheckCircle2,
-    className: "bg-emerald-50 text-emerald-600",
+    iconClassName:
+      "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400",
+    badgeClassName:
+      "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
+    label: "Terverifikasi",
   },
+
   rejected: {
     icon: XCircle,
-    className: "bg-red-50 text-red-500",
+    iconClassName:
+      "bg-rose-50 text-rose-500 dark:bg-rose-950/40 dark:text-rose-400",
+    badgeClassName:
+      "bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400",
+    label: "Ditolak",
   },
+
   updated: {
     icon: RefreshCw,
-    className: "bg-blue-50 text-blue-500",
+    iconClassName:
+      "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400",
+    badgeClassName:
+      "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400",
+    label: "Diperbarui",
   },
+
   "risk-new": {
     icon: AlertTriangle,
-    className: "bg-amber-50 text-amber-600",
+    iconClassName:
+      "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400",
+    badgeClassName:
+      "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
+    label: "Peringatan baru",
   },
+
   "risk-resolved": {
     icon: ShieldCheck,
-    className: "bg-emerald-50 text-emerald-600",
+    iconClassName:
+      "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400",
+    badgeClassName:
+      "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
+    label: "Risiko selesai",
   },
+
   community: {
     icon: Users,
-    className: "bg-violet-50 text-violet-500",
+    iconClassName:
+      "bg-violet-50 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400",
+    badgeClassName:
+      "bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-400",
+    label: "Komunitas",
   },
 };
 
-const groups: ActivityGroup[] = [
-  {
-    day: "Hari ini",
-    events: [
-      {
-        id: 1,
-        type: "verified",
-        time: "14:32",
-        title: "Laporan terverifikasi",
-        description:
-          '"Genangan di Jalan Sudirman" telah diverifikasi oleh sistem komunitas.',
-      },
-      {
-        id: 2,
-        type: "risk-new",
-        time: "13:48",
-        title: "Peringatan baru di sekitar",
-        description: "Risiko genangan terdeteksi 850 m dari lokasi kamu.",
-      },
-      {
-        id: 3,
-        type: "updated",
-        time: "12:20",
-        title: "Laporan diperbarui",
-        description: "2 laporan serupa ditemukan dan digabungkan.",
-      },
-    ],
-  },
-  {
-    day: "Kemarin",
-    events: [
-      {
-        id: 4,
-        type: "risk-resolved",
-        time: "18:42",
-        title: "Peringatan selesai",
-        description:
-          "Risiko kualitas udara di sekitar lokasi kamu telah berakhir.",
-      },
-      {
-        id: 5,
-        type: "community",
-        time: "16:20",
-        title: "Laporanmu membantu memicu peringatan",
-        description:
-          '"Sampah menumpuk di area pasar" dijadikan salah satu dasar peringatan risiko sedang.',
-      },
-      {
-        id: 6,
-        type: "rejected",
-        time: "09:05",
-        title: "Laporan ditolak",
-        description:
-          '"Titik api kecil di lahan kosong" belum memiliki bukti yang cukup.',
-      },
-    ],
-  },
-];
+function formatTime(date: Date): string {
+  return new Date(date).toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 function RouteComponent() {
+  const groups = Route.useLoaderData();
+  const totalActivities = groups.reduce(
+    (total: number, group: { events: unknown[] }) => total + group.events.length,
+    0,
+  );
+
   return (
     <main className="min-h-screen">
       <div className="flex flex-col gap-2 p-4">
-        <div className="mx-auto flex w-full max-w-4xl flex-col gap-3 rounded-xl bg-muted/50 p-2">
-          {/* Header */}
-          <section className="rounded-lg bg-white p-4 shadow-sm">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-              <ActivityIcon className="h-3.5 w-3.5" />
-              Aktivitas
-            </div>
+        <div className="mx-auto flex w-full max-w-4xl flex-col gap-3 rounded-xl bg-muted/50 p-2 dark:bg-muted/30">
+          {/* =====================================================
+              HEADER
+          ====================================================== */}
+          <section className="rounded-lg border border-neutral-200/60 bg-white/90 p-4 shadow-sm backdrop-blur-sm dark:border-neutral-700/60 dark:bg-neutral-800/80">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex min-w-0 items-start gap-3">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
+                  <ActivityIcon className="size-4" />
+                </div>
 
-            <h1 className="mt-2.5 text-base font-semibold tracking-tight text-neutral-900">
-              Aktivitas Terbaru
-            </h1>
-            <p className="mt-1 text-xs leading-relaxed text-neutral-500">
-              Semua aktivitas terbaru yang berkaitan dengan laporan dan risiko
-              di sekitarmu.
-            </p>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="text-sm font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
+                      Aktivitas terbaru
+                    </h1>
+
+                    <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-semibold text-neutral-500 dark:bg-neutral-700 dark:text-neutral-400">
+                      {totalActivities} aktivitas
+                    </span>
+                  </div>
+
+                  <p className="mt-1 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
+                    Semua aktivitas yang berkaitan dengan laporan dan risiko di
+                    sekitarmu.
+                  </p>
+                </div>
+              </div>
+
+              <div className="hidden shrink-0 items-center gap-1.5 rounded-lg bg-neutral-50 px-2.5 py-1.5 text-xs font-medium text-neutral-500 dark:bg-neutral-900/70 dark:text-neutral-400 sm:flex">
+                <Clock3 className="size-3" />
+                Terbaru
+              </div>
+            </div>
           </section>
 
-          {/* Timeline */}
-          {groups.map((group) => (
-            <section key={group.day} className="flex flex-col gap-3">
-              <p className="px-1 text-[11px] font-medium uppercase tracking-wide text-neutral-400">
-                {group.day}
-              </p>
+          {/* =====================================================
+              ACTIVITY GROUPS
+          ====================================================== */}
+          <div className="flex flex-col gap-3">
+            {groups.map((group: ActivityGroup) => (
+              <section key={group.day}>
+                {/* Day label */}
+                <div className="mb-2 flex items-center gap-2 px-1">
+                  <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">
+                    {group.day}
+                  </span>
 
-              <div className="rounded-lg bg-white shadow-sm">
-                {group.events.map((event, index) => {
-                  const config = eventConfig[event.type];
-                  const Icon = config.icon;
+                  <div className="h-px flex-1 bg-neutral-200/70 dark:bg-neutral-700/60" />
 
-                  return (
-                    <div
-                      key={event.id}
-                      className={`flex gap-3 p-4 ${
-                        index !== group.events.length - 1
-                          ? "border-b border-neutral-100"
-                          : ""
-                      }`}
-                    >
-                      <div className="flex flex-col items-center">
-                        <div
-                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${config.className}`}
+                  <span className="text-xs font-medium text-neutral-400 dark:text-neutral-500">
+                    {group.events.length} aktivitas
+                  </span>
+                </div>
+
+                {/* Activity card */}
+                <div className="overflow-hidden rounded-lg border border-neutral-200/60 bg-white/90 shadow-sm backdrop-blur-sm dark:border-neutral-700/60 dark:bg-neutral-800/80">
+                  <div className="divide-y divide-neutral-200/60 dark:divide-neutral-700/60">
+                    {group.events.map((event: ActivityEvent, index: number) => {
+                      const config = eventConfig[event.type];
+                      const Icon = config.icon;
+
+                      const isLast = index === group.events.length - 1;
+
+                      return (
+                        <article
+                          key={event.id}
+                          className="group relative flex gap-3 px-4 py-4 transition-colors hover:bg-neutral-50/80 dark:hover:bg-neutral-700/30"
                         >
-                          <Icon className="h-4 w-4" />
-                        </div>
-                        {index !== group.events.length - 1 && (
-                          <div className="mt-2 w-px flex-1 bg-neutral-100" />
-                        )}
-                      </div>
+                          {/* Timeline */}
+                          <div className="relative flex w-9 shrink-0 justify-center">
+                            {!isLast && (
+                              <div className="absolute left-1/2 top-9 -bottom-4 w-px -translate-x-1/2 bg-neutral-200 dark:bg-neutral-700" />
+                            )}
 
-                      <div className="min-w-0 flex-1 pb-1">
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs font-medium text-neutral-400">
-                            {event.time}
-                          </p>
-                        </div>
-                        <h3 className="mt-1 text-sm font-semibold text-neutral-900">
-                          {event.title}
-                        </h3>
-                        <p className="mt-1 text-xs leading-relaxed text-neutral-500">
-                          {event.description}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          ))}
+                            <div
+                              className={`relative z-10 flex size-9 items-center justify-center rounded-lg ${config.iconClassName}`}
+                            >
+                              <Icon className="size-4" />
+                            </div>
+                          </div>
+
+                          {/* Content */}
+                          <div className="min-w-0 flex-1 pb-0.5">
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                              <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  <h2 className="text-xs font-semibold text-neutral-900 dark:text-neutral-100">
+                                    {event.title}
+                                  </h2>
+
+                                  <span
+                                    className={`rounded-full px-1.5 py-0.5 text-xs font-semibold ${config.badgeClassName}`}
+                                  >
+                                    {config.label}
+                                  </span>
+                                </div>
+
+                                <p className="mt-1 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
+                                  {event.description}
+                                </p>
+                              </div>
+
+                              <time className="shrink-0 text-xs font-medium text-neutral-400 dark:text-neutral-500">
+                                {formatTime(event.time)}
+                              </time>
+                            </div>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                </div>
+              </section>
+            ))}
+          </div>
+
+          {/* =====================================================
+              FOOTER NOTE
+          ====================================================== */}
+          <section className="rounded-lg border border-dashed border-neutral-200/70 bg-neutral-50/60 px-4 py-3 dark:border-neutral-700/60 dark:bg-neutral-800/30">
+            <div className="flex items-center justify-center gap-2 text-center">
+              <ActivityIcon className="size-3.5 shrink-0 text-neutral-400 dark:text-neutral-500" />
+
+              <p className="text-xs text-neutral-400 dark:text-neutral-500">
+                Aktivitas akan diperbarui secara otomatis ketika ada perubahan
+                pada laporan atau risiko di sekitarmu.
+              </p>
+            </div>
+          </section>
         </div>
       </div>
     </main>

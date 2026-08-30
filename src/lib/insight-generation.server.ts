@@ -16,6 +16,11 @@ type InsightGenerationInput = {
 		urgency: string;
 	}>;
 	factors: string[];
+	environmentalContext?: {
+		rainCondition: string;
+		airQualityCondition: string;
+		riskLevel: string | null;
+	};
 };
 
 type InsightGenerationResult = {
@@ -109,6 +114,11 @@ export async function generateInsightContent(
 			)
 			.join("\n");
 
+		const env = input.environmentalContext;
+		const envContext = env
+			? `Kondisi lingkungan:\n- Curah hujan: ${env.rainCondition}${env.riskLevel ? `\n- Level risiko: ${env.riskLevel}` : ""}\n- Kualitas udara (AQI): ${env.airQualityCondition}`
+			: "Kondisi lingkungan: Tidak tersedia";
+
 		const userPrompt = `Analisis berikut isu lingkungan yang terdeteksi dari ${input.reportCount} laporan masyarakat di ${input.locationName}.
 
 Kategori: ${input.category}
@@ -122,9 +132,11 @@ ${reportSummaries}
 Faktor-faktor yang diketahui:
 ${input.factors.map((f) => `- ${f}`).join("\n")}
 
+${envContext}
+
 Berdasarkan data di atas, buatkan:
 1. title: Judul singkat yang menggambarkan isu utama (maks 100 karakter, dalam bahasa Indonesia)
-2. summary: Ringkasan analisis 2-3 kalimat tentang kondisi dan potensi risiko (bahasa Indonesia, faktual, jangan mengarang data yang tidak ada)
+2. summary: Ringkasan analisis 2-3 kalimat tentang kondisi dan potensi risiko (bahasa Indonesia, faktual, jangan mengarang data yang tidak ada). Sebutkan kondisi lingkungan (curah hujan/AQI) bila tersedia.
 3. factors: Daftar faktor penyebab (1-5 item, singkat)
 4. potentialImpacts: Daftar dampak potensial yang mungkin terjadi (1-5 item)
 5. whyRisks: Alasan mengapa risiko ini perlu diperhatikan (1-5 item)

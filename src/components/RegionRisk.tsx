@@ -62,6 +62,7 @@ export default function RegionRisk({
     NORMAL_TEMP = dynamicBaseline.temp;
     NORMAL_AQI = dynamicBaseline.aqi;
     NORMAL_HUMIDITY = dynamicBaseline.humidity;
+
     NORMAL_RAIN_PROB = Math.min(
       95,
       Math.round(10 + dynamicBaseline.rainSum * 7),
@@ -89,12 +90,12 @@ export default function RegionRisk({
   const rainRisk = Math.max(0, rainAnomaly) * 1.5;
   const aqiRisk = Math.max(0, aqiAnomaly) * 0.8;
   const humidityRisk = Math.abs(humidityAnomaly) * 0.5;
+
   const safeReportCount = Number.isFinite(reportCount)
     ? Math.max(0, Math.floor(reportCount))
     : 0;
 
-  // Community evidence contributes up to 30 points, strengthening the
-  // assessment without overpowering live weather and air-quality signals.
+  // Community evidence contributes up to 30 points.
   const reportRisk = Math.min(30, safeReportCount * 5);
 
   const score = Math.min(
@@ -103,35 +104,56 @@ export default function RegionRisk({
   );
 
   let level = "Rendah";
-  let levelColor = "text-emerald-600";
-  let barBg = "border-emerald-100 bg-emerald-50";
-  let barText = "text-emerald-700";
+
+  let levelColor = "text-emerald-600 dark:text-emerald-400";
+
+  let barBg =
+    "border-emerald-200 bg-emerald-50/80 " +
+    "dark:border-emerald-900/50 dark:bg-emerald-900/20";
+
+  let barText = "text-emerald-900 dark:text-emerald-200";
 
   if (score >= 70) {
     level = "Tinggi";
-    levelColor = "text-red-600";
-    barBg = "border-red-100 bg-red-50";
-    barText = "text-red-700";
+
+    levelColor = "text-red-600 dark:text-red-400";
+
+    barBg =
+      "border-red-200 bg-red-50/80 " +
+      "dark:border-red-900/50 dark:bg-red-900/20";
+
+    barText = "text-red-900 dark:text-red-200";
   } else if (score >= 30) {
     level = "Sedang";
-    levelColor = "text-amber-600";
-    barBg = "border-amber-100 bg-amber-50";
-    barText = "text-amber-700";
+
+    levelColor = "text-amber-600 dark:text-amber-400";
+
+    barBg =
+      "border-amber-200 bg-amber-50/80 " +
+      "dark:border-amber-900/50 dark:bg-amber-900/20";
+
+    barText = "text-amber-900 dark:text-amber-200";
   }
 
   // Faktor dominan penyumbang skor risiko
   const factors = [
     {
       risk: tempRisk,
-      insight: `Suhu ${tempAnomaly > 0 ? "lebih tinggi" : "lebih rendah"} ${Math.abs(Math.round(tempAnomaly))}°C dari rata-rata wilayah.`,
+      insight: `Suhu ${
+        tempAnomaly > 0 ? "lebih tinggi" : "lebih rendah"
+      } ${Math.abs(Math.round(tempAnomaly))}°C dari rata-rata wilayah.`,
     },
     {
       risk: rainRisk,
-      insight: `Peluang hujan ${Math.round(rainAnomaly)}% di atas rata-rata wilayah.`,
+      insight: `Peluang hujan ${Math.round(
+        rainAnomaly,
+      )}% di atas rata-rata wilayah.`,
     },
     {
       risk: aqiRisk,
-      insight: `Kualitas udara ${Math.round(aqiAnomaly)} AQI lebih buruk dari rata-rata wilayah.`,
+      insight: `Kualitas udara ${Math.round(
+        aqiAnomaly,
+      )} AQI lebih buruk dari rata-rata wilayah.`,
     },
     {
       risk: reportRisk,
@@ -140,6 +162,7 @@ export default function RegionRisk({
   ].sort((a, b) => b.risk - a.risk);
 
   const topFactor = factors[0];
+
   const factorInsight =
     topFactor.risk > 5
       ? `Penyumbang utama: ${topFactor.insight}`
@@ -150,38 +173,41 @@ export default function RegionRisk({
       icon: CloudRain,
       label: "Curah Hujan",
       value: `${rainProb}%`,
+      iconColor: "text-blue-500",
     },
     {
       icon: Thermometer,
       label: "Suhu",
       value: `${temp}°C`,
+      iconColor: "text-orange-500",
     },
     {
       icon: Wind,
       label: "Kualitas Udara",
       value: `${aqiValue} AQI`,
+      iconColor: "text-teal-500",
     },
   ];
 
   return (
-    <div className="flex h-full w-full flex-col justify-between bg-white p-2 md:p-4">
+    <div className="flex h-full w-full flex-col justify-between bg-white p-2 dark:bg-neutral-800 md:p-4">
       {/* Top Section */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-5">
           {/* Score Detail */}
           <div className="flex items-start">
-            <span className="text-4xl font-bold tracking-tight text-neutral-900">
+            <span className="text-4xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100">
               {score}
             </span>
 
-            <span className="ml-1 text-lg font-medium text-neutral-600">
+            <span className="ml-1 text-lg font-medium text-neutral-500 dark:text-neutral-400">
               /100
             </span>
           </div>
 
           {/* Risk Status */}
           <div>
-            <p className="text-[11px] font-medium text-neutral-400">
+            <p className="text-[11px] font-medium text-neutral-400 dark:text-neutral-500">
               Risiko Wilayah
             </p>
 
@@ -194,31 +220,60 @@ export default function RegionRisk({
         {/* More Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger
-            className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-100"
+            className="
+              flex h-8 w-8 items-center justify-center
+              rounded-md
+              text-neutral-500
+              transition-colors
+              hover:bg-neutral-100
+              hover:text-neutral-700
+              dark:text-neutral-400
+              dark:hover:bg-neutral-700
+              dark:hover:text-neutral-200
+            "
             aria-label="Opsi lainnya"
           >
             <MoreVertical className="h-4 w-4" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+
+          <DropdownMenuContent
+            align="end"
+            className="
+              w-56
+              border-neutral-200
+              bg-white
+              dark:border-neutral-700
+              dark:bg-neutral-800
+            "
+          >
             <DropdownMenuItem
               render={<Link to="/dashboard/warnings" preload="intent" />}
+              className="
+                cursor-pointer
+                focus:bg-neutral-100
+                dark:focus:bg-neutral-700
+              "
             >
               <div className="flex flex-1 flex-col">
-                <span className="font-medium">Laporan Komunitas</span>
-                <span className="text-xs text-neutral-500">
+                <span className="font-medium text-neutral-900 dark:text-neutral-100">
+                  Laporan Komunitas
+                </span>
+
+                <span className="text-xs text-neutral-500 dark:text-neutral-400">
                   {safeReportCount > 0
                     ? `${safeReportCount} laporan mendukung`
                     : "Belum ada laporan"}
                 </span>
               </div>
-              <ArrowRight className="h-3.5 w-3.5 text-neutral-400" />
+
+              <ArrowRight className="h-3.5 w-3.5 text-neutral-400 dark:text-neutral-500" />
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
       {/* Description */}
-      <p className="mt-3 text-xs leading-relaxed text-neutral-500">
+      <p className="mt-3 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
         Kondisi lingkungan saat ini menunjukkan{" "}
         {score >= 50
           ? "peningkatan risiko dibanding pola normal"
@@ -228,31 +283,38 @@ export default function RegionRisk({
           ` ${safeReportCount} laporan sekitar turut memperkuat penilaian.`}
       </p>
 
-      {/* Insight bar — faktor dominan */}
-      <div className={`mt-2 rounded-lg border ${barBg} px-3 py-2`}>
-        <p className={`text-[11px] leading-relaxed ${barText}`}>
+      {/* Insight Bar */}
+      <div
+        className={`
+          mt-2 rounded-lg border px-3 py-2
+          ${barBg}
+        `}
+      >
+        <p
+          className={`
+            text-[11px] leading-relaxed
+            ${barText}
+          `}
+        >
           {factorInsight}
         </p>
       </div>
 
       {/* Conditions */}
       <div className="mt-3 grid grid-cols-3 gap-3">
-        {conditions.map(({ icon: Icon, label, value }, idx) => {
-          const colors = ["text-blue-500", "text-orange-500", "text-teal-500"];
+        {conditions.map(({ icon: Icon, label, value, iconColor }) => (
+          <div key={label}>
+            <p className="flex items-center gap-1.5 text-[11px] font-medium text-neutral-400 dark:text-neutral-500">
+              <Icon className={`h-3.5 w-3.5 ${iconColor}`} strokeWidth={2} />
 
-          return (
-            <div key={label}>
-              <p className="flex items-center gap-1.5 text-[11px] font-medium text-neutral-400">
-                <Icon className={`h-3.5 w-3.5 ${colors[idx]}`} />
-                {label}
-              </p>
+              {label}
+            </p>
 
-              <p className="mt-1.5 text-base font-bold text-neutral-900">
-                {value}
-              </p>
-            </div>
-          );
-        })}
+            <p className="mt-1.5 text-base font-bold text-neutral-900 dark:text-neutral-100">
+              {value}
+            </p>
+          </div>
+        ))}
       </div>
     </div>
   );

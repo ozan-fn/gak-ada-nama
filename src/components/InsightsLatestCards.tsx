@@ -23,53 +23,55 @@ export default function InsightsLatestCards({
 	const navigate = useNavigate();
 
 	return (
-		<div className="flex flex-col space-y-3">
+		<div className="flex flex-col space-y-4">
 			<div>
 				<h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
 					Insight terbaru
 				</h2>
 
-				<p className="text-xs text-neutral-500">
+				<p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
 					Analisis yang dihasilkan dari perkembangan laporan lingkungan
 				</p>
 			</div>
 
-			<div className="flex flex-col gap-3">
-				{insights.map((insight) => (
-					<button
-						key={insight.id}
-						type="button"
-						onClick={() =>
-							navigate({ to: "/dashboard/insights/$insightId", params: { insightId: insight.id } })
-						}
-						className="group flex flex-col rounded-lg border border-neutral-200 bg-neutral-50/50 p-4 text-left transition-all hover:border-neutral-300 hover:shadow-sm dark:border-neutral-800 dark:bg-neutral-800/50 dark:hover:border-neutral-700"
-					>
+		<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+			{insights.slice(0, 6).map((insight, index) => (
+				<button
+					key={insight.id}
+					type="button"
+					onClick={() => navigate({ to: "/dashboard/insight/$insightId", params: { insightId: insight.id }, search: { rank: index + 1 } })}
+					className="group flex flex-col rounded-lg border border-neutral-200 bg-white p-4 text-left transition-all hover:border-sky-300 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-900/50 dark:hover:border-sky-600"
+				>
+						{/* Header */}
 						<div className="flex items-center justify-between">
-							<span className="flex items-center gap-1.5 text-[11px] text-neutral-400">
+							<span className="flex items-center gap-1.5 text-[11px] text-neutral-400 dark:text-neutral-500">
 								<FileText className="size-3.5" />
 								Analisis lingkungan
 							</span>
 
-							<span className="text-[11px] text-neutral-400">
+							<span className="text-[11px] text-neutral-400 dark:text-neutral-500">
 								{timeAgo(insight.generatedAt)}
 							</span>
 						</div>
 
+						{/* Title */}
 						<h3 className="mt-3 line-clamp-2 text-sm font-semibold leading-5 text-neutral-900 dark:text-neutral-100">
 							{insight.title}
 						</h3>
 
+						{/* Summary */}
 						<p className="mt-2 line-clamp-2 text-xs leading-5 text-neutral-500 dark:text-neutral-400">
 							{insight.summary}
 						</p>
 
+						{/* Footer */}
 						<div className="mt-4 flex items-center justify-between border-t border-neutral-200 pt-3 dark:border-neutral-700">
-							<div className="flex items-center gap-1.5 text-[11px] text-neutral-400">
+							<div className="flex items-center gap-1.5 text-[11px] text-neutral-400 dark:text-neutral-500">
 								<BarChart3 className="size-3.5" />
 								Score {insight.impactScore}
 							</div>
 
-							<span className="inline-flex items-center gap-1 text-xs font-medium text-neutral-700 transition-colors group-hover:text-neutral-900 dark:text-neutral-300 dark:group-hover:text-white">
+							<span className="inline-flex items-center gap-1 text-xs font-medium text-sky-600 transition-colors group-hover:text-sky-700 dark:text-sky-400 dark:group-hover:text-sky-300">
 								Baca
 								<ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
 							</span>

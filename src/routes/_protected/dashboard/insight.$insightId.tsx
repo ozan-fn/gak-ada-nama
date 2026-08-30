@@ -2,7 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import InsightDetail from "#/components/InsightDetail";
 import { getInsightByIdFn } from "#/lib/insight.functions";
 
-export const Route = createFileRoute("/_protected/dashboard/insights/$insightId")({
+export const Route = createFileRoute("/_protected/dashboard/insight/$insightId")({
+	validateSearch: (search: Record<string, unknown>) => ({
+		rank: search.rank as number | undefined,
+	}),
 	loader: async ({ params }) => {
 		const insight = await getInsightByIdFn({ data: params.insightId });
 		if (!insight) {
@@ -15,6 +18,7 @@ export const Route = createFileRoute("/_protected/dashboard/insights/$insightId"
 
 function InsightDetailPage() {
 	const insight = Route.useLoaderData();
+	const { rank } = Route.useSearch();
 
-	return <InsightDetail insight={insight} />;
+	return <InsightDetail insight={insight} rank={rank} />;
 }

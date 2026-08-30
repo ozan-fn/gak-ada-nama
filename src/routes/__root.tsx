@@ -57,18 +57,18 @@ export const Route = createRootRoute({
 
 function NotFound() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-white px-4">
-      <div className="text-center space-y-4">
-        <h1 className="text-6xl sm:text-8xl font-bold text-gray-900">404</h1>
-        <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-white px-4 dark:bg-neutral-950">
+      <div className="space-y-4 text-center">
+        <h1 className="text-6xl font-bold text-gray-900 dark:text-neutral-100 sm:text-8xl">404</h1>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100 sm:text-2xl">
           Halaman Tidak Ditemukan
         </h2>
-        <p className="text-sm sm:text-base text-gray-500 max-w-md">
+        <p className="max-w-md text-sm text-gray-500 dark:text-neutral-400 sm:text-base">
           Maaf, halaman yang Anda cari tidak ditemukan atau telah dipindahkan.
         </p>
         <a
           href="/"
-          className="inline-block mt-6 px-6 py-2.5 bg-gray-900 text-white text-sm rounded-md hover:bg-gray-800 transition-colors"
+          className="mt-6 inline-block rounded-md bg-gray-900 px-6 py-2.5 text-sm text-white transition-colors hover:bg-gray-800 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200"
         >
           Kembali ke Beranda
         </a>
@@ -82,6 +82,21 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     <html lang="en">
       <head>
         <HeadContent />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('theme');
+                  var isDark = theme === 'dark';
+                  if (isDark) {
+                    document.documentElement.classList.add('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
       </head>
       <body>
         <QueryClientProvider client={queryClient}>

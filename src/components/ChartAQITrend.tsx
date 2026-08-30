@@ -72,22 +72,31 @@ export function ChartAQITrend({ location }: ChartAQITrendProps) {
 
   // Determine status based on current AQI
   let status = "Baik";
-  let statusColor = "bg-emerald-50/90 border-emerald-100 text-emerald-600";
+
+  let statusColor =
+    "bg-emerald-50/90 border-emerald-100 text-emerald-600 " +
+    "dark:bg-emerald-900/30 dark:border-emerald-900/50 dark:text-emerald-400";
 
   if (aqi.aqi > 100) {
     status = "Tidak Sehat";
-    statusColor = "bg-red-50/90 border-red-100 text-red-600";
+
+    statusColor =
+      "bg-red-50/90 border-red-100 text-red-600 " +
+      "dark:bg-red-900/30 dark:border-red-900/50 dark:text-red-400";
   } else if (aqi.aqi > 50) {
     status = "Sedang";
-    statusColor = "bg-amber-50/90 border-amber-100 text-amber-600";
+
+    statusColor =
+      "bg-amber-50/90 border-amber-100 text-amber-600 " +
+      "dark:bg-amber-900/30 dark:border-amber-900/50 dark:text-amber-400";
   }
 
   return (
     <div className="flex h-full w-full flex-col">
       {/* Header */}
-      <div className="flex shrink-0 items-center justify-between border-b border-neutral-200/60 p-2 md:px-4">
+      <div className="flex shrink-0 items-center justify-between border-b border-neutral-200/60 p-2 dark:border-neutral-700 md:px-4">
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-neutral-900">
+          <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
             Tren Kualitas Udara (PM2.5)
           </h3>
 
@@ -108,38 +117,24 @@ export function ChartAQITrend({ location }: ChartAQITrendProps) {
       </div>
 
       {/* Chart Content */}
-      <div
-        className="relative flex-1 px-1 py-1 md:px-2"
-        style={{
-          minHeight: "200px",
-          height: "100%",
-        }}
-      >
+      <div className="relative flex-1 px-1 py-1 md:px-2">
         {/* Background diagonal pattern */}
         <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundImage: `repeating-linear-gradient(
-              -45deg,
-              transparent,
-              transparent 8px,
-              hsl(var(--muted-foreground) / 0.08) 8px,
-              hsl(var(--muted-foreground) / 0.08) 9px
-            )`,
-            marginLeft: "32px",
-            marginTop: "24px",
-            marginBottom: "32px",
-            marginRight: "12px",
-          }}
+          className="
+            pointer-events-none
+            absolute
+            inset-0
+            ml-8
+            mr-3
+            mt-6
+            mb-8
+            bg-[repeating-linear-gradient(-45deg,transparent,transparent_8px,hsl(var(--muted-foreground)/0.08)_8px,hsl(var(--muted-foreground)/0.08)_9px)]
+          "
         />
 
         <ChartContainer
           config={chartConfig}
-          className="relative z-10"
-          style={{
-            width: "100%",
-            height: "100%",
-          }}
+          className="relative z-10 h-full w-full"
         >
           <AreaChart
             accessibilityLayer
@@ -167,13 +162,14 @@ export function ChartAQITrend({ location }: ChartAQITrendProps) {
               </linearGradient>
             </defs>
 
+            {/* Grid */}
             <CartesianGrid
               vertical={false}
               strokeDasharray="3 3"
-              stroke="hsl(var(--border))"
-              opacity={0.5}
+              className="stroke-neutral-200/70 dark:stroke-neutral-700/70"
             />
 
+            {/* Y Axis */}
             <YAxis
               tickLine={false}
               axisLine={false}
@@ -181,29 +177,37 @@ export function ChartAQITrend({ location }: ChartAQITrendProps) {
               width={25}
               tick={{
                 fontSize: 11,
-                fill: "hsl(var(--muted-foreground))",
+                fill: "currentColor",
               }}
               tickCount={4}
               domain={[
                 0,
                 (dataMax: number) => Math.ceil((dataMax + 10) / 10) * 10,
               ]}
+              className="text-neutral-500 dark:text-neutral-300"
             />
 
+            {/* X Axis */}
             <XAxis
               dataKey="day"
               tickLine={false}
               axisLine={false}
               tickMargin={10}
               interval={0}
-              tick={{ fontSize: 12 }}
+              tick={{
+                fontSize: 12,
+                fill: "currentColor",
+              }}
+              className="text-neutral-500 dark:text-neutral-300"
             />
 
+            {/* Tooltip */}
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent hideLabel />}
             />
 
+            {/* AQI Area */}
             <Area
               dataKey="aqi"
               type="step"
@@ -212,7 +216,7 @@ export function ChartAQITrend({ location }: ChartAQITrendProps) {
               strokeWidth={2}
             />
 
-            {/* Vertical line at today */}
+            {/* Today Reference Line */}
             {todayData && (
               <ReferenceLine
                 x={todayData.day}
