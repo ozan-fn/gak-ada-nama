@@ -2,7 +2,9 @@ import {
   ArrowLeft,
   ArrowRight,
   Clock,
+  CloudRain,
   FileText,
+  Images,
   MapPin,
   ShieldAlert,
   Target,
@@ -87,6 +89,8 @@ export default function InsightDetail({ insight, rank }: InsightDetailProps) {
   const navigate = useNavigate();
 
   const impactTone = getImpactTone(insight.impact);
+
+  const allImages = insight.reports.flatMap((report) => report.images).slice(0, 24);
 
   const scoreTone =
     insight.impactScore >= 70
@@ -355,7 +359,7 @@ export default function InsightDetail({ insight, rank }: InsightDetailProps) {
         </section>
 
         {/* Main metrics */}
-        <section className="mb-5 grid gap-3 sm:grid-cols-3">
+        <section className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {/* Reports */}
           <div
             className="
@@ -399,8 +403,55 @@ export default function InsightDetail({ insight, rank }: InsightDetailProps) {
             </p>
 
             <p className="mt-1 text-[10px] text-neutral-500 dark:text-neutral-400">
-              laporan yang dianalisis
+              laporan · {insight.validatedCount} tervalidasi
             </p>
+          </div>
+
+          {/* Rain / Risk condition */}
+          <div
+            className="
+              rounded-xl
+              border
+              border-neutral-200
+              bg-white
+              p-4
+              shadow-[0_2px_8px_rgba(15,23,42,0.05)]
+              dark:border-neutral-800
+              dark:bg-neutral-900
+              dark:shadow-none
+            "
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+                Kondisi
+              </span>
+
+              <div
+                className="
+                  grid
+                  size-7
+                  place-items-center
+                  rounded-md
+                  border
+                  border-blue-200
+                  bg-blue-50
+                  text-blue-600
+                  dark:border-blue-900/50
+                  dark:bg-blue-950/40
+                  dark:text-blue-400
+                "
+              >
+                <CloudRain className="size-3.5" />
+              </div>
+            </div>
+
+            <div className="mt-2 space-y-0.5 text-xs text-neutral-600 dark:text-neutral-400">
+              <p>Curah hujan: <span className="font-medium text-neutral-900 dark:text-neutral-200">{insight.rainCondition}</span></p>
+              <p>Kualitas udara: <span className="font-medium text-neutral-900 dark:text-neutral-200">{insight.airQualityCondition}</span></p>
+              {insight.riskLevel && (
+                <p>Risiko: <span className="font-medium text-neutral-900 dark:text-neutral-200">{insight.riskLevel}</span></p>
+              )}
+            </div>
           </div>
 
           {/* Radius */}
@@ -1054,7 +1105,16 @@ export default function InsightDetail({ insight, rank }: InsightDetailProps) {
                       dark:group-hover:text-sky-400
                     "
                   >
-                    <FileText className="size-3.5" />
+                    {report.images[0] ? (
+                      <img
+                        src={report.images[0]}
+                        alt={report.title}
+                        className="size-8 rounded-lg object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <FileText className="size-3.5" />
+                    )}
                   </div>
 
                   <div className="min-w-0 flex-1">
@@ -1106,6 +1166,55 @@ export default function InsightDetail({ insight, rank }: InsightDetailProps) {
                     "
                   />
                 </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Photo gallery (horizontal scroll) */}
+        {allImages.length > 0 && (
+          <section
+            className="
+              mb-5
+              overflow-hidden
+              rounded-xl
+              border
+              border-neutral-200
+              bg-white
+              shadow-[0_2px_8px_rgba(15,23,42,0.04)]
+              dark:border-neutral-800
+              dark:bg-neutral-900
+              dark:shadow-none
+            "
+          >
+            <div className="flex items-center justify-between gap-3 border-b border-neutral-200 bg-neutral-50/70 px-5 py-4 dark:border-neutral-800 dark:bg-transparent">
+              <div className="flex items-center gap-3">
+                <div className="grid size-8 shrink-0 place-items-center rounded-lg border border-sky-200 bg-sky-50 text-sky-600 dark:border-sky-900/50 dark:bg-sky-950/40 dark:text-sky-400">
+                  <Images className="size-4" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-semibold text-neutral-950 dark:text-neutral-100">
+                    Galeri foto laporan
+                  </h2>
+                  <p className="mt-0.5 text-[10px] text-neutral-500 dark:text-neutral-400">
+                    Geser untuk melihat foto dari laporan terkait
+                  </p>
+                </div>
+              </div>
+              <span className="hidden rounded-full border border-neutral-200 bg-white px-2 py-1 text-[9px] font-medium text-neutral-500 dark:border-neutral-800 dark:bg-neutral-800 dark:text-neutral-400 sm:inline-flex">
+                {allImages.length} foto
+              </span>
+            </div>
+
+            <div className="flex gap-2 overflow-x-auto p-4">
+              {allImages.map((image, index) => (
+                <img
+                  key={`${image}-${index}`}
+                  src={image}
+                  alt={`Foto laporan ${index + 1}`}
+                  loading="lazy"
+                  className="h-40 w-40 shrink-0 rounded-xl border border-neutral-200 object-cover dark:border-neutral-800"
+                />
               ))}
             </div>
           </section>

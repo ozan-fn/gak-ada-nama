@@ -43,9 +43,18 @@ export type ImpactScore = {
 	severity: number;
 	affectedArea: number;
 	recurrence: number;
+	exposure: number;
 	validation: number;
 	environmental: number;
 	riskAssessment: number;
+};
+
+export type EnvironmentalContext = {
+	rainCondition: string;
+	airQualityCondition: string;
+	riskLevel: string | null;
+	precipitationMm: number | null;
+	aqi: number | null;
 };
 
 function urgencyToScore(urgency: string): number {
@@ -138,6 +147,9 @@ function calculateImpactScore(
 	const count = reports.length;
 	const recurrence = Math.min(15, Math.round(Math.log2(count + 1) * 5));
 
+	// exposure: luas jangkauan + kepadatan laporan → seberapa luas populasi terdampak
+	const exposure = Math.min(15, Math.round(maxDistanceKm * 2 + count / 2));
+
 	const validationRatio = reports.length > 0 ? validatedCount / reports.length : 0;
 	const validation = Math.round(validationRatio * 10);
 
@@ -162,7 +174,7 @@ function calculateImpactScore(
 
 	const total = Math.min(
 		100,
-		severity + affectedArea + recurrence + validation + environmental + riskAssessment,
+		severity + affectedArea + recurrence + exposure + validation + environmental + riskAssessment,
 	);
 
 	return {
@@ -170,6 +182,7 @@ function calculateImpactScore(
 		severity,
 		affectedArea,
 		recurrence,
+		exposure,
 		validation,
 		environmental,
 		riskAssessment,
@@ -180,6 +193,67 @@ function classifyImpact(total: number): "Tinggi" | "Sedang" | "Rendah" {
 	if (total >= 70) return "Tinggi";
 	if (total >= 40) return "Sedang";
 	return "Rendah";
+}
+
+function conditionLabel(
+	value: number | null,
+	high: number,
+	medium: number,
+): string {
+	if (value === null) return "Tidak tersedia";
+	if (value >= high) return "Tinggi";
+	if (value >= medium) return "Sedang";
+	return "Rendah";
+}
+
+export function summarizeEnvironmentalContext(
+	candidate: InsightCandidate,
+): EnvironmentalContext {
+	let maxPrecipitationKm: number | null = null;
+	let maxAqi: number | null = null;
+	let riskLevel: string | null = null;
+
+	for (const report of candidate.reports) {
+		const snapshot = report.riskAssessment?.environmentSnapshot;
+		if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) {
+			continue;
+		}
+
+		const s = snapshot as Record<string, unknown>;
+		const weather = s.weather as Record<string, unknown> | undefined;
+		const current = weather?.current as Record<string, unknown> | undefined;
+		if (current) {
+			const rain =
+				typeof current.precipitationMm === "number"
+					? current.precipitationMm
+					: null;
+			if (rain !== null && (maxPrecipitationKm === null || rain > maxPrecipitationKm)) {
+				maxPrecipitationKm = rain;
+			}
+		}
+
+		const airQuality = s.airQuality as Record<string, unknown> | undefined;
+		const aqiCurrent = airQuality?.current as Record<string, unknown> | undefined;
+		if (aqiCurrent) {
+			const aqi = typeof aqiCurrent.aqi === "number" ? aqiCurrent.aqi : null;
+			if (aqi !== null && (maxAqi === null || aqi > maxAqi)) {
+				maxAqi = aqi;
+			}
+		}
+
+		const level = report.riskAssessment?.level ?? null;
+		if (level && (riskLevel === null || level === "CRITICAL" || level === "HIGH")) {
+			riskLevel = level;
+		}
+	}
+
+	return {
+		rainCondition: conditionLabel(maxPrecipitationKm, 20, 5),
+		airQualityCondition: conditionLabel(maxAqi, 150, 100),
+		riskLevel,
+		precipitationMm: maxPrecipitationKm,
+		aqi: maxAqi,
+	};
 }
 
 export async function fetchReportsForClustering(): Promise<ReportForClustering[]> {
@@ -441,6 +515,7 @@ export function buildInsightFromCandidate(candidate: InsightCandidate) {
 			: 0;
 
 	const latestReport = candidate.reports[0];
+	const environmentalContext = summarizeEnvironmentalContext(candidate);
 
 	return {
 		title: buildInsightTitle(candidate),
@@ -459,7 +534,15 @@ export function buildInsightFromCandidate(candidate: InsightCandidate) {
 		factors: buildFactorsSummary(candidate),
 		potentialImpacts: buildPotentialImpacts(candidate),
 		whyRisks: buildWhyRisks(candidate),
-		weatherContext: null,
-		aqiContext: null,
+		environmentalContext,
+		weatherContext: {
+			rainCondition: environmentalContext.rainCondition,
+			precipitationMm: environmentalContext.precipitationMm,
+			riskLevel: environmentalContext.riskLevel,
+		} as Prisma.JsonObject,
+		aqiContext: {
+			airQualityCondition: environmentalContext.airQualityCondition,
+			aqi: environmentalContext.aqi,
+		} as Prisma.JsonObject,
 	};
 }

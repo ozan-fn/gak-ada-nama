@@ -28,6 +28,9 @@ export type InsightView = {
 	factors: string[];
 	potentialImpacts: string[];
 	whyRisks: string[];
+	rainCondition: string;
+	airQualityCondition: string;
+	riskLevel: string | null;
 	generatedAt: Date;
 };
 
@@ -40,6 +43,7 @@ export type InsightDetailView = InsightView & {
 		urgency: string;
 		status: string;
 		locationName: string;
+		images: string[];
 		createdAt: Date;
 	}>;
 };
@@ -62,6 +66,20 @@ function determineTrend(
 	if (impactScore >= 70) return "up";
 	if (impactScore <= 30) return "down";
 	return "stable";
+}
+
+function ctxValue(ctx: unknown, key: string): unknown {
+	if (ctx && typeof ctx === "object" && !Array.isArray(ctx)) {
+		return (ctx as Record<string, unknown>)[key];
+	}
+	return undefined;
+}
+
+function stringOr(ctx: unknown, key: string, fallback: string | null = "Tidak tersedia"): string | null {
+	const value = ctxValue(ctx, key);
+	if (typeof value === "string" && value.length > 0) return value;
+	if (value != null) return String(value);
+	return fallback;
 }
 
 async function refreshInsights(): Promise<void> {
@@ -108,6 +126,7 @@ async function refreshInsights(): Promise<void> {
 					urgency: r.urgency,
 				})),
 				factors: built.factors,
+				environmentalContext: built.environmentalContext,
 			});
 		}
 
@@ -131,6 +150,8 @@ async function refreshInsights(): Promise<void> {
 					potentialImpacts,
 					whyRisks,
 					trend,
+					weatherContext: built.weatherContext,
+					aqiContext: built.aqiContext,
 					generatedAt: new Date(),
 				},
 			});
@@ -153,6 +174,8 @@ async function refreshInsights(): Promise<void> {
 					factors,
 					potentialImpacts,
 					whyRisks,
+					weatherContext: built.weatherContext,
+					aqiContext: built.aqiContext,
 				},
 			});
 		}
@@ -238,6 +261,9 @@ export const getInsightsFn = createServerFn({ method: "GET" })
 				factors: i.factors,
 				potentialImpacts: i.potentialImpacts,
 				whyRisks: i.whyRisks,
+				rainCondition: stringOr(i.weatherContext, "rainCondition") ?? "Tidak tersedia",
+				airQualityCondition: stringOr(i.aqiContext, "airQualityCondition") ?? "Tidak tersedia",
+				riskLevel: stringOr(i.weatherContext, "riskLevel", null),
 				generatedAt: i.generatedAt,
 			})),
 			stats: {
@@ -266,6 +292,7 @@ export const getInsightByIdFn = createServerFn({ method: "GET" })
 				urgency: true,
 				status: true,
 				locationName: true,
+				images: true,
 				createdAt: true,
 			},
 			orderBy: { createdAt: "desc" },
@@ -288,6 +315,9 @@ export const getInsightByIdFn = createServerFn({ method: "GET" })
 			factors: insight.factors,
 			potentialImpacts: insight.potentialImpacts,
 			whyRisks: insight.whyRisks,
+			rainCondition: stringOr(insight.weatherContext, "rainCondition") ?? "Tidak tersedia",
+			airQualityCondition: stringOr(insight.aqiContext, "airQualityCondition") ?? "Tidak tersedia",
+			riskLevel: stringOr(insight.weatherContext, "riskLevel", null),
 			generatedAt: insight.generatedAt,
 			reportIds: insight.reportIds,
 			reports,

@@ -122,6 +122,19 @@ export default function FeaturedInsightCard({
                 laporan
               </span>
 
+              <span>
+                <strong className="font-medium text-neutral-900 dark:text-neutral-200">
+                  {insight.validatedCount}
+                </strong>{" "}
+                tervalidasi
+              </span>
+
+              {insight.rainCondition && insight.rainCondition !== "Tidak tersedia" && (
+                <span className="text-neutral-600 dark:text-neutral-400">
+                  Curah hujan: {insight.rainCondition}
+                </span>
+              )}
+
               {insight.trend === "up" && (
                 <span className="flex items-center gap-1 text-red-500">
                   <ArrowUp className="size-3.5" />

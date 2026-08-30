@@ -13,6 +13,9 @@ export type InsightItem = {
 	trend: "up" | "down" | "stable";
 	summary: string;
 	generatedAt: Date;
+	rainCondition?: string;
+	airQualityCondition?: string;
+	riskLevel?: string | null;
 };
 
 type InsightsPriorityTableProps = {
