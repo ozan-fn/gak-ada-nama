@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   BadgeCheck,
   CalendarClock,
-  Camera,
   CheckCircle2,
   Eye,
   FileQuestion,
@@ -14,22 +13,23 @@ import {
   MapPin,
   ScanSearch,
   ShieldAlert,
-  Sparkles,
   Target,
   Wind,
 } from "lucide-react";
 import { useState } from "react";
+import { ReportResolutionCard } from "#/components/ReportResolutionCard";
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import { Progress } from "#/components/ui/progress";
-import { getReportByIdFn } from "#/lib/reports.functions";
+import { getCommunityReportDetailFn } from "#/lib/report-resolution.functions";
 
 export const Route = createFileRoute(
   "/_protected/dashboard/report-detail/$reportId",
 )({
-  loader: async ({ params }) => getReportByIdFn({ data: params.reportId }),
+  loader: async ({ params }) =>
+    getCommunityReportDetailFn({ data: params.reportId }),
   component: ReportDetailPage,
 });
 
@@ -124,51 +124,11 @@ function toPercent(value?: number | null): number | null {
   return Math.round(Math.min(1, Math.max(0, value)) * 100);
 }
 
-const confirmationItems = [
-  { id: "location", label: "Lokasi kejadian sesuai dengan foto", icon: MapPin },
-  {
-    id: "photo",
-    label: "Foto menggambarkan kejadian dengan akurat",
-    icon: Camera,
-  },
-  {
-    id: "desc",
-    label: "Deskripsi sesuai dengan kondisi di lapangan",
-    icon: FileQuestion,
-  },
-];
-
-function useReportConfirmations(reportId: string) {
-  const key = `report-confirm:${reportId}`;
-  const [items, setItems] = useState<Record<string, boolean>>(() => {
-    try {
-      const raw =
-        typeof window === "undefined" ? null : window.localStorage.getItem(key);
-      return raw ? (JSON.parse(raw) as Record<string, boolean>) : {};
-    } catch {
-      return {};
-    }
-  });
-
-  const toggle = (id: string) => {
-    setItems((prev) => {
-      const next = { ...prev, [id]: !prev[id] };
-      try {
-        window.localStorage.setItem(key, JSON.stringify(next));
-      } catch {
-        /* ignore */
-      }
-      return next;
-    });
-  };
-
-  return { items, toggle };
-}
-
 function ReportDetailPage() {
-  const report = Route.useLoaderData();
+  const detail = Route.useLoaderData();
+  const [lightbox, setLightbox] = useState<string | null>(null);
 
-  if (!report) {
+  if (!detail) {
     return (
       <main className="flex min-h-[calc(100dvh-3.5rem)] flex-col items-center justify-center gap-3 bg-neutral-50/40 px-4 text-center">
         <div className="grid size-14 place-items-center rounded-2xl bg-neutral-100 text-neutral-400">
@@ -178,7 +138,7 @@ function ReportDetailPage() {
           Laporan Tidak Ditemukan
         </h2>
         <p className="max-w-sm text-sm text-neutral-500">
-          Laporan tidak tersedia atau bukan milik Anda.
+          Laporan tidak tersedia atau sudah dihapus.
         </p>
         <Button
           render={<Link to="/dashboard/my-reports" />}
@@ -191,6 +151,8 @@ function ReportDetailPage() {
     );
   }
 
+  const { report, resolution, viewer } = detail;
+
   const ecolens = report.ecolensAnalysis;
   const risk = report.riskAssessment;
   const confidence = toPercent(ecolens?.confidence);
@@ -202,9 +164,6 @@ function ReportDetailPage() {
     assessmentStatusConfig.PENDING;
   const riskLevel = risk?.level ? riskLevelConfig[risk?.level] : null;
   const latestPhoto = report.images[0];
-  const { items, toggle } = useReportConfirmations(report.id);
-  const [lightbox, setLightbox] = useState<string | null>(null);
-
   const timeline = [
     {
       icon: FileQuestion,
@@ -229,6 +188,11 @@ function ReportDetailPage() {
           },
         ]
       : []),
+    ...resolution.validations.map((validation, index) => ({
+      icon: CheckCircle2,
+      label: `Validasi penyelesaian ${index + 1} oleh ${validation.user.name}`,
+      sub: `${Math.round(validation.distanceMeters)} m dari lokasi · ${formatDate(validation.createdAt)}`,
+    })),
     {
       icon: BadgeCheck,
       label: "Status terakhir",
@@ -240,7 +204,9 @@ function ReportDetailPage() {
     <main className="min-h-[calc(100dvh-3.5rem)] bg-neutral-50/40">
       <div className="mx-auto max-w-3xl space-y-4 p-4">
         <Button
-          render={<Link to="/dashboard/my-reports" />}
+          render={
+            <Link to={viewer.isOwner ? "/dashboard/my-reports" : "/reports"} />
+          }
           variant="ghost"
           size="sm"
           className="-ml-2 gap-1.5 text-neutral-600"
@@ -298,9 +264,6 @@ function ReportDetailPage() {
                 <div className="min-w-0">
                   <p className="text-xs font-semibold text-neutral-800">
                     Dilaporkan oleh {report.user.name}
-                  </p>
-                  <p className="truncate text-[11px] text-neutral-500">
-                    {report.user.email}
                   </p>
                 </div>
                 {report.latitude != null && report.longitude != null ? (
@@ -525,6 +488,14 @@ function ReportDetailPage() {
           </Card>
         )}
 
+        <ReportResolutionCard
+          reportId={report.id}
+          reportLatitude={report.latitude}
+          reportLongitude={report.longitude}
+          resolution={resolution}
+          onViewImage={setLightbox}
+        />
+
         {/* Timeline */}
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-2">
@@ -539,7 +510,7 @@ function ReportDetailPage() {
                 const EventIcon = event.icon;
                 return (
                   <li
-                    key={index}
+                    key={`${event.label}-${event.sub}`}
                     className="relative flex gap-3 pb-4 last:pb-0"
                   >
                     {index < timeline.length - 1 && (
@@ -563,51 +534,6 @@ function ReportDetailPage() {
           </CardContent>
         </Card>
 
-        {/* User Confirmation */}
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-neutral-800">
-              <Sparkles className="size-4 text-amber-500" />
-              Konfirmasi Pelapor
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-2">
-            <p className="text-xs text-neutral-500">
-              Tandai poin yang sudah Anda pastikan. (Tersimpan di perangkat
-              Anda.)
-            </p>
-            <ul className="mt-3 space-y-2">
-              {confirmationItems.map((item) => {
-                const ItemIcon = item.icon;
-                const checked = Boolean(items[item.id]);
-                return (
-                  <li key={item.id}>
-                    <button
-                      type="button"
-                      onClick={() => toggle(item.id)}
-                      className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors ${checked ? "border-emerald-200 bg-emerald-50/60" : "border-neutral-200 bg-white hover:bg-neutral-50"}`}
-                    >
-                      <div
-                        className={`grid size-8 shrink-0 place-items-center rounded-lg ${checked ? "bg-emerald-500 text-white" : "bg-neutral-100 text-neutral-400"}`}
-                      >
-                        {checked ? (
-                          <CheckCircle2 className="size-4" />
-                        ) : (
-                          <ItemIcon className="size-4" />
-                        )}
-                      </div>
-                      <span
-                        className={`text-[13px] ${checked ? "font-medium text-neutral-800" : "text-neutral-600"}`}
-                      >
-                        {item.label}
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Lightbox */}

@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
   Bot,
@@ -60,9 +61,11 @@ export default function RelatedRiskReports({
             const isAutomatic = report.source === "ENVIRONMENT_MONITOR";
 
             return (
-              <button
-                type="button"
+              <Link
                 key={report.id}
+                to="/dashboard/report-detail/$reportId"
+                params={{ reportId: report.id }}
+                preload="intent"
                 onClick={() => onReportSelect?.(report)}
                 className={`group flex w-full items-start gap-3 rounded-xl p-3 text-left transition-all ${
                   isSelected
@@ -137,7 +140,7 @@ export default function RelatedRiskReports({
                     }`}
                   />
                 </div>
-              </button>
+              </Link>
             );
           })}
         </div>

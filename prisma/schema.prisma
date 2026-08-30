@@ -24,6 +24,7 @@ model User {
   sessions         Session[]
   accounts         Account[]
   reports          Report[]
+  resolutionValidations ReportResolutionValidation[]
 
   @@unique([email])
   // @@unique([username])
@@ -113,6 +114,7 @@ model Report {
   incidentClusterId String?               @db.ObjectId
   incidentCluster   IncidentCluster?      @relation(fields: [incidentClusterId], references: [id], onDelete: SetNull)
   riskAssessment    ReportRiskAssessment?
+  resolutionValidations ReportResolutionValidation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -123,6 +125,32 @@ model Report {
   @@index([source])
   @@index([incidentClusterId])
   @@map("report")
+}
+
+model ReportResolutionValidation {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  reportId String @db.ObjectId
+  report   Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  userId String @db.ObjectId
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  description    String
+  image          String
+  latitude       Float
+  longitude      Float
+  distanceMeters Float
+  ecolensSummary String
+  visionModel    String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([reportId, userId])
+  @@index([reportId, createdAt])
+  @@index([userId])
+  @@map("report_resolution_validation")
 }
 
 model EcoLensAnalysis {
