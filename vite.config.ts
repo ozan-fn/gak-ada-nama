@@ -11,6 +11,9 @@ import { nitro } from 'nitro/vite'
 const config = defineConfig({
   envPrefix: 'VITE_',
   resolve: { tsconfigPaths: true },
+  ssr: {
+    noExternal: ['maplibre-gl'],
+  },
   optimizeDeps: {
     exclude: ['maplibre-gl'],
   },
