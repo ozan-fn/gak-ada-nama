@@ -8,6 +8,7 @@ import {
   RotateCcw,
   Sparkles,
   Upload,
+  XCircle,
 } from "lucide-react";
 import {
   type ChangeEvent,
@@ -24,6 +25,7 @@ export type EcoLensStage =
   | "live"
   | "captured"
   | "analyzing"
+  | "rejected"
   | "review"
   | "demo-success"
   | "error";
@@ -33,6 +35,7 @@ type EcoLensCameraViewportProps = {
   videoRef: RefObject<HTMLVideoElement | null>;
   capturedImage: string | null;
   cameraError: string | null;
+  rejection: { reason: string; guidance: string } | null;
   isCameraReady: boolean;
 
   onStartCamera: () => void;
@@ -47,6 +50,7 @@ export function EcoLensCameraViewport({
   videoRef,
   capturedImage,
   cameraError,
+  rejection,
   isCameraReady,
   onStartCamera,
   onCapture,
@@ -95,7 +99,7 @@ export function EcoLensCameraViewport({
 
     const file = e.dataTransfer.files?.[0];
 
-    if (file && file.type.startsWith("image/")) {
+    if (file?.type.startsWith("image/")) {
       onUploadImage(file);
     }
   };
@@ -111,17 +115,11 @@ export function EcoLensCameraViewport({
       />
 
       <div className="mx-auto flex h-full min-h-0 w-full max-w-6xl flex-1 p-2 sm:p-3 lg:p-4">
-        <div
-          role="button"
-          tabIndex={0}
+        <section
+          aria-label="Area foto laporan EcoLens"
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              handleTriggerUpload();
-            }
-          }}
           className={`
             relative flex min-h-0 w-full flex-1
             overflow-hidden rounded-2xl
@@ -524,6 +522,59 @@ export function EcoLensCameraViewport({
             </div>
           )}
 
+          {/* Rejected image */}
+          {stage === "rejected" && rejection && (
+            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-neutral-950/72 px-5 text-center backdrop-blur-sm">
+              <div className="w-full max-w-md rounded-2xl border border-red-300/30 bg-white/96 p-5 shadow-2xl dark:border-red-800/60 dark:bg-neutral-950/96 sm:p-6">
+                <div className="mx-auto grid size-12 place-items-center rounded-full bg-red-50 text-red-600 ring-1 ring-red-100 dark:bg-red-950/60 dark:text-red-400 dark:ring-red-900">
+                  <XCircle className="size-6" />
+                </div>
+
+                <div className="mt-3 inline-flex rounded-full bg-red-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-red-700 dark:bg-red-950/50 dark:text-red-300">
+                  Foto ditolak EcoLens
+                </div>
+
+                <h2 className="mt-3 text-lg font-semibold text-neutral-950 dark:text-white">
+                  Foto belum layak untuk laporan
+                </h2>
+
+                <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">
+                  {rejection.reason}
+                </p>
+
+                <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 text-left dark:border-amber-900/70 dark:bg-amber-950/30">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-amber-800 dark:text-amber-300">
+                    Panduan foto ulang
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-amber-950 dark:text-amber-100">
+                    {rejection.guidance}
+                  </p>
+                </div>
+
+                <div className="mt-5 grid gap-2 sm:grid-cols-2">
+                  <Button
+                    type="button"
+                    onClick={onStartCamera}
+                    className="h-10 gap-2 rounded-lg bg-red-600 text-xs font-semibold text-white hover:bg-red-700"
+                  >
+                    <Camera className="size-4" />
+                    Ambil foto ulang
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleTriggerUpload}
+                    className="h-10 gap-2 rounded-lg border-neutral-200 bg-white text-xs font-medium text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200"
+                  >
+                    <Upload className="size-4" />
+                    Pilih foto lain
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Review */}
           {stage === "review" && (
             <div className="absolute inset-x-0 bottom-0 z-20 flex justify-center px-4 pb-5 sm:pb-7">
@@ -583,7 +634,7 @@ export function EcoLensCameraViewport({
               </div>
             </div>
           )}
-        </div>
+        </section>
       </div>
     </section>
   );
