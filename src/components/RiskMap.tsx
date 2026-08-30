@@ -1,4 +1,4 @@
-import * as maplibregl from "maplibre-gl";
+import type * as maplibregl from "maplibre-gl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
@@ -44,41 +44,6 @@ export type NearbyReportPin = ReportMapPin & {
   distanceKm: number;
 };
 
-/** Creates the DOM element for the custom user location marker. */
-function createUserLocationMarkerElement(): HTMLDivElement {
-  const markerEl = document.createElement("div");
-
-  markerEl.className = "user-location-marker";
-
-  Object.assign(markerEl.style, {
-    width: "28px",
-    height: "28px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    cursor: "pointer",
-    pointerEvents: "auto",
-  });
-
-  const dot = document.createElement("div");
-
-  Object.assign(dot.style, {
-    width: "16px",
-    height: "16px",
-    borderRadius: "9999px",
-    backgroundColor: "#3b82f6",
-    border: "3px solid #ffffff",
-    boxShadow: `
-			0 0 0 2px rgba(59, 130, 246, 0.20),
-			0 2px 6px rgba(0, 0, 0, 0.35)
-		`,
-  });
-
-  markerEl.appendChild(dot);
-
-  return markerEl;
-}
-
 function RiskMapContent({
   context,
   bearing,
@@ -86,6 +51,7 @@ function RiskMapContent({
   setShowAIPanel,
   reports,
   isMapReady,
+  flyToLocation,
   onLocationSelect,
   onReportSelect,
 }: {
@@ -100,11 +66,16 @@ function RiskMapContent({
   }) => void;
   reports: NearbyReportPin[];
   isMapReady: boolean;
+  flyToLocation?: {
+    latitude: number;
+    longitude: number;
+  } | null;
   onReportSelect?: (report: NearbyReportPin) => void;
 }) {
   const reportMarkersRef = useRef<maplibregl.Marker[]>([]);
   const userMarkerRef = useRef<maplibregl.Marker | null>(null);
   const selectedMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const lastLocationMarkerKeyRef = useRef<string | null>(null);
 
   // Tracks initial location flyTo so subsequent GPS updates move only the marker without moving the camera
   const hasInitialLocatedRef = useRef(false);
@@ -136,12 +107,14 @@ function RiskMapContent({
 
   // Calculate nearby reports within 5km of user location
   const nearbyReportsCount = useMemo(() => {
-    if (!userLocation.latitude || !userLocation.longitude) return 0;
+    const latitude = userLocation.latitude;
+    const longitude = userLocation.longitude;
+    if (latitude === null || longitude === null) return 0;
     
     return reports.filter(report => {
       const distance = calculateDistanceKm(
-        userLocation.latitude!,
-        userLocation.longitude!,
+        latitude,
+        longitude,
         report.latitude,
         report.longitude
       );
@@ -149,7 +122,7 @@ function RiskMapContent({
     }).length;
   }, [reports, userLocation.latitude, userLocation.longitude]);
 
-  /** Instantiates or updates the blue user location marker position. */
+  /** Instantiates or updates the shared red location marker position. */
   const createUserMarker = useCallback(
     (mapInstance: maplibregl.Map, latitude: number, longitude: number) => {
       if (userMarkerRef.current) {
@@ -157,14 +130,11 @@ function RiskMapContent({
         return;
       }
 
-      const markerElement = createUserLocationMarkerElement();
-
-      userMarkerRef.current = new maplibregl.Marker({
-        element: markerElement,
-        anchor: "center",
-      })
-        .setLngLat([longitude, latitude])
-        .addTo(mapInstance);
+      userMarkerRef.current = createSelectedLocationMarker(
+        latitude,
+        longitude,
+        mapInstance,
+      );
     },
     [],
   );
@@ -184,13 +154,14 @@ function RiskMapContent({
       return;
     }
 
-    createUserMarker(mapInstance, latitude, longitude);
+    if (!selectedMarkerRef.current) {
+      createUserMarker(mapInstance, latitude, longitude);
+    }
 
     if (!hasInitialLocatedRef.current) {
       hasInitialLocatedRef.current = true;
 
-      // Only fly to user location if there's no selected marker (red marker)
-      // Priority: red marker > blue user dot
+      // Keep a clicked/search location in view instead of overriding it with GPS.
       if (!selectedMarkerRef.current) {
         mapInstance.flyTo({
           center: [longitude, latitude],
@@ -202,6 +173,53 @@ function RiskMapContent({
   }, [
     map,
     isMapReady,
+    userLocation.latitude,
+    userLocation.longitude,
+    createUserMarker,
+  ]);
+
+  // Keep exactly one visible location marker when a searched/clicked location
+  // is synchronized back through the parent route.
+  useEffect(() => {
+    const mapInstance = map.current;
+    if (!mapInstance || !isMapReady || !flyToLocation) return;
+
+    const locationKey = `${flyToLocation.latitude},${flyToLocation.longitude}`;
+    if (lastLocationMarkerKeyRef.current === locationKey) return;
+
+    lastLocationMarkerKeyRef.current = locationKey;
+
+    const userLatitude = userLocation.latitude;
+    const userLongitude = userLocation.longitude;
+    const isUserLocation =
+      userLatitude !== null &&
+      userLongitude !== null &&
+      Math.abs(flyToLocation.latitude - userLatitude) < 0.000001 &&
+      Math.abs(flyToLocation.longitude - userLongitude) < 0.000001;
+
+    if (isUserLocation) {
+      selectedMarkerRef.current?.remove();
+      selectedMarkerRef.current = null;
+      createUserMarker(
+        mapInstance,
+        userLatitude,
+        userLongitude,
+      );
+      return;
+    }
+
+    userMarkerRef.current?.remove();
+    userMarkerRef.current = null;
+    selectedMarkerRef.current?.remove();
+    selectedMarkerRef.current = createSelectedLocationMarker(
+      flyToLocation.latitude,
+      flyToLocation.longitude,
+      mapInstance,
+    );
+  }, [
+    map,
+    isMapReady,
+    flyToLocation,
     userLocation.latitude,
     userLocation.longitude,
     createUserMarker,
@@ -346,6 +364,8 @@ function RiskMapContent({
 
       const nearestCity = findNearestCity(lat, lng, indonesiaLocations);
 
+      userMarkerRef.current?.remove();
+      userMarkerRef.current = null;
       selectedMarkerRef.current?.remove();
 
       selectedMarkerRef.current = createSelectedLocationMarker(
@@ -353,6 +373,7 @@ function RiskMapContent({
         lng,
         mapInstance,
       );
+      lastLocationMarkerKeyRef.current = `${lat},${lng}`;
 
       onLocationSelect({
         latitude: lat,
@@ -393,17 +414,26 @@ function RiskMapContent({
       return;
     }
 
+    selectedMarkerRef.current?.remove();
+    selectedMarkerRef.current = null;
+    createUserMarker(
+      mapInstance,
+      userLocation.latitude,
+      userLocation.longitude,
+    );
+    lastLocationMarkerKeyRef.current = `${userLocation.latitude},${userLocation.longitude}`;
+
+    mapInstance.flyTo({
+      center: [userLocation.longitude, userLocation.latitude],
+      zoom: 14,
+      duration: 1000,
+    });
+
     if (onLocationSelect) {
       onLocationSelect({
         latitude: userLocation.latitude,
         longitude: userLocation.longitude,
         city: userLocation.city,
-      });
-    } else {
-      mapInstance.flyTo({
-        center: [userLocation.longitude, userLocation.latitude],
-        zoom: 14,
-        duration: 1000,
       });
     }
   }, [
@@ -412,6 +442,7 @@ function RiskMapContent({
     userLocation.longitude,
     userLocation.city,
     onLocationSelect,
+    createUserMarker,
   ]);
 
   return (
@@ -815,7 +846,6 @@ export default function RiskMap({
   const [isMapReady, setIsMapReady] = useState(false);
 
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
-  const selectedMarkerRef = useRef<maplibregl.Marker | null>(null);
   const lastFlyLocationRef = useRef<string | null>(null);
 
   // Prevents re-running map initialization on re-renders
@@ -842,7 +872,8 @@ export default function RiskMap({
     });
   }, []);
 
-  // Pan and place marker when flyToLocation prop updates
+  // Pan when flyToLocation updates. RiskMapContent owns the single location
+  // marker so this layer never creates a duplicate marker.
   useEffect(() => {
     const map = mapInstanceRef.current;
 
@@ -858,14 +889,6 @@ export default function RiskMap({
 
     lastFlyLocationRef.current = locationKey;
 
-    selectedMarkerRef.current?.remove();
-
-    selectedMarkerRef.current = createSelectedLocationMarker(
-      flyToLocation.latitude,
-      flyToLocation.longitude,
-      map,
-    );
-
     setAqiRadius(100);
 
     map.flyTo({
@@ -877,9 +900,6 @@ export default function RiskMap({
 
   useEffect(() => {
     return () => {
-      selectedMarkerRef.current?.remove();
-      selectedMarkerRef.current = null;
-
       mapInstanceRef.current = null;
     };
   }, []);
@@ -912,6 +932,7 @@ export default function RiskMap({
           setShowAIPanel={setShowAIPanel}
           reports={reports}
           isMapReady={isMapReady}
+          flyToLocation={flyToLocation}
           onLocationSelect={onLocationSelect}
           onReportSelect={onReportSelect}
         />
