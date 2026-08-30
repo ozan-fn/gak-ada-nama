@@ -9,7 +9,11 @@ import {
   Users,
   Clock3,
 } from "lucide-react";
-import { getActivitiesFn, type ActivityGroup, type ActivityEvent } from "#/lib/activity.functions.server";
+import {
+  type ActivityEvent,
+  type ActivityGroup,
+  getActivitiesFn,
+} from "#/lib/activity.functions";
 
 export const Route = createFileRoute("/_protected/dashboard/activity")({
   loader: () => getActivitiesFn(),

@@ -1,30 +1,11 @@
-import { createServerFn } from "@tanstack/react-start";
-import { prisma } from "#/lib/prisma";
 import { ensureSession } from "#/lib/auth.functions";
+import type {
+	ActivityEvent,
+	ActivityGroup,
+} from "#/lib/activity.functions";
+import { prisma } from "#/lib/prisma";
 
-type EventType =
-	| "verified"
-	| "rejected"
-	| "updated"
-	| "risk-new"
-	| "risk-resolved"
-	| "community";
-
-export type ActivityEvent = {
-	id: string;
-	type: EventType;
-	time: Date;
-	title: string;
-	description: string;
-	relatedId?: string;
-};
-
-export type ActivityGroup = {
-	day: string;
-	events: ActivityEvent[];
-};
-
-export const getActivitiesFn = createServerFn({ method: "GET" }).handler(async () => {
+export async function getActivities(): Promise<ActivityGroup[]> {
 	const session = await ensureSession();
 
 	const sevenDaysAgo = new Date();
@@ -138,4 +119,4 @@ export const getActivitiesFn = createServerFn({ method: "GET" }).handler(async (
 	if (olderEvents.length > 0) groups.push({ day: "Minggu ini", events: olderEvents });
 
 	return groups;
-});
+}
