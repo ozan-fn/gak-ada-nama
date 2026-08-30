@@ -49,6 +49,10 @@ export function EcoLensWorkspace() {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [analysis, setAnalysis] = useState<EcoLensAnalysis | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [rejection, setRejection] = useState<{
+    reason: string;
+    guidance: string;
+  } | null>(null);
   const [category, setCategory] = useState<EcoLensCategory>(EMPTY_CATEGORY);
   const [description, setDescription] = useState("");
   const [formErrors, setFormErrors] = useState<EcoLensFormErrors>({});
@@ -95,6 +99,7 @@ export function EcoLensWorkspace() {
     setCapturedImage(null);
     setAnalysis(null);
     setAnalysisError(null);
+    setRejection(null);
     setCategory(EMPTY_CATEGORY);
     setDescription("");
     setFormErrors({});
@@ -134,6 +139,7 @@ export function EcoLensWorkspace() {
     latestAnalysisRequest.current = requestId;
 
     setAnalysisError(null);
+    setRejection(null);
     setReviewOpen(false);
     setStage("analyzing");
 
@@ -153,6 +159,17 @@ export function EcoLensWorkspace() {
         setAnalysis(result.analysis);
         setCategory(result.analysis.category);
         setDescription(result.analysis.suggestedDescription);
+        setStage("review");
+        setReviewOpen(true);
+      } else if (result.code === "UNSUITABLE_IMAGE") {
+        setAnalysis(null);
+        setRejection({
+          reason: result.message,
+          guidance:
+            result.details ||
+            "Pastikan masalah terlihat jelas dan memenuhi sebagian besar bingkai.",
+        });
+        setStage("rejected");
       } else {
         console.error("[EcoLens] Analisis otomatis gagal:", {
           code: result.code,
@@ -163,6 +180,8 @@ export function EcoLensWorkspace() {
 
         setAnalysis(null);
         setAnalysisError(result.message);
+        setStage("review");
+        setReviewOpen(true);
       }
     } catch (error) {
       if (latestAnalysisRequest.current !== requestId) {
@@ -178,9 +197,6 @@ export function EcoLensWorkspace() {
       setAnalysisError(
         "Analisis tidak dapat dijalankan saat ini. Kamu tetap dapat melengkapi draf secara manual.",
       );
-    }
-
-    if (latestAnalysisRequest.current === requestId) {
       setStage("review");
       setReviewOpen(true);
     }
@@ -424,6 +440,7 @@ export function EcoLensWorkspace() {
           videoRef={camera.videoRef}
           capturedImage={capturedImage}
           cameraError={camera.error || captureError}
+          rejection={rejection}
           isCameraReady={camera.isReady}
           onStartCamera={() => void handleStartCamera()}
           onCapture={handleCapture}

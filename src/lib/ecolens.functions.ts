@@ -201,6 +201,8 @@ function parseAnalysis(rawText: string): EcoLensAnalysis | null {
 	if (!parsed || typeof parsed !== "object") return null;
 
 	const candidate = parsed as Record<string, unknown>;
+	if (candidate.isReportable !== true) return null;
+
 	const category = asCategory(candidate.category);
 	const urgency = asUrgency(candidate.urgency);
 	const summary = asBoundedText(candidate.summary, 500);
@@ -214,6 +216,29 @@ function parseAnalysis(rawText: string): EcoLensAnalysis | null {
 	}
 
 	return { category, urgency, summary, suggestedDescription };
+}
+
+function parseRejection(rawText: string): {
+	reason: string;
+	guidance: string;
+} | null {
+	let parsed: unknown;
+
+	try {
+		parsed = JSON.parse(cleanJsonText(rawText));
+	} catch {
+		return null;
+	}
+
+	if (!parsed || typeof parsed !== "object") return null;
+
+	const candidate = parsed as Record<string, unknown>;
+	if (candidate.isReportable !== false) return null;
+
+	const reason = asBoundedText(candidate.rejectionReason, 300);
+	const guidance = asBoundedText(candidate.captureGuidance, 300);
+
+	return reason && guidance ? { reason, guidance } : null;
 }
 
 function safeErrorResult(error: unknown): AnalyzeEcoLensResult {
@@ -305,8 +330,13 @@ export const analyzeEcoLens = createServerFn({ method: "POST" })
 						role: "system",
 						content: `Kamu adalah Eco Lens, asisten AI klasifikasi masalah lingkungan dan infrastruktur di Indonesia.
 Analisis hanya bukti visual yang tampak pada gambar yang diunggah.
+Tentukan lebih dulu apakah foto layak menjadi bukti laporan. Foto TIDAK LAYAK jika buram atau terlalu gelap, objek utama tertutup/tidak terlihat, tidak memperlihatkan masalah yang dapat dilaporkan, berupa selfie/tangkapan layar/dokumen, atau tidak relevan dengan masalah lingkungan maupun infrastruktur publik.
+Jangan mengarang masalah yang tidak tampak. Jika ragu karena bukti visual tidak cukup, nyatakan foto tidak layak.
 Wajib berikan output HANYA dalam format JSON valid (tanpa teks penjelasan pembuka/penutup dan tanpa markdown) dengan struktur:
 {
+  "isReportable": true | false,
+  "rejectionReason": "Alasan singkat jika tidak layak, atau string kosong jika layak",
+  "captureGuidance": "Arahan foto ulang yang spesifik jika tidak layak, atau string kosong jika layak",
   "category": "Sampah" | "Drainase/Banjir" | "Polusi" | "Kebakaran" | "Fasilitas Rusak" | "Lainnya",
   "urgency": "Rendah" | "Sedang" | "Tinggi" | "Sangat Tinggi",
   "summary": "Ringkasan visual singkat dalam bahasa Indonesia",
@@ -335,6 +365,17 @@ Wajib berikan output HANYA dalam format JSON valid (tanpa teks penjelasan pembuk
 			});
 
 			const rawText = completion.choices[0]?.message?.content;
+			const rejection = rawText ? parseRejection(rawText) : null;
+
+			if (rejection) {
+				return {
+					success: false,
+					code: "UNSUITABLE_IMAGE",
+					message: rejection.reason,
+					details: rejection.guidance,
+				};
+			}
+
 			const analysis = rawText ? parseAnalysis(rawText) : null;
 
 			if (!analysis) {

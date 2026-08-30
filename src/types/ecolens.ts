@@ -34,6 +34,7 @@ export type EcoLensAnalysis = {
 
 export type AnalyzeEcoLensErrorCode =
 	| "INVALID_IMAGE"
+	| "UNSUITABLE_IMAGE"
 	| "UNAUTHORIZED"
 	| "CONFIGURATION"
 	| "RATE_LIMITED"
