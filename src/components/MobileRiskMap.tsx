@@ -27,6 +27,7 @@ import {
 } from "#/lib/mapMarkers";
 
 import { BaseEnvironmentMap, type MapContext } from "./maps/BaseEnvironmentMap";
+import { ElevationLegend } from "./maps/ElevationLegend";
 import type { NearbyReportPin } from "./RiskMap";
 
 interface MobileRiskMapProps {
@@ -1167,6 +1168,8 @@ export default function MobileRiskMap({
                     </div>
                   </div>
                 </div>
+
+                {showElevation && <ElevationLegend />}
               </motion.div>
 
               {/* ================================

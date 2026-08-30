@@ -31,6 +31,7 @@ import {
 } from "#/lib/mapMarkers";
 import type { ReportMapPin } from "#/lib/reports.functions";
 import { BaseEnvironmentMap, type MapContext } from "./maps/BaseEnvironmentMap";
+import { ElevationLegend } from "./maps/ElevationLegend";
 
 const defaultView = {
   center: [118.0, -2.5] as [number, number],
@@ -663,6 +664,8 @@ function RiskMapContent({
                 </p>
               </div>
             )}
+
+            {showElevation && <ElevationLegend />}
           </div>
         )}
       </div>

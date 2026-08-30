@@ -39,6 +39,7 @@ import RegionRisk from "#/components/RegionRisk";
 import WeatherInformation from "#/components/WeatherInformation";
 import { createReportMarkers, groupNearbyReports } from "#/lib/mapMarkers";
 import { BaseEnvironmentMap } from "./maps/BaseEnvironmentMap";
+import { ElevationLegend } from "./maps/ElevationLegend";
 import type { NearbyReportPin } from "./RiskMap";
 import { Skeleton } from "./ui/skeleton";
 
@@ -595,7 +596,7 @@ export default function MobileDashboard({
                   </span>
                 </div>
 
-                {(showRainRadar || showFireLayer) && (
+                {(showRainRadar || showFireLayer || showElevation) && (
                   <div className="flex flex-col overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white/90 dark:bg-neutral-800/90 shadow-sm backdrop-blur-sm">
                     <button
                       type="button"
@@ -643,6 +644,8 @@ export default function MobileDashboard({
                             </p>
                           </div>
                         )}
+
+                        {showElevation && <ElevationLegend />}
                       </div>
                     )}
                   </div>
