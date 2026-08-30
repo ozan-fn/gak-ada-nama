@@ -67,7 +67,7 @@ interface BaseEnvironmentMapProps {
 }
 
 export function BaseEnvironmentMap({
-	initialCenter = [118.0, -2.5],
+	initialCenter = [110.4203, -6.9932],
 	initialZoom = 4.5,
 	initialPitch = 0,
 	initialBearing = 0,

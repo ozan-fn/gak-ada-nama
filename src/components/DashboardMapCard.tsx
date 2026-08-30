@@ -456,7 +456,7 @@ function DashboardMapCard({
       return [userLocation.longitude, userLocation.latitude];
     }
 
-    return [106.8456, -6.2088];
+    return [110.4203, -6.9932];
   }, [userLocation.latitude, userLocation.longitude]);
 
   // Memoize bounds to prevent layout jumps

@@ -24,9 +24,9 @@ export default function SelectedRisk({ selectedLocation }: SelectedRiskProps) {
 
     if (!userLocation.latitude || !userLocation.longitude) {
       return {
-        latitude: -6.2088,
-        longitude: 106.8456,
-        city: userLocation.city || "Jakarta, DKI Jakarta",
+        latitude: -6.9932,
+        longitude: 110.4203,
+        city: userLocation.city || "Semarang, Jawa Tengah",
       };
     }
 

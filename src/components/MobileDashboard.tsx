@@ -107,7 +107,7 @@ const HANDLE_HEIGHT = 80;
  * This object is intentionally kept outside the component
  * so its reference never changes between renders.
  */
-const DEFAULT_MAP_CENTER: [number, number] = [106.8456, -6.2088];
+const DEFAULT_MAP_CENTER: [number, number] = [110.4203, -6.9932];
 const DEFAULT_MAP_ZOOM = 13;
 
 /**
