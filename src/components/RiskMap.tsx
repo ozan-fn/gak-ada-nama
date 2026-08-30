@@ -119,6 +119,8 @@ function RiskMapContent({
     setShowRainRadar,
     showFireLayer,
     setShowFireLayer,
+    showElevation,
+    setShowElevation,
     aqiFilter,
     setAqiFilter,
     showMarkers,
@@ -471,6 +473,17 @@ function RiskMapContent({
                 />
 
                 <span>Fire Hotspots</span>
+              </label>
+
+              <label className="mb-2 flex cursor-pointer items-center gap-2 text-sm text-neutral-700 dark:text-neutral-400">
+                <input
+                  type="checkbox"
+                  checked={showElevation}
+                  onChange={(event) => setShowElevation(event.target.checked)}
+                  className="h-4 w-4 cursor-pointer rounded border-neutral-300 dark:border-neutral-600"
+                />
+
+                <span>Elevation</span>
               </label>
 
               <label className="mb-3 flex cursor-pointer items-center gap-2 border-b border-neutral-100 dark:border-neutral-700 pb-3 text-sm text-neutral-700 dark:text-neutral-400">
