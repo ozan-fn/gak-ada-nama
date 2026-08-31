@@ -875,7 +875,7 @@ export async function getReportById(id: string) {
 	if (!report) return null;
 
 	if (
-		report.riskAssessment?.status === "PENDING" &&
+		(!report.riskAssessment || report.riskAssessment.status === "PENDING") &&
 		!retryCooldownActive(report)
 	) {
 		const refreshed = await refreshOwnedReportAssessment(
