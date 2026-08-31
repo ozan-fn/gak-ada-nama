@@ -75,8 +75,8 @@ const HANDLE_HEIGHT = 80;
  * a new object reference on every render.
  */
 const defaultView = {
-  center: [118.0, -2.5] as [number, number],
-  zoom: 4.5,
+  center: [110.4203, -6.9932] as [number, number],
+  zoom: 12,
   pitch: 0,
   bearing: 0,
 };

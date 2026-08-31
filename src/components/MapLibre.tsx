@@ -6,7 +6,7 @@ interface MapLibreProps {
   zoom?: number;
 }
 
-export function MapLibre({ center = [106.8456, -6.2088], zoom = 12 }: MapLibreProps) {
+export function MapLibre({ center = [110.4203, -6.9932], zoom = 12 }: MapLibreProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<maplibregl.Map | null>(null)
 

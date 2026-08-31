@@ -290,7 +290,7 @@ function WarningsMapContent({
     if (userLocation.latitude !== null && userLocation.longitude !== null) {
       return [userLocation.longitude, userLocation.latitude];
     }
-    return [106.8456, -6.2088];
+    return [110.4203, -6.9932];
   }, [userLocation.latitude, userLocation.longitude]);
 
   const bounds = useMemo<
@@ -340,8 +340,8 @@ function WarningsMapContent({
 
       // Since warnings don't have actual coordinates, we'll place them
       // in a circle around the user location for visualization
-      const lat = userLocation.latitude ?? -6.2088;
-      const lng = userLocation.longitude ?? 106.8456;
+      const lat = userLocation.latitude ?? -6.9932;
+      const lng = userLocation.longitude ?? 110.4203;
 
       warnings.forEach((warning, index) => {
         // Create markers in a circle around user location

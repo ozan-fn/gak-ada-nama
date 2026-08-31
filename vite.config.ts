@@ -10,6 +10,9 @@ import tailwindcss from '@tailwindcss/vite'
 const config = defineConfig({
   envPrefix: 'VITE_',
   resolve: { tsconfigPaths: true },
+  ssr: {
+    noExternal: ['maplibre-gl'],
+  },
   optimizeDeps: {
     exclude: ['maplibre-gl'],
   },

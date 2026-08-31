@@ -83,7 +83,15 @@ function stringOr(ctx: unknown, key: string, fallback: string | null = "Tidak te
 }
 
 async function refreshInsights(): Promise<void> {
-	if (!isCacheStale()) return;
+	// Check if insights exist first - force refresh if empty
+	const existingCount = await prisma.insight.count({
+		where: { status: "ACTIVE" },
+	});
+	
+	// If no insights exist, force refresh regardless of cache
+	const shouldForceRefresh = existingCount === 0;
+	
+	if (!shouldForceRefresh && !isCacheStale()) return;
 
 	console.info("[Insights] starting refresh");
 

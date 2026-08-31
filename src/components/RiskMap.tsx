@@ -34,8 +34,8 @@ import { BaseEnvironmentMap, type MapContext } from "./maps/BaseEnvironmentMap";
 import { ElevationLegend } from "./maps/ElevationLegend";
 
 const defaultView = {
-  center: [118.0, -2.5] as [number, number],
-  zoom: 4.5,
+  center: [110.4203, -6.9932] as [number, number],
+  zoom: 12,
   pitch: 0,
   bearing: 0,
 };

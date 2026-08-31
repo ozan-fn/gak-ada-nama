@@ -11,9 +11,9 @@ type LocationState = {
 };
 
 const FALLBACK: LocationState = {
-	latitude: -6.2088,
-	longitude: 106.8456,
-	city: "Jakarta, ID",
+	latitude: -6.9932,
+	longitude: 110.4203,
+	city: "Semarang, ID",
 	loading: false,
 	error: "Geolocation not supported",
 };
@@ -83,9 +83,9 @@ function startLocation() {
 					setTimeout(attempt, 1000 * retryCount);
 				} else {
 					setState({
-						latitude: -6.2088,
-						longitude: 106.8456,
-						city: "Jakarta, ID",
+						latitude: -6.9932,
+						longitude: 110.4203,
+						city: "Semarang, ID",
 						loading: false,
 						error: error.message,
 					});

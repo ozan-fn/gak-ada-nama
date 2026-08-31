@@ -6,7 +6,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import appCss from "../styles.css?url";
 import maplibreCss from "maplibre-gl/dist/maplibre-gl.css?url";
+import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
+import { setWorkerUrl } from "maplibre-gl";
 import favicon from "@/assets/favicon.ico";
+
+if (typeof window !== "undefined") {
+  setWorkerUrl(workerUrl);
+}
 
 // Create a client with persistent cache
 const queryClient = new QueryClient({

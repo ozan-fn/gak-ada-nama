@@ -44,11 +44,11 @@ export function findNearestCity(
   cities: LocationShape[]
 ): LocationShape {
   if (cities.length === 0) {
-    // ponytail: fallback to Jakarta if no cities
+    // ponytail: fallback to Semarang if no cities
     return {
-      name: "Jakarta",
-      province: "DKI Jakarta",
-      coordinates: [106.8456, -6.2088]
+      name: "Semarang",
+      province: "Jawa Tengah",
+      coordinates: [110.4203, -6.9932]
     };
   }
 
