@@ -13,17 +13,13 @@ import logoWhite from "@/assets/images/logo-white.png";
 
 export const navLinks = [
   {
-    label: "Fitur",
-    href: "/features",
-  },
-  {
     label: "Peta",
     href: "/livemap",
   },
-  {
-    label: "Laporan",
-    href: "/reports",
-  },
+  // {
+  //   label: "Laporan",
+  //   href: "/reports",
+  // },
   {
     label: "Tentang",
     href: "/about",
@@ -33,17 +29,22 @@ export const navLinks = [
 export function Header() {
   const scrolled = useScroll(10);
   const router = useRouterState();
+
   const isHome =
     router.location.pathname === "/" ||
     router.location.pathname === "/_public/";
+
   const { data: session } = useSession();
+
   const [showDropdown, setShowDropdown] = useState(false);
+
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const user = session?.user;
 
   const getInitials = (name?: string) => {
     if (!name) return "U";
+
     return name
       .split(" ")
       .map((n) => n[0])
@@ -61,9 +62,22 @@ export function Header() {
         setShowDropdown(false);
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
+
+  /*
+   * Logo behavior:
+   *
+   * Home + belum scroll  -> white
+   * Home + sudah scroll  -> blue
+   * Selain home          -> blue
+   */
+  const logo = isHome && !scrolled ? logoWhite : logoBlue;
 
   return (
     <header
@@ -72,6 +86,7 @@ export function Header() {
         {
           "border-neutral-200/60 bg-white/65 shadow-sm backdrop-blur-xl supports-backdrop-filter:bg-white/50 md:max-w-4xl dark:border-neutral-800/60 dark:bg-neutral-900/65":
             scrolled,
+
           "bg-transparent": !scrolled,
         },
       )}
@@ -84,6 +99,10 @@ export function Header() {
           },
         )}
       >
+        {/* =====================================================
+            LOGO
+        ====================================================== */}
+
         <Link
           to="/"
           className={cn({
@@ -91,23 +110,27 @@ export function Header() {
             "text-white": !scrolled && isHome,
           })}
         >
-          <img
-            src={scrolled ? logoBlue : logoWhite}
-            alt="Prita Logo"
-            className="h-6.5"
-          />
+          <img src={logo} alt="Prita Logo" className="h-6.5" />
         </Link>
+
+        {/* =====================================================
+            DESKTOP NAVIGATION
+        ====================================================== */}
+
         <div className="hidden items-center gap-2 md:flex">
-          <div>
+          {/* Navigation Links */}
+
+          <div className="flex items-center">
             {navLinks.map((link) => (
               <Button
                 key={link.label}
                 size="sm"
                 variant="ghost"
                 className={cn("transition-colors duration-300", {
-                  "text-foreground hover:text-foreground hover:bg-muted":
+                  "text-foreground hover:bg-muted hover:text-foreground":
                     scrolled || !isHome,
-                  "text-white hover:text-white hover:bg-white/10":
+
+                  "text-white hover:bg-white/10 hover:text-white":
                     !scrolled && isHome,
                 })}
               >
@@ -115,6 +138,10 @@ export function Header() {
               </Button>
             ))}
           </div>
+
+          {/* =================================================
+              AUTHENTICATED USER
+          ================================================== */}
 
           {user ? (
             <div className="relative" ref={dropdownRef}>
@@ -125,20 +152,26 @@ export function Header() {
                   "flex items-center rounded-lg p-1 transition-colors",
                   {
                     "hover:bg-muted": scrolled || !isHome,
+
                     "hover:bg-white/10": !scrolled && isHome,
                   },
                 )}
+                aria-label="Menu pengguna"
+                aria-expanded={showDropdown}
               >
                 <Avatar className="h-7 w-7 rounded-lg">
                   <AvatarImage
                     src={user.image ?? undefined}
                     alt={user.name ?? "User"}
                   />
+
                   <AvatarFallback className="rounded-lg bg-sky-500 text-[11px] font-semibold text-white">
                     {getInitials(user.name)}
                   </AvatarFallback>
                 </Avatar>
               </button>
+
+              {/* User Dropdown */}
 
               {showDropdown && (
                 <div className="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-lg">
@@ -150,10 +183,12 @@ export function Header() {
                     <LayoutDashboard className="h-4 w-4" />
                     Dashboard
                   </Link>
+
                   <button
                     type="button"
                     onClick={() => {
                       setShowDropdown(false);
+
                       // TODO: Implement logout
                     }}
                     className="flex w-full items-center gap-3 border-t border-neutral-100 px-4 py-2.5 text-left text-sm text-red-600 transition-colors hover:bg-red-50"
@@ -166,22 +201,33 @@ export function Header() {
             </div>
           ) : (
             <>
+              {/* =================================================
+                  LOGIN
+              ================================================== */}
+
               <Button
                 size="sm"
                 variant="outline"
                 className={cn("transition-colors duration-300", {
-                  "border-border text-foreground hover:bg-muted bg-background":
+                  "border-border bg-background text-foreground hover:bg-muted":
                     scrolled || !isHome,
-                  "border-white/30 text-white hover:bg-white/10 bg-transparent":
+
+                  "border-white/30 bg-transparent text-white hover:bg-white/10":
                     !scrolled && isHome,
                 })}
               >
                 <Link to="/login">Masuk</Link>
               </Button>
+
+              {/* =================================================
+                  REGISTER
+              ================================================== */}
+
               <Button
                 size="sm"
                 className={cn("transition-colors duration-300", {
                   "": scrolled || !isHome,
+
                   "bg-white text-gray-900 hover:bg-white/90":
                     !scrolled && isHome,
                 })}
@@ -191,6 +237,11 @@ export function Header() {
             </>
           )}
         </div>
+
+        {/* =====================================================
+            MOBILE NAVIGATION
+        ====================================================== */}
+
         <MobileNav isHome={isHome} scrolled={scrolled} user={user} />
       </nav>
     </header>

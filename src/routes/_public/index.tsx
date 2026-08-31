@@ -3,9 +3,7 @@ import CollectedDataSection from "#/components/sections/home/CollectedDataSectio
 import CTASection from "#/components/sections/home/CTASection";
 import FeatureSection from "#/components/sections/home/FeatureSection";
 import HeroSection from "#/components/sections/home/HeroSection";
-import IntegrationSection from "#/components/sections/home/IntegrationSection";
 import WhyChooseUsSection from "#/components/sections/home/WhyChooseUsSection";
-
 
 export const Route = createFileRoute("/_public/")({ component: Home });
 
@@ -15,7 +13,6 @@ function Home() {
       <HeroSection />
       <CollectedDataSection />
       <FeatureSection />
-      <IntegrationSection />
       <WhyChooseUsSection />
       <CTASection />
     </>

@@ -1,6 +1,6 @@
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
-import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import { TanStackDevtools } from "@tanstack/react-devtools";
+// import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+// import { TanStackDevtools } from "@tanstack/react-devtools";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -59,7 +59,9 @@ function NotFound() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-white px-4 dark:bg-neutral-950">
       <div className="space-y-4 text-center">
-        <h1 className="text-6xl font-bold text-gray-900 dark:text-neutral-100 sm:text-8xl">404</h1>
+        <h1 className="text-6xl font-bold text-gray-900 dark:text-neutral-100 sm:text-8xl">
+          404
+        </h1>
         <h2 className="text-xl font-semibold text-gray-900 dark:text-neutral-100 sm:text-2xl">
           Halaman Tidak Ditemukan
         </h2>
@@ -102,7 +104,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <QueryClientProvider client={queryClient}>
           <TooltipProvider>
             {children}
-            <TanStackDevtools
+            {/*<TanStackDevtools
               config={{
                 position: "bottom-right",
               }}
@@ -112,7 +114,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                   render: <TanStackRouterDevtoolsPanel />,
                 },
               ]}
-            />
+            />*/}
           </TooltipProvider>
         </QueryClientProvider>
         <Scripts />
