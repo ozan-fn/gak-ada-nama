@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
 import { devtools } from '@tanstack/devtools-vite'
+import { nitro } from 'nitro/vite'
 
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 
@@ -18,6 +19,7 @@ const config = defineConfig({
   },
   plugins: [
     devtools(),
+    nitro({ rollupConfig: { external: [/^@sentry\//] } }),
     tailwindcss(),
     tanstackStart(),
     viteReact(),
