@@ -1,4 +1,4 @@
-import type { IndonesiaLocation } from "@/data/indonesia-locations";
+import type { IndonesiaLocation } from "#/data/indonesia-locations";
 
 type LocationShape =
   | { name: string; province: string; latitude: number; longitude: number }

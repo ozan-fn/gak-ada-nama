@@ -1,10 +1,10 @@
 import { MapPin, Mountain, Thermometer, Wind, Droplets } from "lucide-react";
 import { useMemo } from "react";
 
-import { useDynamicBaseline } from "@/hooks/useDynamicBaseline";
-import { useEnvironmentData } from "@/hooks/useEnvironmentData";
-import { useUserLocation } from "@/hooks/useUserLocation";
-import { getRegionalBaseline } from "@/lib/regionalBaselines";
+import { useDynamicBaseline } from "#/hooks/useDynamicBaseline";
+import { useEnvironmentData } from "#/hooks/useEnvironmentData";
+import { useUserLocation } from "#/hooks/useUserLocation";
+import { getRegionalBaseline } from "#/lib/regionalBaselines";
 
 import { SelectedRiskSkeleton } from "./skeletons/SelectedRiskSkeleton";
 

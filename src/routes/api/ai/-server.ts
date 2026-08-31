@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getGroqClient } from "@/lib/groq";
+import { getGroqClient } from "#/lib/groq";
 
 interface ChatPayload {
   prompt: string;

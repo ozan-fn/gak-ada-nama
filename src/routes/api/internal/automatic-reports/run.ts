@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { isAutomaticReportRequestAuthorized } from "@/lib/automatic-report-auth";
-import { runAutomaticReports } from "@/lib/automatic-reports.server";
+import { isAutomaticReportRequestAuthorized } from "#/lib/automatic-report-auth";
+import { runAutomaticReports } from "#/lib/automatic-reports.server";
 
 export const Route = createFileRoute("/api/internal/automatic-reports/run")({
 	server: {

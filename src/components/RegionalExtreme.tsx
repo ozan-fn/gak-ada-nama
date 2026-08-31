@@ -1,5 +1,5 @@
 import { AlertTriangle, Wind, CloudRain, Mountain } from "lucide-react";
-import { useEnvironmentData } from "@/hooks/useEnvironmentData";
+import { useEnvironmentData } from "#/hooks/useEnvironmentData";
 import { RegionalExtremeSkeleton } from "./skeletons/RegionalExtremeSkeleton";
 
 type LocationParams =

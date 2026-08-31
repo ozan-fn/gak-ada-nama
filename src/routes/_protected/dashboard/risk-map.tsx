@@ -1,17 +1,17 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { MapPin } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import MobileRiskMap from "@/components/MobileRiskMap";
-import RelatedRiskReports from "@/components/RelatedRiskReports";
-import ReportRiskAssessment from "@/components/ReportRiskAssessment";
-import RiskInformationHeader from "@/components/RiskInformationHeader";
-import RiskMap, { type NearbyReportPin } from "@/components/RiskMap";
-import SelectedRisk from "@/components/SelectedRisk";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useLocalTime } from "@/hooks/useLocalTime";
-import { useUserLocation } from "@/hooks/useUserLocation";
-import { calculateDistanceKm } from "@/lib/distanceUtils";
-import { getReportMapPinsFn } from "@/lib/reports.functions";
+import MobileRiskMap from "#/components/MobileRiskMap";
+import RelatedRiskReports from "#/components/RelatedRiskReports";
+import ReportRiskAssessment from "#/components/ReportRiskAssessment";
+import RiskInformationHeader from "#/components/RiskInformationHeader";
+import RiskMap, { type NearbyReportPin } from "#/components/RiskMap";
+import SelectedRisk from "#/components/SelectedRisk";
+import { Skeleton } from "#/components/ui/skeleton";
+import { useLocalTime } from "#/hooks/useLocalTime";
+import { useUserLocation } from "#/hooks/useUserLocation";
+import { calculateDistanceKm } from "#/lib/distanceUtils";
+import { getReportMapPinsFn } from "#/lib/reports.functions";
 
 // Define search params schema
 type RiskMapSearch = {

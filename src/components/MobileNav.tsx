@@ -1,11 +1,11 @@
-import { cn } from "@/lib/utils";
+import { cn } from "#/lib/utils";
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Portal, PortalBackdrop } from "@/components/ui/portal";
-import { navLinks } from "@/components/Header";
+import { Button } from "#/components/ui/button";
+import { Portal, PortalBackdrop } from "#/components/ui/portal";
+import { navLinks } from "#/components/Header";
 import { XIcon, MenuIcon, LayoutDashboard, LogOut } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 
 interface MobileNavProps {
   isHome: boolean;

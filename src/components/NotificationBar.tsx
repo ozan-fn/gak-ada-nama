@@ -7,8 +7,8 @@ import {
   X,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { useNotifications } from "@/hooks/useNotifications";
-import type { NotificationType } from "@/hooks/useNotifications";
+import { useNotifications } from "#/hooks/useNotifications";
+import type { NotificationType } from "#/hooks/useNotifications";
 
 const notificationIcons: Record<NotificationType, typeof MapPin> = {
   nearby_report: MapPin,

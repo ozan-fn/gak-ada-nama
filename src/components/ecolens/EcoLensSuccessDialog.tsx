@@ -10,7 +10,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "#/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -18,9 +18,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import type { CreateReportResult } from "@/lib/reports.functions";
-import type { RiskLevel } from "@/types/report-assessment";
+} from "#/components/ui/dialog";
+import type { CreateReportResult } from "#/lib/reports.functions";
+import type { RiskLevel } from "#/types/report-assessment";
 
 const AUTO_RETRY_DELAY_MS = 5_500;
 

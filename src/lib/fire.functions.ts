@@ -43,7 +43,7 @@ function validateFireDataInput(input: FireDataInput): FireDataInput {
 export const getFireDataFn = createServerFn({ method: "GET" })
 	.validator(validateFireDataInput)
 	.handler(async ({ data }): Promise<PublicFirePoint[]> => {
-		const { fetchFirmsFirePoints } = await import("@/lib/firms.server");
+		const { fetchFirmsFirePoints } = await import("#/lib/firms.server");
 		const points = await fetchFirmsFirePoints(
 			{
 				west: data.west,

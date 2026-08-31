@@ -1,7 +1,7 @@
-import WeatherWidget from "@/components/WeatherWidget";
-import AlertWidget from "@/components/AlertWidget";
-import RainfallWidget from "@/components/RainfallWidget";
-import AQITrendWidget from "@/components/AQITrendWidget";
+import WeatherWidget from "#/components/WeatherWidget";
+import AlertWidget from "#/components/AlertWidget";
+import RainfallWidget from "#/components/RainfallWidget";
+import AQITrendWidget from "#/components/AQITrendWidget";
 import { Cloud, CloudDrizzle, CloudRain, Sun } from "lucide-react";
 
 export default function FeatureSection() {

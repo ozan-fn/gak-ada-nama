@@ -11,12 +11,12 @@ import {
 } from "lucide-react";
 
 import { BaseEnvironmentMap } from "./maps/BaseEnvironmentMap";
-import type { ReportMapPin } from "@/lib/reports.functions";
+import type { ReportMapPin } from "#/lib/reports.functions";
 import { 
   createReportMarkers, 
   groupNearbyReports,
   createAutomaticReportUncertaintyGeoJson,
-} from "@/lib/mapMarkers";
+} from "#/lib/mapMarkers";
 import type { NearbyReportPin } from "./RiskMap";
 
 interface LiveEnvironmentMapProps {

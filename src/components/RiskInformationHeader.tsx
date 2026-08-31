@@ -1,5 +1,5 @@
 import { Clock, MapPin } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "#/components/ui/skeleton";
 
 type RiskInformationHeaderProps = {
   loading: boolean;

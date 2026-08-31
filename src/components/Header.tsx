@@ -1,15 +1,15 @@
-import { cn } from "@/lib/utils";
-import { useScroll } from "@/hooks/use-scroll";
-import { Button } from "@/components/ui/button";
-import { MobileNav } from "@/components/MobileNav";
+import { cn } from "#/lib/utils";
+import { useScroll } from "#/hooks/use-scroll";
+import { Button } from "#/components/ui/button";
+import { MobileNav } from "#/components/MobileNav";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useSession, signOut } from "@/lib/auth-client";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useSession, signOut } from "#/lib/auth-client";
+import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { useState, useRef, useEffect } from "react";
 import { LayoutDashboard, LogOut } from "lucide-react";
 
-import logoBlue from "@/assets/images/logo-blue.png";
-import logoWhite from "@/assets/images/logo-white.png";
+import logoBlue from "#/assets/images/logo-blue.png";
+import logoWhite from "#/assets/images/logo-white.png";
 
 export const navLinks = [
   {

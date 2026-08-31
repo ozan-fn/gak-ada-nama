@@ -13,7 +13,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
-} from "@/components/ui/chart";
+} from "#/components/ui/chart";
 import { Skeleton } from "./ui/skeleton";
 
 const chartConfig = {

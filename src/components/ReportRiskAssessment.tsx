@@ -10,7 +10,7 @@ import {
 import type {
   RiskAssessmentStatus,
   RiskLevel,
-} from "@/types/report-assessment";
+} from "#/types/report-assessment";
 import type { NearbyReportPin } from "./RiskMap";
 
 type ReportRiskAssessmentProps = {

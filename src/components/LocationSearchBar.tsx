@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Search, MapPin, Navigation, AlertTriangle, Tag } from "lucide-react";
-import { useLocationSearch } from "@/hooks/use-location-search";
-import type { IndonesiaLocation } from "@/data/indonesia-locations";
+import { useLocationSearch } from "#/hooks/use-location-search";
+import type { IndonesiaLocation } from "#/data/indonesia-locations";
 
 type SearchType = "all" | "location" | "address" | "incident" | "category";
 

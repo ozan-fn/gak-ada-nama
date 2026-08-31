@@ -1,6 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { createServerFn } from "@tanstack/react-start";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "#/lib/prisma";
 
 export const getPublicReportsFn = createServerFn({ method: "GET" })
 	.validator(

@@ -1,14 +1,14 @@
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 // import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 // import { TanStackDevtools } from "@tanstack/react-devtools";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { TooltipProvider } from "#/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import appCss from "../styles.css?url";
 import maplibreCss from "maplibre-gl/dist/maplibre-gl.css?url";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import { setWorkerUrl } from "maplibre-gl";
-import favicon from "@/assets/favicon.ico";
+import favicon from "#/assets/favicon.ico";
 
 if (typeof window !== "undefined") {
   setWorkerUrl(workerUrl);

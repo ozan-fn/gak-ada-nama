@@ -6,7 +6,7 @@ import {
   ReferenceLine,
   Cell,
 } from "recharts";
-import { useEnvironmentData } from "@/hooks/useEnvironmentData";
+import { useEnvironmentData } from "#/hooks/useEnvironmentData";
 import { PrecipitationOverviewSkeleton } from "./skeletons/PrecipitationOverviewSkeleton";
 
 type LocationParams =

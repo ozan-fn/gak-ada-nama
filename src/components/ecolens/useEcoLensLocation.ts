@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { findNearestCity } from "@/lib/geoUtils";
-import { INDONESIA_LOCATIONS } from "@/lib/indonesiaLocations";
+import { findNearestCity } from "#/lib/geoUtils";
+import { INDONESIA_LOCATIONS } from "#/lib/indonesiaLocations";
 
 export type EcoLensLocationStatus =
 	| "idle"

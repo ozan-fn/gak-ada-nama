@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { User, Lock, Bell, Palette } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { cn } from "#/lib/utils";
+import { Button } from "#/components/ui/button";
+import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 
 const navItems = [
   { key: "profile" as const, label: "Profil", icon: User },

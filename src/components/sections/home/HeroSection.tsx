@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "#/components/ui/button";
 import { Link } from "@tanstack/react-router";
-import BackgroundSkyHero from "@/assets/images/sky-hero.jpeg";
-import featureDashboard from "@/assets/images/feature-dashboard.png";
+import BackgroundSkyHero from "#/assets/images/sky-hero.jpeg";
+import featureDashboard from "#/assets/images/feature-dashboard.png";
 
 export default function HeroSection() {
   return (

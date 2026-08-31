@@ -22,9 +22,9 @@ import {
   SidebarMenuItem,
   SidebarRail,
   useSidebar,
-} from "@/components/ui/sidebar";
+} from "#/components/ui/sidebar";
 import { Separator } from "./ui/separator";
-import logoBlue from "@/assets/images/logo-blue.png";
+import logoBlue from "#/assets/images/logo-blue.png";
 
 const menuItems = [
   {

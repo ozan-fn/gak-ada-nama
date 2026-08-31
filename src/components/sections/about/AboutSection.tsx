@@ -28,10 +28,10 @@ import {
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
-} from "@/components/ui/chart";
+} from "#/components/ui/chart";
 
-import { useEnvironmentData } from "@/hooks/useEnvironmentData";
-import { getReportMapPinsFn } from "@/lib/reports.functions";
+import { useEnvironmentData } from "#/hooks/useEnvironmentData";
+import { getReportMapPinsFn } from "#/lib/reports.functions";
 
 const chartConfig = {
   pm25: {

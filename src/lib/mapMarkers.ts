@@ -1,5 +1,5 @@
 import * as maplibregl from "maplibre-gl";
-import type { NearbyReportPin } from "@/components/RiskMap";
+import type { NearbyReportPin } from "#/components/RiskMap";
 
 export function groupNearbyReports(
 	reports: NearbyReportPin[],

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { EcoLensWorkspace } from "@/components/ecolens/EcoLensWorkspace";
-import { EcoLensLocationProvider } from "@/contexts/EcoLensLocationContext";
+import { EcoLensWorkspace } from "#/components/ecolens/EcoLensWorkspace";
+import { EcoLensLocationProvider } from "#/contexts/EcoLensLocationContext";
 
 function ReportPage() {
 	return (

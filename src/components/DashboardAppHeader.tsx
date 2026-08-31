@@ -26,7 +26,7 @@ import {
   AlertDialogTitle,
 } from "./ui/alert-dialog";
 
-import { useSession, signOut } from "@/lib/auth-client";
+import { useSession, signOut } from "#/lib/auth-client";
 
 import AQIIndicator from "./AQIIndicator";
 import LocationSearchBar from "./LocationSearchBar";

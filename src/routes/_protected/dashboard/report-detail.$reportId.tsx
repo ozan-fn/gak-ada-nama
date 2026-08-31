@@ -17,13 +17,13 @@ import {
   Wind,
 } from "lucide-react";
 import { useState } from "react";
-import { ReportResolutionCard } from "@/components/ReportResolutionCard";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { getCommunityReportDetailFn } from "@/lib/report-resolution.functions";
+import { ReportResolutionCard } from "#/components/ReportResolutionCard";
+import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
+import { Badge } from "#/components/ui/badge";
+import { Button } from "#/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
+import { Progress } from "#/components/ui/progress";
+import { getCommunityReportDetailFn } from "#/lib/report-resolution.functions";
 
 export const Route = createFileRoute(
   "/_protected/dashboard/report-detail/$reportId",

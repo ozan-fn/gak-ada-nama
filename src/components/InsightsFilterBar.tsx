@@ -1,6 +1,6 @@
 import { MapPin, ChevronDown } from "lucide-react";
 import { useState } from "react";
-import { indonesiaLocations } from "@/data/indonesia-locations";
+import { indonesiaLocations } from "#/data/indonesia-locations";
 
 type InsightsFilterBarProps = {
   activeFilter: string;

@@ -1,4 +1,4 @@
-import type { AutomaticFirePoint } from "@/lib/automatic-report-detection";
+import type { AutomaticFirePoint } from "#/lib/automatic-report-detection";
 
 const FIRMS_TIMEOUT_MS = 10_000;
 

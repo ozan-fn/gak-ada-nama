@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import InsightDetail from "@/components/InsightDetail";
-import { getInsightByIdFn } from "@/lib/insight.functions";
+import InsightDetail from "#/components/InsightDetail";
+import { getInsightByIdFn } from "#/lib/insight.functions";
 
 export const Route = createFileRoute("/_protected/dashboard/insight/$insightId")({
 	validateSearch: (search: Record<string, unknown>) => ({

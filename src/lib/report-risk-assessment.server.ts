@@ -1,4 +1,4 @@
-import { getGroqClient } from "@/lib/groq";
+import { getGroqClient } from "#/lib/groq";
 import {
 	type AssessReportRiskInput,
 	type AssessReportRiskResult,
@@ -10,7 +10,7 @@ import {
 	type RiskAssessmentView,
 	type RiskHorizonView,
 	type RiskLevel,
-} from "@/types/report-assessment";
+} from "#/types/report-assessment";
 
 export const ACTIVE_REPORT_STATUSES = [
 	"PENDING",

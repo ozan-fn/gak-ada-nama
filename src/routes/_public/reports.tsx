@@ -18,15 +18,15 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "#/components/ui/badge";
+import { Button } from "#/components/ui/button";
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+} from "#/components/ui/card";
+import { Input } from "#/components/ui/input";
 import {
   Pagination,
   PaginationContent,
@@ -34,15 +34,15 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination";
+} from "#/components/ui/pagination";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { getPublicReportsFn } from "@/lib/public-reports.functions";
+} from "#/components/ui/select";
+import { getPublicReportsFn } from "#/lib/public-reports.functions";
 
 export const Route = createFileRoute("/_public/reports")({
   loader: () => getPublicReportsFn({ data: { limit: 100 } }),

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { calculateDistance } from "@/lib/geoUtils";
+import { calculateDistance } from "#/lib/geoUtils";
 
 export interface AQIStation {
 	id: number | string;

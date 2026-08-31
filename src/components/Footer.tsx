@@ -1,12 +1,12 @@
 import type React from "react";
 import type { ReactNode } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "#/components/ui/button";
 import { motion, useReducedMotion } from "framer-motion";
 import { InstagramIcon } from "./ui/instagram-icon";
 import { LinkedinIcon } from "./ui/linkedin-icon";
 import { Link } from "@tanstack/react-router";
-import FooterBg from "@/assets/images/sky-no-sky.png";
+import FooterBg from "#/assets/images/sky-no-sky.png";
 
 type FooterLink = {
 	title: string;

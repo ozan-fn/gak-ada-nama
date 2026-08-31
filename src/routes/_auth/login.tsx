@@ -1,13 +1,13 @@
 import { createFileRoute, useNavigate, Link, redirect } from '@tanstack/react-router'
 import { useState } from 'react'
-import { authClient } from '@/lib/auth-client'
-import { getSession } from '@/lib/auth.functions'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
-import googleIcon from '@/assets/icons/google.svg'
-import logoBlue from '@/assets/images/logo-blue.png'
+import { authClient } from '#/lib/auth-client'
+import { getSession } from '#/lib/auth.functions'
+import { Button } from '#/components/ui/button'
+import { Input } from '#/components/ui/input'
+import { Label } from '#/components/ui/label'
+import { Checkbox } from '#/components/ui/checkbox'
+import googleIcon from '#/assets/icons/google.svg'
+import logoBlue from '#/assets/images/logo-blue.png'
 
 type LoginSearch = {
   redirect?: string

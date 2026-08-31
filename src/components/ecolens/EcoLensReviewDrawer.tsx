@@ -9,24 +9,24 @@ import {
   X,
 } from "lucide-react";
 import { type FormEvent, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "#/components/ui/button";
 import {
   Drawer,
   DrawerContent,
   DrawerDescription,
   DrawerHeader,
   DrawerTitle,
-} from "@/components/ui/drawer";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import EcoLensLocationSearch from "@/components/ecolens/EcoLensLocationSearch";
-import { useEcoLensLocationContextSafe } from "@/contexts/EcoLensLocationContext";
-import { useEcoLensLocation } from "@/components/ecolens/useEcoLensLocation";
+} from "#/components/ui/drawer";
+import { Label } from "#/components/ui/label";
+import { Textarea } from "#/components/ui/textarea";
+import EcoLensLocationSearch from "#/components/ecolens/EcoLensLocationSearch";
+import { useEcoLensLocationContextSafe } from "#/contexts/EcoLensLocationContext";
+import { useEcoLensLocation } from "#/components/ecolens/useEcoLensLocation";
 import {
   ECO_LENS_CATEGORIES,
   type EcoLensAnalysis,
   type EcoLensCategory,
-} from "@/types/ecolens";
+} from "#/types/ecolens";
 
 export type EcoLensFormErrors = {
   location?: string;

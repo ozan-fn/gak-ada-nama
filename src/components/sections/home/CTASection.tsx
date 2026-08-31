@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "#/components/ui/button";
 import { Cloud, CloudRain, CloudSun, Rainbow, Sun, Wind } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getReportMapPinsFn } from "@/lib/reports.functions";
+import { getReportMapPinsFn } from "#/lib/reports.functions";
 import { Link } from "@tanstack/react-router";
 
 const weatherIcons = [

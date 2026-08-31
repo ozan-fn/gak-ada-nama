@@ -6,10 +6,10 @@ import {
   TrendingDown,
   Minus,
 } from "lucide-react";
-import { useUserLocation } from "@/hooks/useUserLocation";
-import { useEnvironmentData } from "@/hooks/useEnvironmentData";
-import { useDynamicBaseline } from "@/hooks/useDynamicBaseline";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useUserLocation } from "#/hooks/useUserLocation";
+import { useEnvironmentData } from "#/hooks/useEnvironmentData";
+import { useDynamicBaseline } from "#/hooks/useDynamicBaseline";
+import { Skeleton } from "#/components/ui/skeleton";
 
 type Trend = "up" | "down" | "flat";
 

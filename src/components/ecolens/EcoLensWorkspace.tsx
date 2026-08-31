@@ -9,23 +9,23 @@ import {
 import {
   EcoLensCameraViewport,
   type EcoLensStage,
-} from "@/components/ecolens/EcoLensCameraViewport";
+} from "#/components/ecolens/EcoLensCameraViewport";
 import {
   type EcoLensFormErrors,
   EcoLensReviewDrawer,
-} from "@/components/ecolens/EcoLensReviewDrawer";
-import { EcoLensSuccessDialog } from "@/components/ecolens/EcoLensSuccessDialog";
-import { processUploadedImage } from "@/components/ecolens/imageUtils";
-import { useEcoLensCamera } from "@/components/ecolens/useEcoLensCamera";
-import { useEcoLensLocation } from "@/components/ecolens/useEcoLensLocation";
-import { useEcoLensLocationContext } from "@/contexts/EcoLensLocationContext";
-import { analyzeEcoLens } from "@/lib/ecolens.functions";
+} from "#/components/ecolens/EcoLensReviewDrawer";
+import { EcoLensSuccessDialog } from "#/components/ecolens/EcoLensSuccessDialog";
+import { processUploadedImage } from "#/components/ecolens/imageUtils";
+import { useEcoLensCamera } from "#/components/ecolens/useEcoLensCamera";
+import { useEcoLensLocation } from "#/components/ecolens/useEcoLensLocation";
+import { useEcoLensLocationContext } from "#/contexts/EcoLensLocationContext";
+import { analyzeEcoLens } from "#/lib/ecolens.functions";
 import {
   type CreateReportResult,
   createReportFn,
   refreshReportAssessmentFn,
-} from "@/lib/reports.functions";
-import type { EcoLensAnalysis, EcoLensCategory } from "@/types/ecolens";
+} from "#/lib/reports.functions";
+import type { EcoLensAnalysis, EcoLensCategory } from "#/types/ecolens";
 
 const EMPTY_CATEGORY: EcoLensCategory = "Lainnya";
 

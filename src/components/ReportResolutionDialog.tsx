@@ -11,9 +11,9 @@ import {
 	Upload,
 } from "lucide-react";
 import { type FormEvent, useEffect, useRef, useState } from "react";
-import { processUploadedImage } from "@/components/ecolens/imageUtils";
-import { useEcoLensCamera } from "@/components/ecolens/useEcoLensCamera";
-import { Button } from "@/components/ui/button";
+import { processUploadedImage } from "#/components/ecolens/imageUtils";
+import { useEcoLensCamera } from "#/components/ecolens/useEcoLensCamera";
+import { Button } from "#/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
@@ -21,14 +21,14 @@ import {
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+} from "#/components/ui/dialog";
+import { Label } from "#/components/ui/label";
+import { Textarea } from "#/components/ui/textarea";
 import {
 	analyzeResolutionEvidenceFn,
 	submitResolutionValidationFn,
-} from "@/lib/report-resolution.functions";
-import { REPORT_RESOLUTION_MAX_DISTANCE_METERS } from "@/types/report-resolution";
+} from "#/lib/report-resolution.functions";
+import { REPORT_RESOLUTION_MAX_DISTANCE_METERS } from "#/types/report-resolution";
 
 type ResolutionStage =
 	| "camera"

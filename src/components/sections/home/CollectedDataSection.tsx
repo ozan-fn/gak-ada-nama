@@ -1,7 +1,7 @@
-import LogoLoop from "@/components/LogoLoop";
-import aqicnLogo from "@/assets/logo/aqicn-logo.png";
-import nasaLogo from "@/assets/logo/nasa-logo.webp";
-import openMeteoLogo from "@/assets/logo/open-mateo-logo.png";
+import LogoLoop from "#/components/LogoLoop";
+import aqicnLogo from "#/assets/logo/aqicn-logo.png";
+import nasaLogo from "#/assets/logo/nasa-logo.webp";
+import openMeteoLogo from "#/assets/logo/open-mateo-logo.png";
 
 const dataSourceLogos = [
   {

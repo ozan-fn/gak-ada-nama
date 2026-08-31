@@ -17,16 +17,16 @@ import {
   FileText,
   type LucideIcon,
 } from "lucide-react";
-import { useUserLocation } from "@/hooks/useUserLocation";
-import { useEnvironmentData } from "@/hooks/useEnvironmentData";
+import { useUserLocation } from "#/hooks/useUserLocation";
+import { useEnvironmentData } from "#/hooks/useEnvironmentData";
 import {
   useEnvironmentWarnings,
   type Warning,
-} from "@/hooks/useEnvironmentWarnings";
-import { Skeleton } from "@/components/ui/skeleton";
-import WarningsMap from "@/components/WarningsMap";
-import { calculateDistanceKm } from "@/lib/distanceUtils";
-import { getReportMapPinsFn } from "@/lib/reports.functions";
+} from "#/hooks/useEnvironmentWarnings";
+import { Skeleton } from "#/components/ui/skeleton";
+import WarningsMap from "#/components/WarningsMap";
+import { calculateDistanceKm } from "#/lib/distanceUtils";
+import { getReportMapPinsFn } from "#/lib/reports.functions";
 
 const NEARBY_REPORT_RADIUS_KM = 5;
 

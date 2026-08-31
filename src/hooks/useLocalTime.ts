@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getIndonesianTimezone } from "@/lib/timezoneUtils";
+import { getIndonesianTimezone } from "#/lib/timezoneUtils";
 
 export function useLocalTime(longitude?: number | null) {
 	const [now, setNow] = useState(new Date());

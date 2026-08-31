@@ -1,10 +1,10 @@
-import { GithubIcon } from "@/components/GithubIcon";
+import { GithubIcon } from "#/components/GithubIcon";
 import { ArrowUpRight, Mail } from "lucide-react";
 import { FaLinkedin } from "react-icons/fa";
 import { motion } from "framer-motion";
-import iyanImage from "@/assets/images/iyan.jpg";
-import fauzanImage from "@/assets/images/fauzan.jpg";
-import firmanImage from "@/assets/images/firman.jpg";
+import iyanImage from "#/assets/images/iyan.jpg";
+import fauzanImage from "#/assets/images/fauzan.jpg";
+import firmanImage from "#/assets/images/firman.jpg";
 
 const team = [
   {

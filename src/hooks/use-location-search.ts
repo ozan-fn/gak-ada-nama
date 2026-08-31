@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { indonesiaLocations, type IndonesiaLocation } from "@/data/indonesia-locations";
+import { indonesiaLocations, type IndonesiaLocation } from "#/data/indonesia-locations";
 
 export function useLocationSearch(query: string, delay = 300): IndonesiaLocation[] {
   const [debouncedQuery, setDebouncedQuery] = useState(query);

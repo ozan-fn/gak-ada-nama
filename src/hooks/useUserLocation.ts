@@ -1,6 +1,6 @@
 import { useEffect, useSyncExternalStore } from "react";
-import { indonesiaLocations } from "@/data/indonesia-locations";
-import { findNearestCity } from "@/lib/geoUtils";
+import { indonesiaLocations } from "#/data/indonesia-locations";
+import { findNearestCity } from "#/lib/geoUtils";
 
 type LocationState = {
 	latitude: number | null;

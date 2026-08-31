@@ -1,17 +1,17 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
-import { ensureSession } from "@/lib/auth.functions";
-import { getGroqClient } from "@/lib/groq";
-import { prisma } from "@/lib/prisma";
-import { deleteObjectByUrl, uploadImageDataUrl } from "@/lib/r2";
+import { ensureSession } from "#/lib/auth.functions";
+import { getGroqClient } from "#/lib/groq";
+import { prisma } from "#/lib/prisma";
+import { deleteObjectByUrl, uploadImageDataUrl } from "#/lib/r2";
 import {
 	getResolutionBlockCode,
 	getResolutionBlockReason,
 	hasResolutionQuorum,
 	parseResolutionEvidenceAssessment,
 	RESOLVABLE_REPORT_STATUSES,
-} from "@/lib/report-resolution-policy";
-import { haversineDistanceMeters } from "@/lib/report-risk-assessment.server";
-import { MAX_ECO_LENS_IMAGE_BYTES } from "@/types/ecolens";
+} from "#/lib/report-resolution-policy";
+import { haversineDistanceMeters } from "#/lib/report-risk-assessment.server";
+import { MAX_ECO_LENS_IMAGE_BYTES } from "#/types/ecolens";
 import {
 	type AnalyzeResolutionEvidenceInput,
 	type AnalyzeResolutionEvidenceResult,
@@ -20,7 +20,7 @@ import {
 	type ReportResolutionSummary,
 	type SubmitResolutionValidationInput,
 	type SubmitResolutionValidationResult,
-} from "@/types/report-resolution";
+} from "#/types/report-resolution";
 
 const DEFAULT_VISION_MODEL = "qwen/qwen3.6-27b";
 const DATA_URL_PREFIX = "data:image/jpeg;base64,";

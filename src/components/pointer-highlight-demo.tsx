@@ -1,4 +1,4 @@
-import { PointerHighlight } from "@/components/ui/pointer-highlight.tsx";
+import { PointerHighlight } from "#/components/ui/pointer-highlight.tsx";
 
 export default function PointerHighlightDemo() {
   return (

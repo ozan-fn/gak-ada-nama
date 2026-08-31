@@ -12,8 +12,8 @@ import {
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
-} from "@/components/ui/chart";
-import { useEnvironmentData } from "@/hooks/useEnvironmentData";
+} from "#/components/ui/chart";
+import { useEnvironmentData } from "#/hooks/useEnvironmentData";
 import { ChartAQITrendSkeleton } from "./skeletons/ChartAQITrendSkeleton";
 
 const chartConfig = {

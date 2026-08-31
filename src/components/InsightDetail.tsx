@@ -12,7 +12,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import type { InsightDetailView } from "@/lib/insight.functions";
+import type { InsightDetailView } from "#/lib/insight.functions";
 
 type InsightDetailProps = {
   insight: InsightDetailView;

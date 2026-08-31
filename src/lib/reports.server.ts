@@ -1,11 +1,11 @@
 import type { Prisma } from "@prisma/client";
-import { ensureSession } from "@/lib/auth.functions";
+import { ensureSession } from "#/lib/auth.functions";
 import {
 	EnvironmentProviderError,
 	fetchAQIByCoordinates,
 	fetchWeatherByCoordinates,
-} from "@/lib/environment.server";
-import { prisma } from "@/lib/prisma";
+} from "#/lib/environment.server";
+import { prisma } from "#/lib/prisma";
 import {
 	ACTIVE_REPORT_STATUSES,
 	assessReportRisk,
@@ -15,13 +15,13 @@ import {
 	haversineDistanceMeters,
 	resolveRiskAssessmentStatus,
 	toValidCoordinates,
-} from "@/lib/report-risk-assessment.server";
+} from "#/lib/report-risk-assessment.server";
 import type {
 	NearbyReportRiskContext,
 	ReportAssessmentSummary,
 	RiskAssessmentStatus,
 	RiskAssessmentView,
-} from "@/types/report-assessment";
+} from "#/types/report-assessment";
 
 const ENVIRONMENT_TIMEOUT_MS = 4_000;
 const ASSESSMENT_RETRY_COOLDOWN_MS = 5_000;

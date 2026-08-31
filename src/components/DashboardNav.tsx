@@ -6,11 +6,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { SidebarMenu, SidebarMenuItem } from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+} from "#/components/ui/dropdown-menu";
+import { SidebarMenu, SidebarMenuItem } from "#/components/ui/sidebar";
+import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { ChevronsUpDown, LogOut, Settings } from "lucide-react";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "#/lib/auth-client";
 import { useNavigate } from "@tanstack/react-router";
 
 interface DashboardNavProps {
