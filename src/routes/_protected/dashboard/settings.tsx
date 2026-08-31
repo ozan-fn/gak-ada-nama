@@ -15,9 +15,9 @@ import {
   Wind,
 } from "lucide-react";
 
-import { authClient } from "@/lib/auth-client.client";
-import SettingsNav from "#/components/SettingsNav";
-import { useNotificationSettings } from "#/hooks/useNotificationSettings";
+import { authClient } from "@/lib/auth-client";
+import SettingsNav from "@/components/SettingsNav";
+import { useNotificationSettings } from "@/hooks/useNotificationSettings";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";

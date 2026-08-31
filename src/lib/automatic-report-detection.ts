@@ -1,7 +1,7 @@
 import type {
 	AutomaticReportCategory,
 	AutomaticReportRegion,
-} from "#/config/automatic-report-regions";
+} from "@/config/automatic-report-regions";
 
 export const AUTOMATIC_REPORT_SOURCE = "ENVIRONMENT_MONITOR" as const;
 export const FIRE_MIN_CONFIDENCE = 50;

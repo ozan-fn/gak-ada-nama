@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowUp } from "lucide-react";
-import type { InsightItem } from "#/components/InsightsPriorityTable";
+import type { InsightItem } from "@/components/InsightsPriorityTable";
 
 type RegionalRankingCardProps = {
   insights: InsightItem[];

@@ -1,10 +1,10 @@
 import type { Prisma } from "@prisma/client";
-import { prisma } from "#/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import {
 	haversineDistanceMeters,
 	hasValidCoordinates,
 	REPORT_SEARCH_POLICIES,
-} from "#/lib/report-risk-assessment.server";
+} from "@/lib/report-risk-assessment.server";
 
 const DAY_MS = 24 * 60 * 60 * 1_000;
 const INSIGHT_LOOKBACK_DAYS = 14;

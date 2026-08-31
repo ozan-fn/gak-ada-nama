@@ -7,7 +7,7 @@ import {
   Sun,
   Sunrise,
 } from "lucide-react";
-import { useEnvironmentData } from "#/hooks/useEnvironmentData";
+import { useEnvironmentData } from "@/hooks/useEnvironmentData";
 import { WeatherInformationSkeleton } from "./skeletons/WeatherInformationSkeleton";
 
 type LocationParams =

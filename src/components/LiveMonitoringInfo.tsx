@@ -1,6 +1,6 @@
 import { MapPin, Thermometer, Wind, Droplets, AlertTriangle } from "lucide-react";
-import type { MonitoringPoint } from "#/types/livemap";
-import { getAqiColorClass } from "#/types/livemap";
+import type { MonitoringPoint } from "@/types/livemap";
+import { getAqiColorClass } from "@/types/livemap";
 
 interface LiveMonitoringInfoProps {
   point: MonitoringPoint | null;

@@ -1,9 +1,9 @@
-import { ensureSession } from "#/lib/auth.functions";
+import { ensureSession } from "@/lib/auth.functions";
 import type {
 	ActivityEvent,
 	ActivityGroup,
-} from "#/lib/activity.functions";
-import { prisma } from "#/lib/prisma";
+} from "@/lib/activity.functions";
+import { prisma } from "@/lib/prisma";
 
 export async function getActivities(): Promise<ActivityGroup[]> {
 	const session = await ensureSession();

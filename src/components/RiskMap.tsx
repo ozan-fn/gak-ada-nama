@@ -16,20 +16,20 @@ import {
   XCircle,
 } from "lucide-react";
 
-import { indonesiaLocations } from "#/data/indonesia-locations";
+import { indonesiaLocations } from "@/data/indonesia-locations";
 import {
   generateRecommendation,
   getRecommendationColor,
-} from "#/lib/aiSimulation";
-import { calculateDistanceKm } from "#/lib/distanceUtils";
-import { findNearestCity } from "#/lib/geoUtils";
+} from "@/lib/aiSimulation";
+import { calculateDistanceKm } from "@/lib/distanceUtils";
+import { findNearestCity } from "@/lib/geoUtils";
 import {
   createAutomaticReportUncertaintyGeoJson,
   createReportMarkers,
   createSelectedLocationMarker,
   groupNearbyReports,
-} from "#/lib/mapMarkers";
-import type { ReportMapPin } from "#/lib/reports.functions";
+} from "@/lib/mapMarkers";
+import type { ReportMapPin } from "@/lib/reports.functions";
 import { BaseEnvironmentMap, type MapContext } from "./maps/BaseEnvironmentMap";
 import { ElevationLegend } from "./maps/ElevationLegend";
 

@@ -4,7 +4,7 @@ import {
 	REPORT_RESOLUTION_MAX_DESCRIPTION_LENGTH,
 	REPORT_RESOLUTION_MIN_DESCRIPTION_LENGTH,
 	type SubmitResolutionValidationInput,
-} from "#/types/report-resolution";
+} from "@/types/report-resolution";
 
 function validateReportId(reportId: unknown): string {
 	if (typeof reportId !== "string" || !reportId.trim()) {
@@ -18,7 +18,7 @@ export const getCommunityReportDetailFn = createServerFn({ method: "GET" })
 	.handler(async ({ data }) => {
 		setResponseHeader("Cache-Control", "no-store");
 		const { getCommunityReportDetail } = await import(
-			"#/lib/report-resolution.server"
+			"@/lib/report-resolution.server"
 		);
 		return getCommunityReportDetail(data);
 	});
@@ -38,7 +38,7 @@ export const analyzeResolutionEvidenceFn = createServerFn({ method: "POST" })
 	.handler(async ({ data }) => {
 		setResponseHeader("Cache-Control", "no-store");
 		const { analyzeResolutionEvidence } = await import(
-			"#/lib/report-resolution.server"
+			"@/lib/report-resolution.server"
 		);
 		return analyzeResolutionEvidence(data);
 	});
@@ -83,7 +83,7 @@ export const submitResolutionValidationFn = createServerFn({ method: "POST" })
 	.handler(async ({ data }) => {
 		setResponseHeader("Cache-Control", "no-store");
 		const { submitResolutionValidation } = await import(
-			"#/lib/report-resolution.server"
+			"@/lib/report-resolution.server"
 		);
 		return submitResolutionValidation(data);
 	});

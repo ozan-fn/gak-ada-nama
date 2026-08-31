@@ -24,7 +24,7 @@ export type ActivityGroup = {
 
 export const getActivitiesFn = createServerFn({ method: "GET" }).handler(
 	async () => {
-		const { getActivities } = await import("#/lib/activity.functions.server");
+		const { getActivities } = await import("@/lib/activity.functions.server");
 		return getActivities();
 	},
 );

@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link, redirect } from '@tanstack/react-router'
 import { useState } from 'react'
-import { authClient } from '@/lib/auth-client.client'
+import { authClient } from '@/lib/auth-client'
 import { getSession } from '@/lib/auth.functions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

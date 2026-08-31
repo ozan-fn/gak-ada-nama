@@ -3,9 +3,9 @@ import * as maplibregl from "maplibre-gl";
 import { Layers, Minus, Plus, ChevronDown, ChevronUp } from "lucide-react";
 import { BaseEnvironmentMap, type MapContext } from "./maps/BaseEnvironmentMap";
 import { Skeleton } from "./ui/skeleton";
-import type { Warning } from "#/hooks/useEnvironmentWarnings";
-import type { NearbyReportPin } from "#/components/RiskMap";
-import { createReportMarkers, groupNearbyReports } from "#/lib/mapMarkers";
+import type { Warning } from "@/hooks/useEnvironmentWarnings";
+import type { NearbyReportPin } from "@/components/RiskMap";
+import { createReportMarkers, groupNearbyReports } from "@/lib/mapMarkers";
 
 interface UserLocation {
   latitude: number | null;

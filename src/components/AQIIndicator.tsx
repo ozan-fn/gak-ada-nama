@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Wind, MapPin } from "lucide-react";
-import { useUserLocation } from "#/hooks/useUserLocation";
-import { useEnvironmentData } from "#/hooks/useEnvironmentData";
-import { getAQIColor, getAQICategory, getAQIAdvice } from "#/lib/aqiUtils";
+import { useUserLocation } from "@/hooks/useUserLocation";
+import { useEnvironmentData } from "@/hooks/useEnvironmentData";
+import { getAQIColor, getAQICategory, getAQIAdvice } from "@/lib/aqiUtils";
 
 export default function AQIIndicator() {
   const userLocation = useUserLocation();

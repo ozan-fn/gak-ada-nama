@@ -1,4 +1,4 @@
-import { getGroqClient } from "#/lib/groq";
+import { getGroqClient } from "@/lib/groq";
 
 const INSIGHT_MODEL = "qwen/qwen3.6-27b";
 const INSIGHT_GENERATION_TIMEOUT_MS = 15_000;

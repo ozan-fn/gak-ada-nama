@@ -23,16 +23,16 @@ import {
   XCircle,
 } from "lucide-react";
 import { useRef, useState } from "react";
-import { Button } from "#/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   type CreateReportResult,
   getMyReportsFn,
   refreshReportAssessmentFn,
-} from "#/lib/reports.functions";
+} from "@/lib/reports.functions";
 import type {
   RiskAssessmentStatus,
   RiskLevel,
-} from "#/types/report-assessment";
+} from "@/types/report-assessment";
 
 export const Route = createFileRoute("/_protected/dashboard/my-reports")({
   loader: async () => {

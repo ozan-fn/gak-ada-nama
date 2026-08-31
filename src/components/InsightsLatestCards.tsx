@@ -1,6 +1,6 @@
 import { ArrowRight, BarChart3, FileText } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
-import type { InsightItem } from "#/components/InsightsPriorityTable";
+import type { InsightItem } from "@/components/InsightsPriorityTable";
 
 type InsightsLatestCardsProps = {
 	insights: InsightItem[];

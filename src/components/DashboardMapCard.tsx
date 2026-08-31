@@ -18,9 +18,9 @@ import {
 } from "lucide-react";
 import * as maplibregl from "maplibre-gl";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { NearbyReportPin } from "#/components/RiskMap";
-import { useLocalFireData } from "#/hooks/useFireData";
-import { createReportMarkers, groupNearbyReports } from "#/lib/mapMarkers";
+import type { NearbyReportPin } from "@/components/RiskMap";
+import { useLocalFireData } from "@/hooks/useFireData";
+import { createReportMarkers, groupNearbyReports } from "@/lib/mapMarkers";
 import { BaseEnvironmentMap, type MapContext } from "./maps/BaseEnvironmentMap";
 import { ElevationLegend } from "./maps/ElevationLegend";
 import { Skeleton } from "./ui/skeleton";

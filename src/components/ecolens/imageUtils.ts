@@ -1,4 +1,4 @@
-import { MAX_ECO_LENS_IMAGE_BYTES } from "#/types/ecolens";
+import { MAX_ECO_LENS_IMAGE_BYTES } from "@/types/ecolens";
 
 export function processUploadedImage(file: File): Promise<string> {
 	return new Promise((resolve, reject) => {

@@ -5,7 +5,7 @@ import {
 	getResolutionBlockReason,
 	hasResolutionQuorum,
 	parseResolutionEvidenceAssessment,
-} from "#/lib/report-resolution-policy";
+} from "@/lib/report-resolution-policy";
 
 const NOW = new Date("2026-08-30T12:00:00.000Z");
 const OLD_ACCOUNT = new Date("2026-08-28T12:00:00.000Z");

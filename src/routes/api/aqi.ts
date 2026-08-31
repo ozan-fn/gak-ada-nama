@@ -3,7 +3,7 @@ import {
 	EnvironmentProviderError,
 	fetchAQIByCity,
 	fetchAQIByCoordinates,
-} from "#/lib/environment.server";
+} from "@/lib/environment.server";
 
 export const Route = createFileRoute("/api/aqi")({
 	server: {

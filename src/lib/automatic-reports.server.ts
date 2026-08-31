@@ -3,7 +3,7 @@ import {
 	AUTOMATIC_REPORT_REGIONS,
 	type AutomaticReportRegion,
 	validateAutomaticReportRegions,
-} from "#/config/automatic-report-regions";
+} from "@/config/automatic-report-regions";
 import {
 	AUTOMATIC_REPORT_SOURCE,
 	type AutomaticReportCandidate,
@@ -14,26 +14,26 @@ import {
 	distanceMeters,
 	type MonitoringGridCell,
 	type RegionalEnvironmentObservation,
-} from "#/lib/automatic-report-detection";
-import { generateAutomaticReportNarrative } from "#/lib/automatic-report-narrative.server";
+} from "@/lib/automatic-report-detection";
+import { generateAutomaticReportNarrative } from "@/lib/automatic-report-narrative.server";
 import {
 	fetchAQIByCoordinates,
 	fetchWeatherByCoordinates,
-} from "#/lib/environment.server";
-import { fetchFirmsFirePoints } from "#/lib/firms.server";
-import { prisma } from "#/lib/prisma";
+} from "@/lib/environment.server";
+import { fetchFirmsFirePoints } from "@/lib/firms.server";
+import { prisma } from "@/lib/prisma";
 import {
 	getReportSearchBounds,
 	getReportSearchPolicy,
-} from "#/lib/report-risk-assessment.server";
+} from "@/lib/report-risk-assessment.server";
 import {
 	createReportCore,
 	refreshAutomaticReportAssessment,
-} from "#/lib/reports.server";
+} from "@/lib/reports.server";
 import {
 	type ResolvedLocation,
 	resolveAutomaticReportLocation,
-} from "#/lib/reverse-geocoding.server";
+} from "@/lib/reverse-geocoding.server";
 
 const PROVIDER_TIMEOUT_MS = 5_000;
 const DEFAULT_MAX_GRID_CELLS_PER_RUN = 12;

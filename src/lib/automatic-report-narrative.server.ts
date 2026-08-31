@@ -1,5 +1,5 @@
-import type { AutomaticReportCandidate } from "#/lib/automatic-report-detection";
-import { getGroqClient } from "#/lib/groq";
+import type { AutomaticReportCandidate } from "@/lib/automatic-report-detection";
+import { getGroqClient } from "@/lib/groq";
 
 const DEFAULT_MODEL = "qwen/qwen3.6-27b";
 const NARRATIVE_TIMEOUT_MS = 10_000;

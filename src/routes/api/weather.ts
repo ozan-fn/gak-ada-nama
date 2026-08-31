@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { fetchWeatherByCoordinates, resolveWeatherCityCoordinates } from "#/lib/environment.server";
+import { fetchWeatherByCoordinates, resolveWeatherCityCoordinates } from "@/lib/environment.server";
 
 export const Route = createFileRoute("/api/weather")({
   server: {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getDynamicBaseline, type DynamicBaseline } from '#/lib/historicalBaseline';
+import { getDynamicBaseline, type DynamicBaseline } from '@/lib/historicalBaseline';
 
 /**
  * React hook to fetch dynamic baseline from real APIs

@@ -1,6 +1,6 @@
-import { indonesiaLocations } from "#/data/indonesia-locations";
-import type { AutomaticCoordinates } from "#/lib/automatic-report-detection";
-import { findNearestCity } from "#/lib/geoUtils";
+import { indonesiaLocations } from "@/data/indonesia-locations";
+import type { AutomaticCoordinates } from "@/lib/automatic-report-detection";
+import { findNearestCity } from "@/lib/geoUtils";
 
 const DEFAULT_ENDPOINT = "https://nominatim.openstreetmap.org";
 const PUBLIC_NOMINATIM_INTERVAL_MS = 16_000;

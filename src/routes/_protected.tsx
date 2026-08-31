@@ -6,10 +6,10 @@ import {
 } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { AppSidebar } from "#/components/AppSidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 import { getSession } from "@/lib/auth.functions";
-import DashboardAppHeader from "#/components/DashboardAppHeader";
-import { EcoLensLocationProvider } from "#/contexts/EcoLensLocationContext";
+import DashboardAppHeader from "@/components/DashboardAppHeader";
+import { EcoLensLocationProvider } from "@/contexts/EcoLensLocationContext";
 
 export const Route = createFileRoute("/_protected")({
   beforeLoad: async ({ location }) => {

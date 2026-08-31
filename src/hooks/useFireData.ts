@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import {
 	type PublicFirePoint as FirePoint,
 	getFireDataFn,
-} from "#/lib/fire.functions";
+} from "@/lib/fire.functions";
 
 export type { FirePoint };
 

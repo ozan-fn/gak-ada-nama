@@ -13,7 +13,7 @@ import {
   type ActivityEvent,
   type ActivityGroup,
   getActivitiesFn,
-} from "#/lib/activity.functions";
+} from "@/lib/activity.functions";
 
 export const Route = createFileRoute("/_protected/dashboard/activity")({
   loader: () => getActivitiesFn(),

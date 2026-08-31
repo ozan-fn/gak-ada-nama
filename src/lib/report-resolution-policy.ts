@@ -2,7 +2,7 @@ import {
 	REPORT_RESOLUTION_REQUIRED_VALIDATIONS,
 	REPORT_RESOLUTION_MIN_ACCOUNT_AGE_MS,
 	type ReportResolutionBlockCode,
-} from "#/types/report-resolution";
+} from "@/types/report-resolution";
 
 export const RESOLVABLE_REPORT_STATUSES = [
 	"PENDING",

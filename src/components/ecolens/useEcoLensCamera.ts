@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { MAX_ECO_LENS_IMAGE_BYTES } from "#/types/ecolens";
+import { MAX_ECO_LENS_IMAGE_BYTES } from "@/types/ecolens";
 
 export type CameraStatus = "idle" | "requesting" | "live" | "error";
 

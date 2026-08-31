@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { LocateFixed, LoaderCircle, MapPin, Search } from "lucide-react";
 
-import { useLocationSearch } from "#/hooks/use-location-search";
-import type { IndonesiaLocation } from "#/data/indonesia-locations";
-import { useEcoLensLocationContextSafe } from "#/contexts/EcoLensLocationContext";
+import { useLocationSearch } from "@/hooks/use-location-search";
+import type { IndonesiaLocation } from "@/data/indonesia-locations";
+import { useEcoLensLocationContextSafe } from "@/contexts/EcoLensLocationContext";
 import { useEcoLensLocation } from "./useEcoLensLocation";
 
 type EcoLensLocationSearchProps = {

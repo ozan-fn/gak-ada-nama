@@ -3,7 +3,7 @@ import { describe, test } from "node:test";
 import {
 	type AutomaticReportRegion,
 	validateAutomaticReportRegions,
-} from "#/config/automatic-report-regions";
+} from "@/config/automatic-report-regions";
 import { isAutomaticReportRequestAuthorized } from "./automatic-report-auth";
 import {
 	AUTOMATIC_DETECTOR_REGISTRY,

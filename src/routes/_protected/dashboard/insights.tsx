@@ -1,13 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import InsightsHeader from "#/components/InsightsHeader";
-import InsightsOverviewCards from "#/components/InsightsOverviewCards";
-import InsightsFilterBar from "#/components/InsightsFilterBar";
-import RegionalRankingCard from "#/components/RegionalRankingCard";
-import FeaturedInsightCard from "#/components/FeaturedInsightCard";
-import InsightsPriorityTable from "#/components/InsightsPriorityTable";
-import InsightsLatestCards from "#/components/InsightsLatestCards";
-import { getInsightsFn } from "#/lib/insight.functions";
+import InsightsHeader from "@/components/InsightsHeader";
+import InsightsOverviewCards from "@/components/InsightsOverviewCards";
+import InsightsFilterBar from "@/components/InsightsFilterBar";
+import RegionalRankingCard from "@/components/RegionalRankingCard";
+import FeaturedInsightCard from "@/components/FeaturedInsightCard";
+import InsightsPriorityTable from "@/components/InsightsPriorityTable";
+import InsightsLatestCards from "@/components/InsightsLatestCards";
+import { getInsightsFn } from "@/lib/insight.functions";
 
 export const Route = createFileRoute("/_protected/dashboard/insights")({
   loader: () => getInsightsFn({ data: { scope: "Indonesia" } }),

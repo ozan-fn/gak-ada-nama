@@ -1,13 +1,13 @@
 import * as maplibregl from "maplibre-gl";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { useUserLocationMarker } from "#/hooks/use-user-marker";
-import { useAQIStations } from "#/hooks/useAQIStations";
-import { useEnvironmentAlerts } from "#/hooks/useEnvironmentAlerts";
-import { useEnvironmentData } from "#/hooks/useEnvironmentData";
-import { type FirePoint, useFireData } from "#/hooks/useFireData";
-import { usePrecipitationGrid } from "#/hooks/usePrecipitationGrid";
-import { useUserLocation } from "#/hooks/useUserLocation";
+import { useUserLocationMarker } from "@/hooks/use-user-marker";
+import { useAQIStations } from "@/hooks/useAQIStations";
+import { useEnvironmentAlerts } from "@/hooks/useEnvironmentAlerts";
+import { useEnvironmentData } from "@/hooks/useEnvironmentData";
+import { type FirePoint, useFireData } from "@/hooks/useFireData";
+import { usePrecipitationGrid } from "@/hooks/usePrecipitationGrid";
+import { useUserLocation } from "@/hooks/useUserLocation";
 
 export interface MapContext {
 	map: React.MutableRefObject<maplibregl.Map | null>;

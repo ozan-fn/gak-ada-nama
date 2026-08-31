@@ -3,7 +3,7 @@ import { useScroll } from "@/hooks/use-scroll";
 import { Button } from "@/components/ui/button";
 import { MobileNav } from "@/components/MobileNav";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useSession, signOut } from "#/lib/auth-client.client";
+import { useSession, signOut } from "@/lib/auth-client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useRef, useEffect } from "react";
 import { LayoutDashboard, LogOut } from "lucide-react";

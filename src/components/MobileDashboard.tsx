@@ -32,12 +32,12 @@ import {
   useRef,
   useState,
 } from "react";
-import { ChartAQITrend } from "#/components/ChartAQITrend";
-import PrecipitationOverview from "#/components/PrecipitationOverview";
-import RegionalExtreme from "#/components/RegionalExtreme";
-import RegionRisk from "#/components/RegionRisk";
-import WeatherInformation from "#/components/WeatherInformation";
-import { createReportMarkers, groupNearbyReports } from "#/lib/mapMarkers";
+import { ChartAQITrend } from "@/components/ChartAQITrend";
+import PrecipitationOverview from "@/components/PrecipitationOverview";
+import RegionalExtreme from "@/components/RegionalExtreme";
+import RegionRisk from "@/components/RegionRisk";
+import WeatherInformation from "@/components/WeatherInformation";
+import { createReportMarkers, groupNearbyReports } from "@/lib/mapMarkers";
 import { BaseEnvironmentMap } from "./maps/BaseEnvironmentMap";
 import { ElevationLegend } from "./maps/ElevationLegend";
 import type { NearbyReportPin } from "./RiskMap";

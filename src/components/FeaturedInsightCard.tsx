@@ -1,6 +1,6 @@
 import { ArrowRight, ArrowUp, MapPin, ShieldAlert } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
-import type { InsightItem } from "#/components/InsightsPriorityTable";
+import type { InsightItem } from "@/components/InsightsPriorityTable";
 
 type FeaturedInsightCardProps = {
   insight: InsightItem;

@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { setResponseHeader } from "@tanstack/react-start/server";
-import { ensureSession } from "#/lib/auth.functions";
-import { getGroqClient } from "#/lib/groq";
+import { ensureSession } from "@/lib/auth.functions";
+import { getGroqClient } from "@/lib/groq";
 import {
 	type AnalyzeEcoLensInput,
 	type AnalyzeEcoLensResult,
@@ -12,7 +12,7 @@ import {
 	type EcoLensUrgency,
 	MAX_ECO_LENS_IMAGE_BYTES,
 	MAX_ECO_LENS_LOCATION_LENGTH,
-} from "#/types/ecolens";
+} from "@/types/ecolens";
 
 const DEFAULT_VISION_MODEL = "qwen/qwen3.6-27b";
 const DATA_URL_PREFIX = "data:image/jpeg;base64,";

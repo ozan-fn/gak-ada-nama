@@ -1,21 +1,21 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Clock, Download, MapPin } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { ChartAQITrend } from "#/components/ChartAQITrend";
-import DashboardMapCard from "#/components/DashboardMapCard";
-import MobileDashboard from "#/components/MobileDashboard";
-import PrecipitationOverview from "#/components/PrecipitationOverview";
-import RegionalExtreme from "#/components/RegionalExtreme";
-import RegionRisk from "#/components/RegionRisk";
-import type { NearbyReportPin } from "#/components/RiskMap";
-import { Skeleton } from "#/components/ui/skeleton";
-import WeatherInformation from "#/components/WeatherInformation";
-import { useEnvironmentAlerts } from "#/hooks/useEnvironmentAlerts";
-import { useEnvironmentData } from "#/hooks/useEnvironmentData";
-import { useUserLocation } from "#/hooks/useUserLocation";
-import { calculateDistanceKm } from "#/lib/distanceUtils";
-import { getReportMapPinsFn } from "#/lib/reports.functions";
-import { getIndonesianTimezone } from "#/lib/timezoneUtils";
+import { ChartAQITrend } from "@/components/ChartAQITrend";
+import DashboardMapCard from "@/components/DashboardMapCard";
+import MobileDashboard from "@/components/MobileDashboard";
+import PrecipitationOverview from "@/components/PrecipitationOverview";
+import RegionalExtreme from "@/components/RegionalExtreme";
+import RegionRisk from "@/components/RegionRisk";
+import type { NearbyReportPin } from "@/components/RiskMap";
+import { Skeleton } from "@/components/ui/skeleton";
+import WeatherInformation from "@/components/WeatherInformation";
+import { useEnvironmentAlerts } from "@/hooks/useEnvironmentAlerts";
+import { useEnvironmentData } from "@/hooks/useEnvironmentData";
+import { useUserLocation } from "@/hooks/useUserLocation";
+import { calculateDistanceKm } from "@/lib/distanceUtils";
+import { getReportMapPinsFn } from "@/lib/reports.functions";
+import { getIndonesianTimezone } from "@/lib/timezoneUtils";
 
 const NEARBY_REPORT_RADIUS_KM = 5;
 

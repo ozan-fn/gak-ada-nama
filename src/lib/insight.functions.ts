@@ -1,12 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
-import { prisma } from "#/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import {
 	clusterReports,
 	fetchReportsForClustering,
 	buildInsightFromCandidate,
-} from "#/lib/insight-engine.server";
-import { generateInsightContent } from "#/lib/insight-generation.server";
-import { ensureSession } from "#/lib/auth.functions";
+} from "@/lib/insight-engine.server";
+import { generateInsightContent } from "@/lib/insight-generation.server";
+import { ensureSession } from "@/lib/auth.functions";
 
 const INSIGHT_CACHE_TTL_MS = 30 * 60 * 1_000; // 30 minutes
 let lastInsightRefresh = 0;

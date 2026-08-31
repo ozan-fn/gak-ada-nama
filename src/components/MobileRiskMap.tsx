@@ -16,15 +16,15 @@ import {
   useState,
 } from "react";
 
-import { indonesiaLocations } from "#/data/indonesia-locations";
-import { calculateDistanceKm } from "#/lib/distanceUtils";
-import { findNearestCity } from "#/lib/geoUtils";
+import { indonesiaLocations } from "@/data/indonesia-locations";
+import { calculateDistanceKm } from "@/lib/distanceUtils";
+import { findNearestCity } from "@/lib/geoUtils";
 import {
   createAutomaticReportUncertaintyGeoJson,
   createReportMarkers,
   createSelectedLocationMarker,
   groupNearbyReports,
-} from "#/lib/mapMarkers";
+} from "@/lib/mapMarkers";
 
 import { BaseEnvironmentMap, type MapContext } from "./maps/BaseEnvironmentMap";
 import { ElevationLegend } from "./maps/ElevationLegend";
