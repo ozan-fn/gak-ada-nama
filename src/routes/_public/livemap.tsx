@@ -278,64 +278,66 @@ function LiveMapPage() {
             </div>
           </div>
 
-          {/* Right - Info Panel (1/3) */}
-          <div className="space-y-6">
-            {/* Time Header */}
-            <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-              <span className="text-sm text-gray-600">Waktu lokal</span>
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-gray-600" />
-                <span className="text-sm font-semibold text-gray-900">
-                  {localTime}
-                </span>
+          {/* Right - Info Panel (1/3) - Scrollable */}
+          <div className="lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
+            <div className="space-y-4">
+              {/* Time Header */}
+              <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                <span className="text-sm text-gray-600">Waktu lokal</span>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-gray-600" />
+                  <span className="text-sm font-semibold text-gray-900">
+                    {localTime}
+                  </span>
+                </div>
               </div>
+
+              {nearbyReports.length === 0 ? (
+                <>
+                  {/* Environment Card */}
+                  <div>
+                    <SelectedRisk selectedLocation={selectedLocation} />
+                  </div>
+
+                  {/* Info Card */}
+                  <div className="rounded-lg border border-gray-200 bg-white p-6">
+                    <h3 className="text-sm font-semibold text-gray-900">
+                      Tentang Peta
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-gray-600">
+                      Klik pada peta untuk melihat kondisi lingkungan di lokasi
+                      tersebut. Data ditampilkan secara real-time dari berbagai
+                      sumber monitoring.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Report Assessment */}
+                  <div>
+                    <ReportRiskAssessment
+                      report={focusedAssessmentReport}
+                      locationName={selectedLocation.city}
+                      selectionMode={selectedReport ? "manual" : "location"}
+                    />
+                  </div>
+
+                  {/* Environment Card */}
+                  <div>
+                    <SelectedRisk selectedLocation={selectedLocation} />
+                  </div>
+
+                  {/* Related Reports */}
+                  <div>
+                    <RelatedRiskReports
+                      reports={prioritizedReports}
+                      selectedReport={focusedAssessmentReport}
+                      onReportSelect={setSelectedReport}
+                    />
+                  </div>
+                </>
+              )}
             </div>
-
-            {nearbyReports.length === 0 ? (
-              <>
-                {/* Environment Card */}
-                <div>
-                  <SelectedRisk selectedLocation={selectedLocation} />
-                </div>
-
-                {/* Info Card */}
-                <div className="rounded-lg border border-gray-200 bg-white p-6">
-                  <h3 className="text-sm font-semibold text-gray-900">
-                    Tentang Peta
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-gray-600">
-                    Klik pada peta untuk melihat kondisi lingkungan di lokasi
-                    tersebut. Data ditampilkan secara real-time dari berbagai
-                    sumber monitoring.
-                  </p>
-                </div>
-              </>
-            ) : (
-              <>
-                {/* Report Assessment */}
-                <div>
-                  <ReportRiskAssessment
-                    report={focusedAssessmentReport}
-                    locationName={selectedLocation.city}
-                    selectionMode={selectedReport ? "manual" : "location"}
-                  />
-                </div>
-
-                {/* Environment Card */}
-                <div>
-                  <SelectedRisk selectedLocation={selectedLocation} />
-                </div>
-
-                {/* Related Reports */}
-                <div>
-                  <RelatedRiskReports
-                    reports={prioritizedReports}
-                    selectedReport={focusedAssessmentReport}
-                    onReportSelect={setSelectedReport}
-                  />
-                </div>
-              </>
-            )}
           </div>
         </div>
       </div>

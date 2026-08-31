@@ -3,7 +3,7 @@ import { useScroll } from "@/hooks/use-scroll";
 import { Button } from "@/components/ui/button";
 import { MobileNav } from "@/components/MobileNav";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useSession } from "#/lib/auth-client";
+import { useSession, signOut } from "#/lib/auth-client.client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useRef, useEffect } from "react";
 import { LayoutDashboard, LogOut } from "lucide-react";
@@ -186,10 +186,9 @@ export function Header() {
 
                   <button
                     type="button"
-                    onClick={() => {
+                    onClick={async () => {
                       setShowDropdown(false);
-
-                      // TODO: Implement logout
+                      await signOut();
                     }}
                     className="flex w-full items-center gap-3 border-t border-neutral-100 px-4 py-2.5 text-left text-sm text-red-600 transition-colors hover:bg-red-50"
                   >
@@ -226,7 +225,8 @@ export function Header() {
               <Button
                 size="sm"
                 className={cn("transition-colors duration-300", {
-                  "": scrolled || !isHome,
+                  "border-sky-400/30 bg-sky-500 text-white shadow-lg shadow-sky-500/20 hover:bg-sky-400 hover:shadow-sky-500/30":
+                    scrolled || !isHome,
 
                   "bg-white text-gray-900 hover:bg-white/90":
                     !scrolled && isHome,

@@ -15,7 +15,7 @@ import {
   Wind,
 } from "lucide-react";
 
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth-client.client";
 import SettingsNav from "#/components/SettingsNav";
 import { useNotificationSettings } from "#/hooks/useNotificationSettings";
 

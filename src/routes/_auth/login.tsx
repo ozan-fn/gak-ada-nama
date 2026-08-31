@@ -1,12 +1,13 @@
 import { createFileRoute, useNavigate, Link, redirect } from '@tanstack/react-router'
 import { useState } from 'react'
-import { authClient } from '@/lib/auth-client'
+import { authClient } from '@/lib/auth-client.client'
 import { getSession } from '@/lib/auth.functions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import googleIcon from '@/assets/icons/google.svg'
+import logoBlue from '@/assets/images/logo-blue.png'
 
 type LoginSearch = {
   redirect?: string
@@ -33,10 +34,11 @@ function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
 
   const handleGoogleLogin = async () => {
-    setLoading(true)
+    setGoogleLoading(true)
     setError('')
 
     const { error } = await authClient.signIn.social({
@@ -46,9 +48,9 @@ function Login() {
 
     if (error) {
       setError(error.message || 'Google login failed')
-      setLoading(false)
-      return
+      setGoogleLoading(false)
     }
+    // ponytail: no finally block - social login redirects away on success
   }
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -74,11 +76,9 @@ function Login() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Logo */}
-      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 md:top-8 md:left-8">
-        <div className="flex items-center gap-2">
-          <span className="text-lg sm:text-xl font-bold text-gray-900">Prita.</span>
-        </div>
-      </div>
+      <Link to="/" className="absolute top-4 left-4 sm:top-6 sm:left-6 md:top-8 md:left-8">
+        <img src={logoBlue} alt="Prita Logo" className="h-6 sm:h-6.5" />
+      </Link>
 
       {/* Login Form */}
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 py-16 sm:py-20">
@@ -102,11 +102,11 @@ function Login() {
               type="button"
               variant="outline"
               className="w-full h-9 sm:h-10 gap-2 border-gray-300 hover:bg-gray-50 text-xs sm:text-sm"
-              disabled={loading}
+              disabled={googleLoading || loading}
               onClick={handleGoogleLogin}
             >
               <img src={googleIcon} alt="Google" className="w-4 h-4" />
-              Masuk dengan Google
+              {googleLoading ? "Membuka Google..." : "Masuk dengan Google"}
             </Button>
 
             <div className="relative">
@@ -168,8 +168,8 @@ function Login() {
 
             <Button
               type="submit"
-              disabled={loading}
-              className="w-full mt-3 sm:mt-4 h-9 sm:h-10 bg-gray-900 hover:bg-gray-800 text-white text-xs sm:text-sm"
+              disabled={loading || googleLoading}
+              className="w-full mt-3 sm:mt-4 h-9 sm:h-10 bg-sky-500 hover:bg-sky-600 text-white text-xs sm:text-sm"
             >
               {loading ? "Memuat..." : "Masuk"}
             </Button>
