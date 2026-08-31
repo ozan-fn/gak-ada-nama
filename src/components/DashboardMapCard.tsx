@@ -80,18 +80,21 @@ function DashboardMapContent({
   reportRadiusKm,
   selectedReport,
   onClearSelectedReport,
+  mapInstanceRef,
+  coordsRef,
 }: {
   context: MapContext;
   reports: NearbyReportPin[];
   reportRadiusKm: number;
   selectedReport: NearbyReportPin | null;
   onClearSelectedReport: () => void;
+  mapInstanceRef: React.RefObject<maplibregl.Map | null>;
+  coordsRef: React.RefObject<{ lat: number | null; lng: number | null }>;
 }) {
   const [showLegend, setShowLegend] = useState<boolean>(false);
 
   const {
     alerts,
-    locate,
     isLocating,
     handleZoom,
     showLayers,
@@ -122,7 +125,9 @@ function DashboardMapContent({
               onClick={() => setShowLegend((previous: boolean) => !previous)}
               className="flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700"
             >
-              <h4 className="text-xs font-bold text-neutral-800 dark:text-neutral-100">Map Legend</h4>
+              <h4 className="text-xs font-bold text-neutral-800 dark:text-neutral-100">
+                Map Legend
+              </h4>
 
               {showLegend ? (
                 <ChevronDown className="h-3 w-3 text-neutral-600 dark:text-neutral-400" />
@@ -198,7 +203,9 @@ function DashboardMapContent({
                   )}
                 </span>
 
-                <span className="flex-1 text-neutral-700 dark:text-neutral-400">{alert.message}</span>
+                <span className="flex-1 text-neutral-700 dark:text-neutral-400">
+                  {alert.message}
+                </span>
               </div>
             ))}
           </div>
@@ -362,9 +369,7 @@ function DashboardMapContent({
                 <input
                   type="checkbox"
                   checked={showElevation}
-                  onChange={(event) =>
-                    setShowElevation(event.target.checked)
-                  }
+                  onChange={(event) => setShowElevation(event.target.checked)}
                   className="h-4 w-4 cursor-pointer rounded border-neutral-300"
                 />
                 <span>Elevation</span>
@@ -375,7 +380,13 @@ function DashboardMapContent({
 
         <button
           type="button"
-          onClick={() => locate(true)}
+          onClick={() => {
+            const map = mapInstanceRef.current;
+            const { lat, lng } = coordsRef.current;
+            if (map && lat !== null && lng !== null) {
+              map.flyTo({ center: [lng, lat], zoom: 13, duration: 1200 });
+            }
+          }}
           disabled={isLocating}
           className="flex h-9 w-9 items-center justify-center rounded-b-lg transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
           aria-label="Locate me"
@@ -644,6 +655,8 @@ function DashboardMapCard({
           reportRadiusKm={reportRadiusKm}
           selectedReport={selectedReport}
           onClearSelectedReport={() => setSelectedReport(null)}
+          mapInstanceRef={mapInstanceRef}
+          coordsRef={coordsRef}
         />
       )}
     </BaseEnvironmentMap>

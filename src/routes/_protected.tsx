@@ -1,4 +1,9 @@
-import { createFileRoute, Outlet, redirect, useLocation } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Outlet,
+  redirect,
+  useLocation,
+} from "@tanstack/react-router";
 import { useEffect } from "react";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "#/components/AppSidebar";
@@ -25,7 +30,7 @@ function ProtectedLayout() {
   useEffect(() => {
     const theme = localStorage.getItem("theme");
     const isDark = theme === "dark";
-    
+
     if (isDark) {
       document.documentElement.classList.add("dark");
     } else {

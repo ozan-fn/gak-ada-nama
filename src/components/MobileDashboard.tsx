@@ -564,7 +564,6 @@ export default function MobileDashboard({
         {(context) => {
           const {
             alerts,
-            locate,
             isLocating,
             handleZoom,
             showLayers,
@@ -897,7 +896,13 @@ export default function MobileDashboard({
 
                 <button
                   type="button"
-                  onClick={() => locate(true)}
+                  onClick={() => {
+                    const map = mapInstanceRef.current;
+                    const { lat, lng } = coordsRef.current;
+                    if (map && lat !== null && lng !== null) {
+                      map.flyTo({ center: [lng, lat], zoom: 13, duration: 1200 });
+                    }
+                  }}
                   disabled={isLocating}
                   className="flex h-9 w-9 items-center justify-center rounded-b-lg transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
                   aria-label="Locate me"

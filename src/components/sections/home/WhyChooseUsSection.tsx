@@ -29,7 +29,7 @@ const advantages = [
 
 export default function WhyChooseUsSection() {
   return (
-    <section className="relative z-10 bg-background px-6 pb-16 pt-24">
+    <section className="relative z-10 bg-background px-6 pb-16 pt-26">
       <div className="mx-auto grid max-w-6xl grid-cols-1 items-start gap-10 lg:grid-cols-2 lg:gap-16">
         {/* Left Content */}
         <div className="flex h-full flex-col justify-between">
